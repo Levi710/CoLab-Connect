@@ -58,55 +58,8 @@ export default function Dashboard() {
         }
     };
 
-    const handleUpgrade = async () => {
-        const res = await loadRazorpay();
-        if (!res) {
-            alert('Razorpay SDK failed to load. Are you online?');
-            return;
-        }
-
-        try {
-            const order = await api.payment.createOrder();
-
-            const options = {
-                key: 'rzp_test_1DP5mmOlF5G5ag', // Enter the Key ID generated from the Dashboard
-                amount: order.amount,
-                currency: order.currency,
-                name: 'CoLab Connect',
-                description: 'Premium Upgrade Transaction',
-                order_id: order.id,
-                handler: async function (response) {
-                    try {
-                        await api.payment.verify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
-                        });
-                        alert('Payment Successful! You are now a Premium member.');
-                        setIsPremium(true);
-                        setShowPremiumModal(false);
-                        fetchAiAnalysis();
-                    } catch (err) {
-                        alert('Payment verification failed');
-                    }
-                },
-                prefill: {
-                    name: 'Test User',
-                    email: 'test@example.com',
-                    contact: '9999999999'
-                },
-                theme: {
-                    color: '#4F46E5'
-                }
-            };
-
-            const paymentObject = new window.Razorpay(options);
-            paymentObject.open();
-
-        } catch (err) {
-            console.error('Payment Error:', err);
-            alert('Failed to initiate payment');
-        }
+    const handleUpgrade = () => {
+        window.open('https://rzp.io/rzp/CmYvunI', '_blank');
     };
 
     if (loading) return <div className="text-center py-20">Loading dashboard...</div>;
