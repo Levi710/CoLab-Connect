@@ -99,6 +99,19 @@ async function initDb() {
             console.log('Checked/Added project_id column to messages');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // Migration: Backfill project owners into project_members
+        try {
+            await db.query(`
+                INSERT INTO project_members (project_id, user_id, role)
+                SELECT p.id, p.user_id, 'Owner'
+                FROM projects p
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM project_members pm WHERE pm.project_id = p.id AND pm.user_id = p.user_id
+                )
+            `);
+            console.log('Checked/Backfilled project owners');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         console.log('Database schema initialized');
     } catch (err) {
         console.error('Error initializing database schema:', err);
@@ -317,13 +330,24 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
 app.post('/api/requests', authenticateToken, async (req, res) => {
     const { projectId, role, note } = req.body;
     try {
-        // Check if user is owner
+        // Check if project exists and get owner
         const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        // Check if user is owner
         if (projectRes.rows[0].user_id === req.user.id) {
             return res.status(400).json({ error: 'Cannot apply to your own project' });
         }
 
-        // Check if already applied
+        // Check if already a member
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'You are already a member of this project' });
+        }
+
+        // Check if already applied (pending)
         const existing = await db.query('SELECT * FROM requests WHERE project_id = $1 AND user_id = $2 AND status = \'pending\'', [projectId, req.user.id]);
         if (existing.rows.length > 0) {
             return res.status(400).json({ error: 'Request already pending' });
@@ -335,7 +359,7 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
         );
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
+        console.error('Error sending request:', err);
         res.status(500).json({ error: 'Failed to send request' });
     }
 });
