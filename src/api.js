@@ -35,6 +35,15 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch user');
             return res.json();
         },
+        updateProfile: async (profileData) => {
+            const res = await fetch(`${API_URL}/users/profile`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(profileData),
+            });
+            if (!res.ok) throw new Error('Failed to update profile');
+            return res.json();
+        },
     },
     projects: {
         getAll: async () => {

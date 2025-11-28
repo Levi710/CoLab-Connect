@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   bio TEXT,
   skills TEXT, -- Comma separated
+  photo_url TEXT,
   is_premium BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

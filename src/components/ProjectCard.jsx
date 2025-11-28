@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, MessageSquare, Star, Users, X } from 'lucide-react';
 
-export default function ProjectCard({ project, isFeatured, isSponsored }) {
+export default function ProjectCard({ project, isFeatured, isSponsored, isOwner }) {
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [note, setNote] = useState('');
 
@@ -67,12 +67,17 @@ export default function ProjectCard({ project, isFeatured, isSponsored }) {
                         <span className="flex items-center"><ThumbsUp className="h-4 w-4 mr-1" /> {project.likes || 0}</span>
                         <span className="flex items-center"><Users className="h-4 w-4 mr-1" /> {project.impressions || 0}</span>
                     </div>
-                    <button
-                        onClick={() => setShowApplyModal(true)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                        I'm Interested
-                    </button>
+                    {!isOwner && (
+                        <button
+                            onClick={() => setShowApplyModal(true)}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            I'm Interested
+                        </button>
+                    )}
+                    {isOwner && (
+                        <span className="text-xs text-gray-400 italic">Your Project</span>
+                    )}
                 </div>
             </div>
 
