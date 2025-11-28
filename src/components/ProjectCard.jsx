@@ -5,13 +5,22 @@ export default function ProjectCard({ project, isFeatured, isSponsored, isOwner 
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [note, setNote] = useState('');
 
-    const handleApply = (e) => {
+    const handleApply = async (e) => {
         e.preventDefault();
-        // TODO: Implement apply logic
-        console.log(`Applying to project ${project.id} with note: ${note}`);
-        setShowApplyModal(false);
-        setNote('');
-        alert('Application sent successfully!');
+        try {
+            const { api } = await import('../api');
+            await api.requests.create({
+                projectId: project.id,
+                role: 'Collaborator', // Default role or add a selector
+                note: note
+            });
+            alert('Application sent successfully!');
+            setShowApplyModal(false);
+            setNote('');
+        } catch (error) {
+            console.error('Failed to apply:', error);
+            alert('Failed to send application. Please try again.');
+        }
     };
 
     return (
