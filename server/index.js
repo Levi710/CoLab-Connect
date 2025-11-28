@@ -77,7 +77,198 @@ async function initDb() {
     }
 }
 
-// ... (existing code)
+// Wait for DB to be ready then init
+setTimeout(initDb, 5000);
+
+// Middleware to authenticate token
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+};
+
+// --- Payment Routes ---
+
+app.post('/api/payment/order', authenticateToken, async (req, res) => {
+    const options = {
+        amount: 100, // amount in the smallest currency unit (100 paise = 1 INR)
+        currency: "INR",
+        receipt: `receipt_order_${Date.now()}`
+    };
+
+    try {
+        const order = await razorpay.orders.create(options);
+        res.json(order);
+    } catch (error) {
+        console.error("Razorpay Error:", error);
+        res.status(500).send(error);
+    }
+});
+
+app.post('/api/payment/verify', authenticateToken, async (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 's4g4r123');
+    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    const generated_signature = hmac.digest('hex');
+
+    if (generated_signature === razorpay_signature) {
+        try {
+            // Update user to premium
+            await db.query('UPDATE users SET is_premium = TRUE WHERE id = $1', [req.user.id]);
+            res.json({ status: 'success', message: 'Payment verified and user upgraded' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Failed to update user status' });
+        }
+    } else {
+        res.status(400).json({ status: 'failure', message: 'Invalid signature' });
+    }
+});
+
+// --- AI Analysis Route ---
+
+app.get('/api/ai/analysis', authenticateToken, async (req, res) => {
+    try {
+        // Check if user is premium
+        const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+        if (!userRes.rows[0].is_premium) {
+            return res.status(403).json({ error: 'Premium access required' });
+        }
+
+        // Mock AI Analysis Data
+        const analysisData = {
+            projectGrowth: [12, 19, 3, 5, 2, 3],
+            audienceDemographics: {
+                'Developers': 45,
+                'Designers': 25,
+                'Managers': 20,
+                'Others': 10
+            },
+            suggestions: [
+                "Your project 'EcoTrack' is trending in the 'Tech' category.",
+                "Consider adding more details to your 'Looking For' section to attract senior developers.",
+                "Based on current trends, adding a 'Mobile App' component could increase engagement by 20%."
+            ]
+        };
+
+        // Simulate AI processing delay
+        setTimeout(() => {
+            res.json(analysisData);
+        }, 1000);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to generate analysis' });
+    }
+});
+
+// --- Auth Routes ---
+
+app.post('/api/auth/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await db.query(
+            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, is_premium',
+            [username, email, hashedPassword]
+        );
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+        res.json({ token, user });
+    } catch (err) {
+        console.error(err);
+        if (err.code === '23505') {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+        res.status(500).json({ error: 'Registration failed' });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        if (!user) return res.status(400).json({ error: 'User not found' });
+
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
+
+        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+        delete user.password;
+        res.json({ token, user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [req.user.id]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch user' });
+    }
+});
+
+app.put('/api/users/profile', authenticateToken, async (req, res) => {
+    const { bio, skills, photo_url, background_url } = req.body;
+    try {
+        const result = await db.query(
+            'UPDATE users SET bio = $1, skills = $2, photo_url = $3, background_url = $4 WHERE id = $5 RETURNING id, username, email, bio, skills, photo_url, background_url, is_premium',
+            [bio, skills, photo_url, background_url, req.user.id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
+// --- Project Routes ---
+
+app.get('/api/projects', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM projects ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+});
+
+app.post('/api/projects', authenticateToken, async (req, res) => {
+    const { title, description, category, status, lookingFor, pollQuestion } = req.body;
+    try {
+        const result = await db.query(
+            'INSERT INTO projects (user_id, title, description, category, status, looking_for, poll_question) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [req.user.id, title, description, category, status, lookingFor, pollQuestion]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to create project' });
+    }
+});
+
+app.get('/api/projects/my', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch user projects' });
+    }
+});
 
 // --- Request Routes ---
 
