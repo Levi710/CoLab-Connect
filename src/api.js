@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const getHeaders = () => {
     const token = localStorage.getItem('token');
@@ -96,8 +96,8 @@ export const api = {
         },
     },
     messages: {
-        get: async (requestId) => {
-            const res = await fetch(`${API_URL}/messages/${requestId}`, {
+        getProjectMessages: async (projectId) => {
+            const res = await fetch(`${API_URL}/messages/project/${projectId}`, {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to fetch messages');
@@ -112,6 +112,30 @@ export const api = {
             if (!res.ok) throw new Error('Failed to send message');
             return res.json();
         },
+    },
+    chat: {
+        getRooms: async () => {
+            const res = await fetch(`${API_URL}/chat/rooms`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch chat rooms');
+            return res.json();
+        },
+        getMembers: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch members');
+            return res.json();
+        },
+        removeMember: async (projectId, userId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members/${userId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to remove member');
+            return res.json();
+        }
     },
     payment: {
         createOrder: async () => {

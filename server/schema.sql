@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS projects (
   impressions INTEGER DEFAULT 0,
   is_featured BOOLEAN DEFAULT FALSE,
   is_sponsored BOOLEAN DEFAULT FALSE,
+  member_limit INTEGER DEFAULT 5,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -36,9 +37,19 @@ CREATE TABLE IF NOT EXISTS requests (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS project_members (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id),
+  user_id INTEGER REFERENCES users(id),
+  role VARCHAR(100) DEFAULT 'Member',
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(project_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
-  request_id INTEGER REFERENCES requests(id),
+  request_id INTEGER REFERENCES requests(id), -- Keeping for backward compatibility or direct DMs if needed
+  project_id INTEGER REFERENCES projects(id), -- New: For Project Rooms
   sender_id INTEGER REFERENCES users(id),
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

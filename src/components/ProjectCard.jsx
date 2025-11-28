@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThumbsUp, MessageSquare, Star, Users, X } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock } from 'lucide-react';
 
 export default function ProjectCard({ project, isFeatured, isSponsored, isOwner }) {
     const [showApplyModal, setShowApplyModal] = useState(false);
@@ -71,21 +71,46 @@ export default function ProjectCard({ project, isFeatured, isSponsored, isOwner 
                     )}
                 </div>
 
-                <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-100">
-                    <div className="flex space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center"><ThumbsUp className="h-4 w-4 mr-1" /> {project.likes || 0}</span>
-                        <span className="flex items-center"><Users className="h-4 w-4 mr-1" /> {project.impressions || 0}</span>
+                <div className="px-6 py-4">
+                    <div className="flex items-center text-gray-500 text-sm mb-2">
+                        <Users className="h-4 w-4 mr-1" />
+                        <span>{project.member_count || 1} / {project.member_limit || 5} Members</span>
                     </div>
+                    <div className="flex items-center text-gray-500 text-sm">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+                    <div className="flex space-x-4">
+                        <button className="flex items-center text-gray-400 hover:text-pink-500 transition-colors">
+                            <Heart className="h-5 w-5 mr-1" />
+                            <span className="text-sm">{project.likes || 0}</span>
+                        </button>
+                        <button className="flex items-center text-gray-400 hover:text-indigo-500 transition-colors">
+                            <MessageSquare className="h-5 w-5 mr-1" />
+                            <span className="text-sm">Comment</span>
+                        </button>
+                        <button className="flex items-center text-gray-400 hover:text-green-500 transition-colors">
+                            <Share2 className="h-5 w-5 mr-1" />
+                            <span className="text-sm">Share</span>
+                        </button>
+                    </div>
+
                     {!isOwner && (
                         <button
                             onClick={() => setShowApplyModal(true)}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            disabled={project.member_count >= project.member_limit}
+                            className="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            I'm Interested
+                            {project.member_count >= project.member_limit ? 'Full' : "I'm Interested"}
                         </button>
                     )}
                     {isOwner && (
-                        <span className="text-xs text-gray-400 italic">Your Project</span>
+                        <span className="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                            Your Project
+                        </span>
                     )}
                 </div>
             </div>

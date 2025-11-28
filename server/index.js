@@ -11,7 +11,7 @@ const Razorpay = require('razorpay');
 // ... (existing imports)
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
 
 // Razorpay Instance (Use environment variables in production)
@@ -71,6 +71,34 @@ async function initDb() {
             console.log('Checked/Created messages table');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // Migration: Add member_limit to projects if not exists
+        try {
+            await db.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS member_limit INTEGER DEFAULT 5');
+            console.log('Checked/Added member_limit column to projects');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Create project_members table if not exists
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS project_members (
+                    id SERIAL PRIMARY KEY,
+                    project_id INTEGER REFERENCES projects(id),
+                    user_id INTEGER REFERENCES users(id),
+                    role VARCHAR(100) DEFAULT 'Member',
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(project_id, user_id)
+                )
+            `);
+            console.log('Checked/Created project_members table');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Add project_id to messages if not exists
+        try {
+            await db.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id)');
+            await db.query('ALTER TABLE messages ALTER COLUMN request_id DROP NOT NULL');
+            console.log('Checked/Added project_id column to messages');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         console.log('Database schema initialized');
     } catch (err) {
         console.error('Error initializing database schema:', err);
@@ -94,6 +122,7 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// ... (Payment and AI routes remain unchanged) ...
 // --- Payment Routes ---
 
 app.post('/api/payment/order', authenticateToken, async (req, res) => {
@@ -240,7 +269,12 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 
 app.get('/api/projects', async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM projects ORDER BY created_at DESC');
+        const result = await db.query(`
+            SELECT p.*, 
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count 
+            FROM projects p 
+            ORDER BY created_at DESC
+        `);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch projects' });
@@ -248,13 +282,21 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.post('/api/projects', authenticateToken, async (req, res) => {
-    const { title, description, category, status, lookingFor, pollQuestion } = req.body;
+    const { title, description, category, status, lookingFor, pollQuestion, memberLimit } = req.body;
     try {
         const result = await db.query(
-            'INSERT INTO projects (user_id, title, description, category, status, looking_for, poll_question) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [req.user.id, title, description, category, status, lookingFor, pollQuestion]
+            'INSERT INTO projects (user_id, title, description, category, status, looking_for, poll_question, member_limit) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [req.user.id, title, description, category, status, lookingFor, pollQuestion, memberLimit || 5]
         );
-        res.json(result.rows[0]);
+        const project = result.rows[0];
+
+        // Add creator as a member
+        await db.query(
+            'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3)',
+            [project.id, req.user.id, 'Owner']
+        );
+
+        res.json(project);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to create project' });
@@ -275,6 +317,18 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
 app.post('/api/requests', authenticateToken, async (req, res) => {
     const { projectId, role, note } = req.body;
     try {
+        // Check if user is owner
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows[0].user_id === req.user.id) {
+            return res.status(400).json({ error: 'Cannot apply to your own project' });
+        }
+
+        // Check if already applied
+        const existing = await db.query('SELECT * FROM requests WHERE project_id = $1 AND user_id = $2 AND status = \'pending\'', [projectId, req.user.id]);
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ error: 'Request already pending' });
+        }
+
         const result = await db.query(
             'INSERT INTO requests (project_id, user_id, role, note, status) VALUES ($1, $2, $3, $4, \'pending\') RETURNING *',
             [projectId, req.user.id, role, note]
@@ -308,7 +362,32 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
     const { status } = req.body; // 'accepted' or 'rejected'
     const requestId = req.params.id;
     try {
-        // Verify ownership (optional but recommended)
+        const requestRes = await db.query('SELECT * FROM requests WHERE id = $1', [requestId]);
+        const request = requestRes.rows[0];
+
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+
+        // Verify ownership
+        const projectRes = await db.query('SELECT user_id, member_limit FROM projects WHERE id = $1', [request.project_id]);
+        if (projectRes.rows[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        if (status === 'accepted') {
+            // Check member limit
+            const membersRes = await db.query('SELECT COUNT(*) FROM project_members WHERE project_id = $1', [request.project_id]);
+            const memberCount = parseInt(membersRes.rows[0].count);
+            if (memberCount >= projectRes.rows[0].member_limit) {
+                return res.status(400).json({ error: 'Project is full' });
+            }
+
+            // Add to project_members
+            await db.query(
+                'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+                [request.project_id, request.user_id, request.role]
+            );
+        }
+
         const result = await db.query(
             'UPDATE requests SET status = $1 WHERE id = $2 RETURNING *',
             [status, requestId]
@@ -320,18 +399,42 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
-// --- Message Routes ---
+// --- Chat / Room Routes ---
 
-app.get('/api/messages/:requestId', authenticateToken, async (req, res) => {
-    const requestId = req.params.requestId;
+app.get('/api/chat/rooms', authenticateToken, async (req, res) => {
     try {
+        // Get projects where user is a member or owner
+        const result = await db.query(`
+            SELECT p.*, pm.role as my_role
+            FROM projects p
+            JOIN project_members pm ON p.id = pm.project_id
+            WHERE pm.user_id = $1
+            ORDER BY p.created_at DESC
+        `, [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch chat rooms' });
+    }
+});
+
+app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) => {
+    const projectId = req.params.projectId;
+    try {
+        // Verify membership
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) {
+            return res.status(403).json({ error: 'Not a member of this project' });
+        }
+
         const result = await db.query(`
             SELECT m.*, u.username as sender_name, u.photo_url as sender_photo
             FROM messages m
             JOIN users u ON m.sender_id = u.id
-            WHERE m.request_id = $1
+            WHERE m.project_id = $1
             ORDER BY m.created_at ASC
-        `, [requestId]);
+        `, [projectId]);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch messages' });
@@ -339,16 +442,67 @@ app.get('/api/messages/:requestId', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/messages', authenticateToken, async (req, res) => {
-    const { requestId, content } = req.body;
+    const { projectId, content } = req.body;
     try {
+        // Verify membership
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) {
+            return res.status(403).json({ error: 'Not a member of this project' });
+        }
+
         const result = await db.query(
-            'INSERT INTO messages (request_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
-            [requestId, req.user.id, content]
+            'INSERT INTO messages (project_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
+            [projectId, req.user.id, content]
         );
-        res.json(result.rows[0]);
+
+        // Fetch sender details to return complete message object
+        const senderRes = await db.query('SELECT username, photo_url FROM users WHERE id = $1', [req.user.id]);
+        const message = { ...result.rows[0], sender_name: senderRes.rows[0].username, sender_photo: senderRes.rows[0].photo_url };
+
+        res.json(message);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// --- Member Management Routes ---
+
+app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) => {
+    const projectId = req.params.projectId;
+    try {
+        const result = await db.query(`
+            SELECT pm.*, u.username, u.photo_url, u.email
+            FROM project_members pm
+            JOIN users u ON pm.user_id = u.id
+            WHERE pm.project_id = $1
+        `, [projectId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch members' });
+    }
+});
+
+app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async (req, res) => {
+    const { projectId, userId } = req.params;
+    try {
+        // Verify requester is owner
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Only project owner can remove members' });
+        }
+
+        // Cannot remove self (owner)
+        if (parseInt(userId) === req.user.id) {
+            return res.status(400).json({ error: 'Cannot remove yourself' });
+        }
+
+        await db.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+        res.json({ message: 'Member removed' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to remove member' });
     }
 });
 

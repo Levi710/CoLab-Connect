@@ -19,7 +19,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-project" element={<CreateProject />} />
-          <Route path="/chat/:requestId" element={<Chat />} />
+          <Route path="/chat/:requestId?" element={<Chat />} />
 
           {/* Policy Routes */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

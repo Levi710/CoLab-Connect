@@ -139,6 +139,25 @@ export default function CreateProject() {
                         <p className="mt-1 text-xs text-gray-500">Separate roles with commas.</p>
                     </div>
 
+                    {/* Member Limit */}
+                    <div>
+                        <label htmlFor="memberLimit" className="block text-sm font-medium text-gray-700 mb-1">
+                            Team Size Limit
+                        </label>
+                        <input
+                            type="number"
+                            id="memberLimit"
+                            name="memberLimit"
+                            min="2"
+                            max="50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            placeholder="e.g., 5"
+                            value={formData.memberLimit || 5}
+                            onChange={handleChange}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">Maximum number of members including yourself.</p>
+                    </div>
+
                     {/* Poll Question */}
                     <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
                         <label htmlFor="pollQuestion" className="block text-sm font-medium text-indigo-900 mb-1">
