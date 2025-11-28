@@ -98,7 +98,11 @@ export default function Home() {
                         <Star className="h-6 w-6 text-amber-500 mr-2 fill-current" />
                         <h2 className="text-2xl font-bold text-gray-900">Project of the Month</h2>
                     </div>
-                    <ProjectCard project={projectOfTheMonth} isFeatured={true} />
+                    <ProjectCard
+                        project={projectOfTheMonth}
+                        isFeatured={true}
+                        isOwner={currentUser && projectOfTheMonth.user_id === currentUser.id}
+                    />
                 </section>
             )}
 
@@ -111,7 +115,12 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {featuredProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} isSponsored={true} />
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                isSponsored={true}
+                                isOwner={currentUser && project.user_id === currentUser.id}
+                            />
                         ))}
                     </div>
                 </section>
