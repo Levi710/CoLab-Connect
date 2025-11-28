@@ -17,17 +17,17 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        e.setLoading(true);
+        setLoading(true);
         try {
             isLogin
-            ? await login(email, password)
-            : await register(username, email, password);
+                ? await login(email, password)
+                : await register(username, email, password);
             navigate('/');
         } catch (err) {
             setError(err.message || 'Authentication failed.');
-        }   finally {
+        } finally {
             setLoading(false);
-    }
+        }
 
     };
 
