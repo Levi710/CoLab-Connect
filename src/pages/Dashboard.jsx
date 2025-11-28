@@ -62,6 +62,19 @@ export default function Dashboard() {
         window.open('https://rzp.io/rzp/CmYvunI', '_blank');
     };
 
+    const handleRequestStatus = async (requestId, status) => {
+        try {
+            await api.requests.updateStatus(requestId, status);
+            // Update local state
+            setRequests(requests.map(req =>
+                req.id === requestId ? { ...req, status } : req
+            ));
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            alert('Failed to update request status');
+        }
+    };
+
     if (loading) return <div className="text-center py-20">Loading dashboard...</div>;
 
     return (
@@ -267,14 +280,42 @@ export default function Dashboard() {
                                     <div className="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded">
                                         "{request.note}"
                                     </div>
+                                    <div className="mt-2">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                            request.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                            {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex space-x-2">
-                                    <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        <Check className="h-5 w-5" />
-                                    </button>
-                                    <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        <X className="h-5 w-5" />
-                                    </button>
+                                    {request.status === 'pending' && (
+                                        <>
+                                            <button
+                                                onClick={() => handleRequestStatus(request.id, 'accepted')}
+                                                className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                                title="Accept"
+                                            >
+                                                <Check className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleRequestStatus(request.id, 'rejected')}
+                                                className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                title="Reject"
+                                            >
+                                                <X className="h-5 w-5" />
+                                            </button>
+                                        </>
+                                    )}
+                                    {request.status === 'accepted' && (
+                                        <button
+                                            onClick={() => window.location.href = `/chat/${request.id}`}
+                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            <MessageSquare className="h-4 w-4 mr-2" /> Chat
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

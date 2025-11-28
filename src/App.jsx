@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import CreateProject from './pages/CreateProject';
+import Chat from './pages/Chat';
 import { PrivacyPolicy, TermsAndConditions, RefundPolicy, ShippingPolicy, ContactUs } from './pages/Policies';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-project" element={<CreateProject />} />
+          <Route path="/chat/:requestId" element={<Chat />} />
 
           {/* Policy Routes */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

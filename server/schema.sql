@@ -35,3 +35,11 @@ CREATE TABLE IF NOT EXISTS requests (
   status VARCHAR(50) DEFAULT 'pending', -- pending, accepted, rejected
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS messages (
+  id SERIAL PRIMARY KEY,
+  request_id INTEGER REFERENCES requests(id),
+  sender_id INTEGER REFERENCES users(id),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

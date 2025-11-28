@@ -85,6 +85,33 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch requests');
             return res.json();
         },
+        updateStatus: async (requestId, status) => {
+            const res = await fetch(`${API_URL}/requests/${requestId}/status`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) throw new Error('Failed to update request status');
+            return res.json();
+        },
+    },
+    messages: {
+        get: async (requestId) => {
+            const res = await fetch(`${API_URL}/messages/${requestId}`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch messages');
+            return res.json();
+        },
+        send: async (messageData) => {
+            const res = await fetch(`${API_URL}/messages`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(messageData),
+            });
+            if (!res.ok) throw new Error('Failed to send message');
+            return res.json();
+        },
     },
     payment: {
         createOrder: async () => {
