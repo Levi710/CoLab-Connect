@@ -82,17 +82,17 @@ export default function Dashboard() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Host Dashboard</h1>
+                <h1 className="text-3xl font-bold text-white">Host Dashboard</h1>
                 {!isPremium && (
                     <button
                         onClick={() => setShowPremiumModal(true)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-secondary to-primary hover:shadow-lg hover:shadow-primary/25 transition-all shadow-md"
                     >
                         Upgrade to Premium
                     </button>
                 )}
                 {isPremium && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary/10 text-secondary border border-secondary/20">
                         <Zap className="h-4 w-4 mr-1 fill-current" /> Premium Member
                     </span>
                 )}
@@ -100,63 +100,63 @@ export default function Dashboard() {
 
             {/* Analytics Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
                     <div className="flex items-center">
-                        <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                        <div className="p-3 rounded-full bg-primary/10 text-primary">
                             <ThumbsUp className="h-6 w-6" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">Total Likes</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Total Likes</p>
+                            <p className="text-2xl font-semibold text-white">
                                 {myProjects.reduce((acc, curr) => acc + (curr.likes || 0), 0)}
                             </p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
                     <div className="flex items-center">
-                        <div className="p-3 rounded-full bg-green-100 text-green-600">
+                        <div className="p-3 rounded-full bg-green-500/10 text-green-400">
                             <Users className="h-6 w-6" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">Total Impressions</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Total Impressions</p>
+                            <p className="text-2xl font-semibold text-white">
                                 {myProjects.reduce((acc, curr) => acc + (curr.impressions || 0), 0)}
                             </p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
                     <div className="flex items-center">
-                        <div className="p-3 rounded-full bg-amber-100 text-amber-600">
+                        <div className="p-3 rounded-full bg-amber-500/10 text-amber-400">
                             <MessageSquare className="h-6 w-6" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <p className="text-2xl font-semibold text-gray-900">{requests.length}</p>
+                            <p className="text-sm font-medium text-gray-400">Pending Requests</p>
+                            <p className="text-2xl font-semibold text-white">{requests.length}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Advanced Insights (Premium Only) */}
-            <div className="mb-8 bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative overflow-hidden">
+            <div className="mb-8 bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <TrendingUp className="h-5 w-5 mr-2 text-indigo-600" /> AI Advanced Insights
+                    <h2 className="text-lg font-semibold text-white flex items-center">
+                        <TrendingUp className="h-5 w-5 mr-2 text-primary" /> AI Advanced Insights
                     </h2>
-                    {!isPremium && <Lock className="h-5 w-5 text-gray-400" />}
+                    {!isPremium && <Lock className="h-5 w-5 text-gray-500" />}
                 </div>
 
                 {isPremium && aiAnalysis ? (
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <h3 className="text-sm font-medium text-gray-500 mb-2">Project Growth Trend</h3>
-                                <div className="h-40 flex items-end justify-between space-x-2 px-2 bg-gray-50 rounded p-4">
+                                <h3 className="text-sm font-medium text-gray-400 mb-2">Project Growth Trend</h3>
+                                <div className="h-40 flex items-end justify-between space-x-2 px-2 bg-dark rounded p-4 border border-white/5">
                                     {aiAnalysis.projectGrowth.map((h, i) => (
-                                        <div key={i} className="w-full bg-indigo-500 rounded-t-sm relative group" style={{ height: `${h * 5}%` }}>
-                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded z-10">
+                                        <div key={i} className="w-full bg-primary rounded-t-sm relative group" style={{ height: `${h * 5}%` }}>
+                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white text-dark text-xs py-1 px-2 rounded z-10 font-bold">
                                                 {h} new views
                                             </div>
                                         </div>
@@ -164,16 +164,16 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-sm font-medium text-gray-500 mb-2">Audience Demographics</h3>
-                                <div className="space-y-3 bg-gray-50 rounded p-4">
+                                <h3 className="text-sm font-medium text-gray-400 mb-2">Audience Demographics</h3>
+                                <div className="space-y-3 bg-dark rounded p-4 border border-white/5">
                                     {Object.entries(aiAnalysis.audienceDemographics).map(([role, percent]) => (
                                         <div key={role}>
-                                            <div className="flex justify-between text-xs mb-1">
+                                            <div className="flex justify-between text-xs mb-1 text-gray-300">
                                                 <span>{role}</span>
                                                 <span>{percent}%</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${percent}%` }}></div>
+                                            <div className="w-full bg-white/10 rounded-full h-2">
+                                                <div className="bg-secondary h-2 rounded-full" style={{ width: `${percent}%` }}></div>
                                             </div>
                                         </div>
                                     ))}
@@ -181,11 +181,11 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-medium text-gray-500 mb-2">AI Suggestions</h3>
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">AI Suggestions</h3>
                             <ul className="space-y-2">
                                 {aiAnalysis.suggestions.map((suggestion, idx) => (
-                                    <li key={idx} className="flex items-start text-sm text-gray-600 bg-indigo-50 p-3 rounded-md border border-indigo-100">
-                                        <Zap className="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <li key={idx} className="flex items-start text-sm text-gray-300 bg-primary/5 p-3 rounded-md border border-primary/10">
+                                        <Zap className="h-4 w-4 text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
                                         {suggestion}
                                     </li>
                                 ))}
@@ -193,13 +193,13 @@ export default function Dashboard() {
                         </div>
                     </div>
                 ) : isPremium && loadingAi ? (
-                    <div className="text-center py-10 text-gray-500">Generating AI Analysis...</div>
+                    <div className="text-center py-10 text-gray-400">Generating AI Analysis...</div>
                 ) : (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                        <p className="text-gray-600 mb-4 font-medium">Unlock detailed growth charts and AI-powered suggestions.</p>
+                    <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                        <p className="text-gray-300 mb-4 font-medium">Unlock detailed growth charts and AI-powered suggestions.</p>
                         <button
                             onClick={() => setShowPremiumModal(true)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover"
                         >
                             Upgrade to Premium
                         </button>
@@ -207,55 +207,55 @@ export default function Dashboard() {
                 )}
                 {/* Background placeholder for non-premium */}
                 {!isPremium && (
-                    <div className="h-64 flex items-end justify-between space-x-2 px-4 opacity-20">
+                    <div className="h-64 flex items-end justify-between space-x-2 px-4 opacity-10">
                         {[30, 45, 35, 60, 55, 70, 85].map((h, i) => (
-                            <div key={i} className="w-full bg-gray-300 rounded-t-sm" style={{ height: `${h}%` }}></div>
+                            <div key={i} className="w-full bg-gray-500 rounded-t-sm" style={{ height: `${h}%` }}></div>
                         ))}
                     </div>
                 )}
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-200 mb-6">
+            <div className="border-b border-white/10 mb-6">
                 <nav className="-mb-px flex space-x-8">
                     <button
                         onClick={() => setActiveTab('projects')}
-                        className={`${activeTab === 'projects' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        className={`${activeTab === 'projects' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
                     >
                         My Projects
                     </button>
                     <button
                         onClick={() => setActiveTab('inbox')}
-                        className={`${activeTab === 'inbox' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        className={`${activeTab === 'inbox' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
                     >
-                        Inbox <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">{requests.length}</span>
+                        Inbox <span className="ml-2 bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-xs border border-red-500/20">{requests.length}</span>
                     </button>
                 </nav>
             </div>
 
             {/* Content */}
             {activeTab === 'projects' ? (
-                <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                    <ul className="divide-y divide-gray-200">
+                <div className="bg-[#13161f] shadow-lg overflow-hidden sm:rounded-md border border-white/5">
+                    <ul className="divide-y divide-white/5">
                         {myProjects.length > 0 ? myProjects.map((project) => (
                             <li key={project.id}>
-                                <div className="px-4 py-4 sm:px-6">
+                                <div className="px-4 py-4 sm:px-6 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-indigo-600 truncate">{project.title}</p>
+                                        <p className="text-sm font-medium text-primary truncate">{project.title}</p>
                                         <div className="ml-2 flex-shrink-0 flex">
-                                            <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
                                                 {project.status}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="mt-2 sm:flex sm:justify-between">
                                         <div className="sm:flex">
-                                            <p className="flex items-center text-sm text-gray-500">
-                                                <ThumbsUp className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                                            <p className="flex items-center text-sm text-gray-400">
+                                                <ThumbsUp className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
                                                 {project.likes} Likes
                                             </p>
-                                            <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                                                <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                                            <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
+                                                <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
                                                 {project.impressions} Impressions
                                             </p>
                                         </div>
@@ -272,20 +272,20 @@ export default function Dashboard() {
             ) : (
                 <div className="space-y-4">
                     {requests.length > 0 ? requests.map((request) => (
-                        <div key={request.id} className="bg-white shadow sm:rounded-lg p-6">
+                        <div key={request.id} className="bg-[#13161f] shadow-lg sm:rounded-lg p-6 border border-white/5">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                    <h3 className="text-lg leading-6 font-medium text-white">
                                         {request.user_name} <span className="text-gray-500 text-sm font-normal">wants to join</span> {request.project_title}
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-500">Role: {request.role}</p>
-                                    <div className="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                                    <p className="mt-1 text-sm text-gray-400">Role: {request.role}</p>
+                                    <div className="mt-3 text-sm text-gray-300 bg-white/5 p-3 rounded border border-white/10">
                                         "{request.note}"
                                     </div>
                                     <div className="mt-2">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                                            request.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                'bg-yellow-100 text-yellow-800'
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'accepted' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                            request.status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                                'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                                             }`}>
                                             {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
                                         </span>
@@ -313,7 +313,7 @@ export default function Dashboard() {
                                     {request.status === 'accepted' && (
                                         <button
                                             onClick={() => navigate(`/chat/${request.project_id}`)}
-                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                         >
                                             <MessageSquare className="h-4 w-4 mr-2" /> Chat
                                         </button>
@@ -322,7 +322,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     )) : (
-                        <div className="p-6 text-center text-gray-500 bg-white rounded-lg shadow">
+                        <div className="p-6 text-center text-gray-500 bg-[#13161f] rounded-lg shadow border border-white/5">
                             No pending requests.
                         </div>
                     )}
@@ -333,13 +333,13 @@ export default function Dashboard() {
             {showPremiumModal && (
                 <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setShowPremiumModal(false)}></div>
+                        <div className="fixed inset-0 bg-dark/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => setShowPremiumModal(false)}></div>
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                        <div className="inline-block align-bottom bg-[#13161f] rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl border border-white/10 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                             <div className="absolute top-0 right-0 pt-4 pr-4">
                                 <button
                                     type="button"
-                                    className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    className="bg-transparent rounded-md text-gray-400 hover:text-white focus:outline-none"
                                     onClick={() => setShowPremiumModal(false)}
                                 >
                                     <span className="sr-only">Close</span>
@@ -348,17 +348,17 @@ export default function Dashboard() {
                             </div>
                             <div className="sm:flex sm:items-start">
                                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                    <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    <h3 className="text-lg leading-6 font-bold text-white" id="modal-title">
                                         Upgrade to Premium
                                     </h3>
                                     <div className="mt-2">
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-gray-400">
                                             Get access to advanced analytics, boosted project visibility, and more.
                                         </p>
-                                        <ul className="mt-4 space-y-2 text-left text-sm text-gray-600">
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Advanced AI Insights & Growth Charts</li>
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Sponsored Project Status (Top of Feed)</li>
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Priority Support</li>
+                                        <ul className="mt-4 space-y-2 text-left text-sm text-gray-300">
+                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Advanced AI Insights & Growth Charts</li>
+                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Sponsored Project Status (Top of Feed)</li>
+                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Priority Support</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -366,14 +366,14 @@ export default function Dashboard() {
                             <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                 <button
                                     type="button"
-                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gradient-to-r from-secondary to-primary text-base font-medium text-white hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
                                     onClick={handleUpgrade}
                                 >
                                     Upgrade Now (₹1)
                                 </button>
                                 <button
                                     type="button"
-                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-white/10 shadow-sm px-4 py-2 bg-transparent text-base font-medium text-gray-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
                                     onClick={() => setShowPremiumModal(false)}
                                 >
                                     Maybe Later

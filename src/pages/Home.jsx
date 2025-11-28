@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, TrendingUp, Star } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import { api } from '../api';
@@ -6,10 +7,13 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
     const { currentUser } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterCategory, setFilterCategory] = useState('All');
+
+    // Initialize state from URL params
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+    const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || 'All');
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -33,131 +37,144 @@ export default function Home() {
         fetchProjects();
     }, []);
 
-    // Filter projects
+    // Sync local state with URL params when they change (e.g. back button)
+    useEffect(() => {
+        setSearchTerm(searchParams.get('q') || '');
+        setFilterCategory(searchParams.get('category') || 'All');
+    }, [searchParams]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setSearchParams({ q: searchTerm, category: filterCategory });
+    };
+
+    // Filter projects based on URL params (source of truth)
+    const currentSearch = searchParams.get('q') || '';
+    const currentCategory = searchParams.get('category') || 'All';
+
     const filteredProjects = projects.filter(project => {
-        const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = filterCategory === 'All' || project.category === filterCategory;
+        const matchesSearch = project.title.toLowerCase().includes(currentSearch.toLowerCase()) ||
+            project.description.toLowerCase().includes(currentSearch.toLowerCase());
+        const matchesCategory = currentCategory === 'All' || project.category === currentCategory;
         return matchesSearch && matchesCategory;
     });
 
-    const featuredProjects = projects.filter(p => p.is_sponsored);
-    // Simple logic for project of the month: most likes
-    const projectOfTheMonth = [...projects].sort((a, b) => b.likes - a.likes)[0];
+    // Simple logic for project of the month: most likes from FILTERED projects
+    const projectOfTheMonth = [...filteredProjects].sort((a, b) => b.likes - a.likes)[0];
 
     if (loading) return <div className="text-center py-20">Loading projects...</div>;
 
     return (
-        <div className="space-y-12">
+        <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30">
             {/* Hero Section */}
-            <section className="text-center py-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl text-white shadow-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1920&q=80')] opacity-10 bg-cover bg-center"></div>
-                <div className="relative z-10 px-4">
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-                        Where Ideas Meet <span className="text-amber-300">Action</span>
+            <section className="relative pt-20 pb-32 overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                    <div className="inline-block mb-4">
+                        <span className="py-1 px-3 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase">
+                            Featured Platform
+                        </span>
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
+                        Find Your Next Project
                     </h1>
-                    <p className="text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto mb-10">
-                        Discover groundbreaking projects, find your dream team, and turn "what if" into "what is".
+                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-light">
+                        Join the community of developers building the future.
                     </p>
 
-                    {/* Search Bar */}
-                    <div className="max-w-3xl mx-auto bg-white rounded-full p-2 flex shadow-lg transform hover:scale-[1.01] transition-transform duration-200">
-                        <div className="flex-1 flex items-center px-4">
-                            <Search className="h-5 w-5 text-gray-400 mr-3" />
-                            <input
-                                type="text"
-                                placeholder="Search for projects, skills, or keywords..."
-                                className="w-full focus:outline-none text-gray-700 placeholder-gray-400"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                    {/* 3D Demo Placeholder */}
+                    <div className="relative max-w-4xl mx-auto mt-12">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-2xl blur opacity-30 animate-pulse"></div>
+                        <div className="relative bg-dark-surface rounded-2xl border border-white/10 aspect-video flex items-center justify-center overflow-hidden shadow-2xl">
+                            <div className="text-center">
+                                <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg shadow-primary/20">
+                                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-400 font-medium">Watch the Demo</p>
+                            </div>
+                            {/* Grid overlay for video placeholder */}
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
                         </div>
-                        <div className="border-l border-gray-200 mx-2"></div>
-                        <select
-                            className="bg-transparent text-gray-600 font-medium px-4 focus:outline-none cursor-pointer hover:text-indigo-600 transition-colors"
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                        >
-                            <option value="All">All Categories</option>
-                            <option value="Tech">Tech</option>
-                            <option value="Art">Art</option>
-                            <option value="Social">Social</option>
-                            <option value="Business">Business</option>
-                        </select>
-                        <button className="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold hover:bg-indigo-700 transition-colors shadow-md">
+                    </div>
+                </div>
+            </section>
+
+            {/* Main Content Area */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
+                {/* Search Bar */}
+                <div className="max-w-3xl mx-auto mb-16">
+                    <form onSubmit={handleSearch} className="bg-dark-surface border border-white/10 rounded-full p-2 flex shadow-xl shadow-black/50 backdrop-blur-xl">
+                        <div className="flex-shrink-0 pl-4 pr-2 flex items-center border-r border-white/5">
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="bg-transparent text-gray-300 text-sm font-medium focus:outline-none cursor-pointer hover:text-white transition-colors [&>option]:bg-[#13161f] [&>option]:text-gray-300"
+                            >
+                                <option value="All" className="bg-[#13161f]">All Categories</option>
+                                <option value="Tech" className="bg-[#13161f]">Technology</option>
+                                <option value="Social Impact" className="bg-[#13161f]">Social Impact</option>
+                                <option value="Art" className="bg-[#13161f]">Art</option>
+                                <option value="Education" className="bg-[#13161f]">Education</option>
+                                <option value="Business" className="bg-[#13161f]">Business</option>
+                                <option value="Marketing" className="bg-[#13161f]">Marketing</option>
+                                <option value="Design" className="bg-[#13161f]">Design</option>
+                                <option value="Other" className="bg-[#13161f]">Other</option>
+                            </select>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search for projects..."
+                            className="flex-1 bg-transparent border-none px-4 text-white placeholder-gray-500 focus:ring-0"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <button type="submit" className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40">
                             Search
                         </button>
-                    </div>
-                </div>
-            </section>
-
-            {/* Project of the Month */}
-            {projectOfTheMonth && (
-                <section>
-                    <div className="flex items-center mb-6">
-                        <Star className="h-6 w-6 text-amber-500 mr-2 fill-current" />
-                        <h2 className="text-2xl font-bold text-gray-900">Project of the Month</h2>
-                    </div>
-                    <ProjectCard
-                        project={projectOfTheMonth}
-                        isFeatured={true}
-                        isOwner={currentUser && projectOfTheMonth.user_id === currentUser.id}
-                    />
-                </section>
-            )}
-
-            {/* Featured / Sponsored */}
-            {featuredProjects.length > 0 && (
-                <section>
-                    <div className="flex items-center mb-6">
-                        <TrendingUp className="h-6 w-6 text-indigo-500 mr-2" />
-                        <h2 className="text-2xl font-bold text-gray-900">Featured Projects</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {featuredProjects.map(project => (
-                            <ProjectCard
-                                key={project.id}
-                                project={project}
-                                isSponsored={true}
-                                isOwner={currentUser && project.user_id === currentUser.id}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* Discovery Feed */}
-            <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Discovery Feed</h2>
-                    <button className="flex items-center text-gray-600 hover:text-indigo-600 font-medium transition-colors">
-                        <Filter className="h-4 w-4 mr-2" />
-                        More Filters
-                    </button>
+                    </form>
                 </div>
 
-                {filteredProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredProjects.map((project) => (
-                            <ProjectCard
-                                key={project.id}
-                                project={project}
-                                isOwner={currentUser && project.user_id === currentUser.id}
-                            />
+                {/* Featured Projects */}
+                <div className="mb-16">
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <span className="w-1 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></span>
+                            Featured Projects
+                        </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredProjects.filter(p => p.is_featured).map(project => (
+                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} />
                         ))}
                     </div>
-                ) : (
-                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                        <p className="text-gray-500 text-lg">No projects found matching your criteria.</p>
-                        <button
-                            onClick={() => { setSearchTerm(''); setFilterCategory('All'); }}
-                            className="mt-4 text-indigo-600 font-medium hover:underline"
-                        >
-                            Clear filters
-                        </button>
+                </div>
+
+                {/* Project of the Month */}
+                {projectOfTheMonth && (
+                    <div className="mb-16">
+                        <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
+                            <span className="w-1 h-8 bg-gradient-to-b from-accent to-primary rounded-full"></span>
+                            Project of the Month
+                        </h2>
+                        <div className="bg-dark-surface rounded-2xl p-1 border border-white/10 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <ProjectCard project={projectOfTheMonth} isSponsored={true} isOwner={projectOfTheMonth.user_id === currentUser?.id} />
+                        </div>
                     </div>
                 )}
-            </section>
+
+                {/* All Projects */}
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-8">All Projects</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredProjects.filter(p => !p.is_featured && p.id !== projectOfTheMonth?.id).map(project => (
+                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} />
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
