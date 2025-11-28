@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap } from 'lucide-react';
 import { api } from '../api';
 
@@ -13,6 +14,7 @@ const loadRazorpay = () => {
 };
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('projects');
     const [isPremium, setIsPremium] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -310,7 +312,7 @@ export default function Dashboard() {
                                     )}
                                     {request.status === 'accepted' && (
                                         <button
-                                            onClick={() => window.location.href = `/chat/${request.id}`}
+                                            onClick={() => navigate(`/chat/${request.project_id}`)}
                                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                         >
                                             <MessageSquare className="h-4 w-4 mr-2" /> Chat
