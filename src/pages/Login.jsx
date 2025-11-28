@@ -12,19 +12,23 @@ export default function Login() {
     const { login, register } = useAuth();
     const navigate = useNavigate();
 
+    const [loading, setLoading] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        e.setLoading(true);
         try {
-            if (isLogin) {
-                await login(email, password);
-            } else {
-                await register(username, email, password);
-            }
+            isLogin
+            ? await login(email, password)
+            : await register(username, email, password);
             navigate('/');
         } catch (err) {
-            setError('Failed to authenticate. Please check your credentials.');
-        }
+            setError(err.message || 'Authentication failed.');
+        }   finally {
+            setLoading(false);
+    }
+
     };
 
     return (
