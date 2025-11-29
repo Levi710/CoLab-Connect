@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, PlusCircle, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,6 +13,15 @@ export default function Navbar() {
         navigate('/login');
     };
 
+    const location = useLocation();
+
+    const getMobileLinkClass = (path) => {
+        const isActive = location.pathname === path;
+        return isActive
+            ? "bg-primary/10 border-primary text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            : "border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium";
+    };
+
     return (
         <nav className="bg-dark/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,13 +31,13 @@ export default function Navbar() {
                             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">CoLab Connect</span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <Link to="/" className="border-transparent text-gray-300 hover:text-white hover:bg-white/5 inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2">
+                            <Link to="/" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname === '/' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Discovery
                             </Link>
-                            <Link to="/dashboard" className="border-transparent text-gray-300 hover:text-white hover:bg-white/5 inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2">
+                            <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Dashboard
                             </Link>
-                            <Link to="/chat/all" className="border-transparent text-gray-300 hover:text-white hover:bg-white/5 inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2">
+                            <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Messages
                             </Link>
                         </div>
@@ -69,13 +78,13 @@ export default function Navbar() {
             {isOpen && (
                 <div className="sm:hidden bg-dark border-b border-white/10">
                     <div className="pt-2 pb-3 space-y-1">
-                        <Link to="/" className="bg-primary/10 border-primary text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                        <Link to="/" className={getMobileLinkClass('/')}>
                             Discovery
                         </Link>
-                        <Link to="/dashboard" className="border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                        <Link to="/dashboard" className={getMobileLinkClass('/dashboard')}>
                             Dashboard
                         </Link>
-                        <Link to="/chat/all" className="border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                        <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
                             Messages
                         </Link>
                     </div>

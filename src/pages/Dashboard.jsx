@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap, Trash2 } from 'lucide-react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 const loadRazorpay = () => {
     return new Promise((resolve) => {
@@ -15,6 +16,7 @@ const loadRazorpay = () => {
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('projects');
     const [isPremium, setIsPremium] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -139,7 +141,9 @@ export default function Dashboard() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-white">Host Dashboard</h1>
+                <h1 className="text-3xl font-bold text-white">
+                    {currentUser ? `${currentUser.username}'s Dashboard` : 'Dashboard'}
+                </h1>
                 {!isPremium && (
                     <button
                         onClick={() => setShowPremiumModal(true)}
