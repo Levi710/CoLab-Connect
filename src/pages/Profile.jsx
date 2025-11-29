@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
-import { User, Award, Briefcase, X, Plus, Search, Check, Lock } from 'lucide-react';
+import { User, Award, Briefcase, X, Plus, Search, Check, Lock, Eye } from 'lucide-react';
 import skillsData from '../data/skills.json';
 import ProjectCard from '../components/ProjectCard';
 
@@ -16,6 +16,7 @@ export default function Profile() {
     const [backgroundUrl, setBackgroundUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [userProjects, setUserProjects] = useState([]);
+    const [viewingImage, setViewingImage] = useState(null);
 
     // Skills Selector State
     const [skillSearch, setSkillSearch] = useState('');
@@ -27,26 +28,11 @@ export default function Profile() {
 
     const isOwnProfile = !id || (currentUser && currentUser.id === parseInt(id));
 
-
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowSkillDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const [error, setError] = useState(null); // Add error state
-
-    // ... (existing code)
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
-            setError(null); // Reset error
+            setError(null);
             if (isOwnProfile) {
                 if (currentUser) {
                     setProfileUser(currentUser);
@@ -69,7 +55,7 @@ export default function Profile() {
                 setLoading(true);
                 try {
                     const { api } = await import('../api');
-                    console.log('Fetching profile for ID:', id); // Debug log
+                    console.log('Fetching profile for ID:', id);
                     const data = await api.users.getProfile(id);
                     setProfileUser(data);
                     setBio(data.bio || '');
@@ -90,7 +76,16 @@ export default function Profile() {
         fetchProfile();
     }, [currentUser, id, isOwnProfile]);
 
-    // ... (existing code)
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowSkillDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     if (error) {
         return (
@@ -168,7 +163,6 @@ export default function Profile() {
         setLoading(true);
         try {
             const { api } = await import('../api');
-            // Join skills array back to string for storage
             const skillsString = selectedSkills.join(', ');
 
             await api.auth.updateProfile({
@@ -178,7 +172,6 @@ export default function Profile() {
                 background_url: backgroundUrl
             });
 
-            // Force reload to update context and UI
             window.location.reload();
         } catch (error) {
             console.error('Failed to update profile:', error);
@@ -191,18 +184,51 @@ export default function Profile() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
+            {/* Image Viewer Modal */}
+            {viewingImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
+                    onClick={() => setViewingImage(null)}
+                >
+                    <button
+                        className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+                        onClick={() => setViewingImage(null)}
+                    >
+                        <X className="h-10 w-10" />
+                    </button>
+                    <img
+                        src={viewingImage === 'photo' ? photoUrl : backgroundUrl}
+                        alt="Full view"
+                        className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
+
             <div className="bg-dark-surface shadow-xl rounded-lg overflow-hidden border border-white/10 mb-8">
                 <div
-                    className="h-32 bg-cover bg-center relative"
+                    className="h-32 bg-cover bg-center relative group"
                     style={{
                         backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : 'none',
-                        backgroundColor: backgroundUrl ? 'transparent' : '#4f46e5' // indigo-600
+                        backgroundColor: backgroundUrl ? 'transparent' : '#4f46e5'
                     }}
                 >
-                    {isEditing && isOwnProfile && (
-                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                            <label className="cursor-pointer bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-md transition-colors backdrop-blur-sm border border-white/20">
-                                <span>Change Cover</span>
+                    {/* Background Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        {backgroundUrl && (
+                            <button
+                                onClick={() => setViewingImage('background')}
+                                className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm border border-white/20 transition-all transform hover:scale-110"
+                                title="View Cover"
+                            >
+                                <Eye className="h-5 w-5" />
+                            </button>
+                        )}
+
+                        {isEditing && isOwnProfile && (
+                            <label className="cursor-pointer bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm border border-white/20 transition-all transform hover:scale-110" title="Change Cover">
+                                <span className="sr-only">Change Cover</span>
+                                <Plus className="h-5 w-5" />
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -210,11 +236,11 @@ export default function Profile() {
                                     className="hidden"
                                 />
                             </label>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
                 <div className="px-4 py-5 sm:px-6 relative">
-                    <div className="-mt-16 mb-4">
+                    <div className="-mt-16 mb-4 relative inline-block group">
                         {photoUrl ? (
                             <img
                                 className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md inline-block object-cover bg-dark"
@@ -226,18 +252,31 @@ export default function Profile() {
                                 <User className="h-12 w-12 text-gray-400" />
                             </div>
                         )}
-                        {isEditing && isOwnProfile && (
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Change Photo</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Max 5MB</p>
-                            </div>
-                        )}
+
+                        {/* Profile Photo Hover Overlay */}
+                        <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 border-4 border-transparent">
+                            {photoUrl && (
+                                <button
+                                    onClick={() => setViewingImage('photo')}
+                                    className="text-white hover:text-primary transition-colors transform hover:scale-110"
+                                    title="View Photo"
+                                >
+                                    <Eye className="h-6 w-6" />
+                                </button>
+                            )}
+
+                            {isEditing && isOwnProfile && (
+                                <label className="cursor-pointer text-white hover:text-primary transition-colors transform hover:scale-110" title="Change Photo">
+                                    <Plus className="h-6 w-6" />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                </label>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex justify-between items-start">
