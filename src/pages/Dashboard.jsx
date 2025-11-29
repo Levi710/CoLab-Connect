@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-
-
+import ProjectCard from '../components/ProjectCard';
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -115,6 +114,10 @@ export default function Dashboard() {
             console.error('Failed to update project:', error);
             alert(error.message || 'Failed to update project');
         }
+    };
+
+    const handleDeleteProject = (projectId) => {
+        setMyProjects(prev => prev.filter(p => p.id !== projectId));
     };
 
     const handleDeleteNotification = async (id) => {
@@ -288,51 +291,20 @@ export default function Dashboard() {
 
             {/* Content */}
             {activeTab === 'projects' ? (
-                <div className="bg-[#13161f] shadow-lg overflow-hidden sm:rounded-md border border-white/5">
-                    <ul className="divide-y divide-white/5">
-                        {myProjects.length > 0 ? myProjects.map((project) => (
-                            <li key={project.id}>
-                                <div className="px-4 py-4 sm:px-6 hover:bg-white/5 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-primary truncate">{project.title}</p>
-                                        <div className="ml-2 flex-shrink-0 flex">
-                                            <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                                {project.status}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 sm:flex sm:justify-between">
-                                        <div className="sm:flex">
-                                            <p className="flex items-center text-sm text-gray-400">
-                                                <ThumbsUp className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
-                                                {project.likes} Likes
-                                            </p>
-                                            <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
-                                                <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
-                                                {project.impressions} Impressions
-                                            </p>
-                                            <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
-                                                <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
-                                                {project.impressions} Impressions
-                                            </p>
-                                        </div>
-                                        <div className="mt-2 sm:mt-0">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleEditClick(project); }}
-                                                className="text-sm text-primary hover:text-white underline"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        )) : (
-                            <div className="p-6 text-center text-gray-500">
-                                You haven't created any projects yet.
-                            </div>
-                        )}
-                    </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myProjects.length > 0 ? myProjects.map((project) => (
+                        <ProjectCard
+                            key={project.id}
+                            project={project}
+                            isOwner={true}
+                            onDelete={handleDeleteProject}
+                            onEdit={handleEditClick}
+                        />
+                    )) : (
+                        <div className="col-span-full p-6 text-center text-gray-500 bg-[#13161f] rounded-lg border border-white/5">
+                            You haven't created any projects yet.
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-4">

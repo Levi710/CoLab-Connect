@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 export default function CreateProject() {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -11,7 +14,9 @@ export default function CreateProject() {
         category: 'Tech',
         status: 'Idea',
         lookingFor: '',
-        pollQuestion: ''
+        pollQuestion: '',
+        memberLimit: 5,
+        images: []
     });
 
     const handleChange = (e) => {
@@ -22,12 +27,40 @@ export default function CreateProject() {
         }));
     };
 
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const maxImages = currentUser?.is_premium ? 10 : 5;
+        const currentCount = formData.images.length;
+
+        if (currentCount + files.length > maxImages) {
+            alert(`You can only upload up to ${maxImages} images. ${currentUser?.is_premium ? '' : 'Upgrade to Premium for more!'}`);
+            return;
+        }
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    images: [...prev.images, reader.result]
+                }));
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index)
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             await api.projects.create(formData);
-            // Redirect to dashboard or home
             navigate('/dashboard');
         } catch (err) {
             console.error('Failed to create project:', err);
@@ -39,7 +72,7 @@ export default function CreateProject() {
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-8">
-            <div className="bg-dark-surface rounded-2xl shadow-xl overflow-hidden border border-white/10">
+            <div className="bg-[#13161f] rounded-2xl shadow-xl overflow-hidden border border-white/10">
                 <div className="bg-gradient-to-r from-primary to-secondary px-8 py-6">
                     <h1 className="text-2xl font-bold text-white">Pitch Your Project</h1>
                     <p className="text-white/80 mt-1">Share your vision and find the perfect team.</p>
@@ -56,7 +89,7 @@ export default function CreateProject() {
                             id="title"
                             name="title"
                             required
-                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., EcoTrack - Carbon Footprint AI"
                             value={formData.title}
                             onChange={handleChange}
@@ -73,7 +106,7 @@ export default function CreateProject() {
                             name="description"
                             rows="4"
                             required
-                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="Describe your project, its goals, and why it matters..."
                             value={formData.description}
                             onChange={handleChange}
@@ -89,7 +122,7 @@ export default function CreateProject() {
                             <select
                                 id="category"
                                 name="category"
-                                className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-dark"
+                                className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-gray-900"
                                 value={formData.category}
                                 onChange={handleChange}
                             >
@@ -110,7 +143,7 @@ export default function CreateProject() {
                             <select
                                 id="status"
                                 name="status"
-                                className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-dark"
+                                className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-gray-900"
                                 value={formData.status}
                                 onChange={handleChange}
                             >
@@ -131,7 +164,7 @@ export default function CreateProject() {
                             type="text"
                             id="lookingFor"
                             name="lookingFor"
-                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., React Developer, UI Designer, Marketing Lead"
                             value={formData.lookingFor}
                             onChange={handleChange}
@@ -148,41 +181,93 @@ export default function CreateProject() {
                             type="number"
                             id="memberLimit"
                             name="memberLimit"
-                            min="2"
+                            min="1"
                             max="50"
-                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                            placeholder="e.g., 5"
-                            value={formData.memberLimit || 5}
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            value={formData.memberLimit}
                             onChange={handleChange}
                         />
-                        <p className="mt-1 text-xs text-gray-500">Maximum number of members including yourself.</p>
                     </div>
 
-                    {/* Poll Question */}
-                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
-                        <label htmlFor="pollQuestion" className="block text-sm font-medium text-primary mb-1">
-                            Add a Poll (Optional)
+                    {/* Image Upload */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Project Images ({formData.images.length}/{currentUser?.is_premium ? 10 : 5})
                         </label>
-                        <p className="text-xs text-gray-400 mb-2">Engage the community by asking a question.</p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            {formData.images.map((img, idx) => (
+                                <div key={idx} className="relative aspect-video rounded-lg overflow-hidden group border border-white/10">
+                                    <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage(idx)}
+                                        className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {formData.images.length < (currentUser?.is_premium ? 10 : 5) && (
+                                <label className="border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer hover:border-primary/50 hover:bg-white/5 transition-all aspect-video">
+                                    <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                                    <span className="text-xs text-gray-400">Upload Image</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                    />
+                                </label>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                            Supported formats: JPG, PNG, GIF. Max 5MB per file.
+                        </p>
+                    </div>
+
+                    {/* Poll Question (Optional) */}
+                    <div>
+                        <label htmlFor="pollQuestion" className="block text-sm font-medium text-gray-300 mb-1">
+                            Poll Question (Optional)
+                        </label>
                         <input
                             type="text"
                             id="pollQuestion"
                             name="pollQuestion"
-                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                            placeholder="e.g., Would you use this feature?"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            placeholder="e.g., What feature should we build next?"
                             value={formData.pollQuestion}
                             onChange={handleChange}
                         />
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="pt-4">
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/dashboard')}
+                            className="px-6 py-2 text-gray-400 hover:text-white font-medium transition-colors mr-4"
+                        >
+                            Cancel
+                        </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-lg shadow-primary/20 transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-2 rounded-lg font-bold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                            {loading ? 'Publishing...' : 'Publish Project'}
+                            {loading ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Creating...
+                                </>
+                            ) : (
+                                'Launch Project'
+                            )}
                         </button>
                     </div>
                 </form>

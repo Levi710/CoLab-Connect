@@ -90,11 +90,28 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch comments');
             return res.json();
         },
-        addComment: async (projectId, content) => {
+
+        delete: async (id) => {
+            const res = await fetch(`${API_URL}/projects/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to delete project');
+            return res.json();
+        },
+        view: async (id) => {
+            const res = await fetch(`${API_URL}/projects/${id}/view`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) throw new Error('Failed to update view count');
+            return res.json();
+        },
+        addComment: async (projectId, content, parentId = null) => {
             const res = await fetch(`${API_URL}/projects/${projectId}/comments`, {
                 method: 'POST',
                 headers: getHeaders(),
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ content, parentId }),
             });
             if (!res.ok) throw new Error('Failed to add comment');
             return res.json();
