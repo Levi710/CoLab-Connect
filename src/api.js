@@ -124,6 +124,14 @@ export const api = {
             if (!res.ok) throw new Error('Failed to delete comment');
             return res.json();
         },
+        toggleCommentLike: async (commentId) => {
+            const res = await fetch(`${API_URL}/comments/${commentId}/like`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to toggle comment like');
+            return res.json();
+        },
         getMyProjects: async () => {
             const res = await fetch(`${API_URL}/projects/my`, {
                 headers: getHeaders(),

@@ -83,6 +83,18 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         }
     };
 
+    const handleCommentLike = async (commentId) => {
+        if (!currentUser) return alert('Please login to like comments');
+        try {
+            const res = await api.projects.toggleCommentLike(commentId);
+            setComments(comments.map(c =>
+                c.id === commentId ? { ...c, likes_count: res.likes } : c
+            ));
+        } catch (err) {
+            console.error('Failed to like comment:', err);
+        }
+    };
+
     const handleDelete = async () => {
         if (!window.confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
         try {
@@ -107,7 +119,11 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             setNote('');
         } catch (error) {
             console.error('Failed to apply:', error);
-            alert('Failed to send application. Please try again.');
+            if (error.message.includes('already requested')) {
+                alert('You have already requested to join this project.');
+            } else {
+                alert(error.message || 'Failed to send application. Please try again.');
+            }
         }
     };
 
@@ -138,31 +154,43 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             </div>
             <div className="flex-1">
                 <div className="bg-white/5 rounded-lg rounded-tl-none p-2 text-xs group relative">
-                    <span className="font-bold text-gray-300 mr-2">{comment.username}</span>
-                    <span className="text-gray-400">{comment.content}</span>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span className="font-bold text-gray-300 mr-2">{comment.username}</span>
+                            <span className="text-gray-400">{comment.content}</span>
+                        </div>
+                    </div>
 
-                    {/* Reply Button for Owner */}
-                    {isOwner && !isReply && (
+                    <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] text-gray-600">{new Date(comment.created_at).toLocaleDateString()}</span>
                         <button
-                            onClick={() => setReplyTo({ id: comment.id, username: comment.username })}
-                            className="absolute top-1 right-2 text-[10px] text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleCommentLike(comment.id)}
+                            className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-pink-500 transition-colors"
                         >
-                            Reply
+                            <Heart className="w-3 h-3" />
+                            <span>{comment.likes_count || 0}</span>
                         </button>
-                    )}
+                        {isOwner && !isReply && (
+                            <button
+                                onClick={() => setReplyTo({ id: comment.id, username: comment.username })}
+                                className="text-[10px] text-gray-500 hover:text-primary transition-colors"
+                            >
+                                Reply
+                            </button>
+                        )}
+                    </div>
 
                     {/* Delete Button for Owner or Comment Author */}
                     {(isOwner || (currentUser && currentUser.id === comment.user_id)) && (
                         <button
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="absolute top-1 right-12 text-[10px] text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 text-[10px] text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Delete Comment"
                         >
                             <Trash2 className="w-3 h-3" />
                         </button>
                     )}
                 </div>
-                <span className="text-[10px] text-gray-600 ml-1">{new Date(comment.created_at).toLocaleDateString()}</span>
 
                 {/* Render Replies */}
                 {!isReply && getReplies(comment.id).map(reply => (

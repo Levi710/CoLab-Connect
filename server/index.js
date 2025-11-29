@@ -30,6 +30,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // Initialize DB Schema
+// Initialize DB Schema
 async function initDb() {
     try {
         const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
@@ -108,6 +109,12 @@ async function initDb() {
                 content TEXT NOT NULL,
                 parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+            `CREATE TABLE IF NOT EXISTS comment_likes (
+                comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (comment_id, user_id)
             )`
         ];
 
@@ -412,6 +419,47 @@ app.put('/api/projects/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Toggle Project Like
+app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
+    const projectId = req.params.id;
+    const userId = req.user.id;
+    try {
+        const check = await db.query('SELECT * FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+        if (check.rows.length > 0) {
+            await db.query('DELETE FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+            const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
+            res.json({ liked: false, likes: parseInt(countRes.rows[0].count) });
+        } else {
+            await db.query('INSERT INTO likes (project_id, user_id) VALUES ($1, $2)', [projectId, userId]);
+            const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
+            res.json({ liked: true, likes: parseInt(countRes.rows[0].count) });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to toggle like' });
+    }
+});
+
+app.post('/api/comments/:id/like', authenticateToken, async (req, res) => {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+    try {
+        const check = await db.query('SELECT * FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+        if (check.rows.length > 0) {
+            await db.query('DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+            const countRes = await db.query('SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1', [commentId]);
+            res.json({ liked: false, likes: parseInt(countRes.rows[0].count) });
+        } else {
+            await db.query('INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)', [commentId, userId]);
+            const countRes = await db.query('SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1', [commentId]);
+            res.json({ liked: true, likes: parseInt(countRes.rows[0].count) });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to toggle comment like' });
+    }
+});
+
 app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
     const projectId = req.params.id;
     try {
@@ -450,7 +498,8 @@ app.get('/api/projects/:id/comments', async (req, res) => {
     const projectId = req.params.id;
     try {
         const result = await db.query(`
-            SELECT c.*, u.username, u.photo_url 
+            SELECT c.*, u.username, u.photo_url,
+            (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) as likes_count
             FROM comments c
             JOIN users u ON c.user_id = u.id
             WHERE c.project_id = $1
@@ -506,8 +555,8 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
         const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
         if (memberCheck.rows.length > 0) return res.status(400).json({ error: 'You are already a member of this project' });
 
-        const existing = await db.query('SELECT * FROM requests WHERE project_id = $1 AND user_id = $2 AND status = \'pending\'', [projectId, req.user.id]);
-        if (existing.rows.length > 0) return res.status(400).json({ error: 'Request already pending' });
+        const existing = await db.query('SELECT * FROM requests WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (existing.rows.length > 0) return res.status(400).json({ error: 'You have already requested to join this project' });
 
         const result = await db.query(
             'INSERT INTO requests (project_id, user_id, role, note, status) VALUES ($1, $2, $3, $4, \'pending\') RETURNING *',
