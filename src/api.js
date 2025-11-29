@@ -188,6 +188,21 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch chat rooms');
             return res.json();
         },
+        getMembers: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch members');
+            return res.json();
+        },
+        removeMember: async (projectId, userId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members/${userId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to remove member');
+            return res.json();
+        }
     },
     payment: {
         createOrder: async () => {
