@@ -389,10 +389,10 @@ export default function Dashboard() {
                                     )}
                                     <button
                                         onClick={() => handleDeleteRequest(request.id)}
-                                        className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-gray-400 hover:text-red-400 hover:bg-white/5 focus:outline-none"
+                                        className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none"
                                         title="Delete Request"
                                     >
-                                        <Trash2 className="h-5 w-5" />
+                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
                                     </button>
                                 </div>
                             </div>
