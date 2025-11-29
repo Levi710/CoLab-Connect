@@ -714,16 +714,50 @@ app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async 
         await db.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
         res.json({ message: 'Member removed' });
     } catch (err) {
+    });
+
+app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async (req, res) => {
+    const { projectId, userId } = req.params;
+    try {
+        // Verify requester is owner
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Only project owner can remove members' });
+        }
+
+        // Cannot remove self (owner)
+        if (parseInt(userId) === req.user.id) {
+            return res.status(400).json({ error: 'Cannot remove yourself' });
+        }
+
+        await db.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+        res.json({ message: 'Member removed' });
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to remove member' });
     }
 });
 
-app.get('/api/debug/fix-members', authenticateToken, async (req, res) => {
+app.get('/api/debug/fix-members', async (req, res) => {
     try {
         const report = [];
+        report.push('--- DEBUG REPORT ---');
 
-        // 1. Ensure Constraint Exists
+        // 1. Check Tables Existence
+        const tables = await db.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        report.push('Tables found: ' + tables.rows.map(r => r.table_name).join(', '));
+
+        // 2. Dump Requests Table (Accepted only)
+        const requests = await db.query("SELECT id, project_id, user_id, status FROM requests WHERE status = 'accepted'");
+        report.push(`Accepted Requests Found: ${requests.rows.length}`);
+        report.push(JSON.stringify(requests.rows));
+
+        // 3. Dump Project Members Table
+        const members = await db.query("SELECT * FROM project_members");
+        report.push(`Existing Project Members: ${members.rows.length}`);
+        report.push(JSON.stringify(members.rows));
+
+        // 4. Ensure Constraint Exists
         try {
             await db.query(`
                 ALTER TABLE project_members 
@@ -732,10 +766,10 @@ app.get('/api/debug/fix-members', authenticateToken, async (req, res) => {
             `);
             report.push('Added UNIQUE constraint to project_members');
         } catch (e) {
-            report.push(`Constraint check: ${e.message}`); // Likely "already exists"
+            report.push(`Constraint check: ${e.message}`);
         }
 
-        // 2. Backfill
+        // 5. Run Backfill
         const result = await db.query(`
             INSERT INTO project_members (project_id, user_id, role)
             SELECT r.project_id, r.user_id, r.role
@@ -747,19 +781,22 @@ app.get('/api/debug/fix-members', authenticateToken, async (req, res) => {
             RETURNING *
         `);
         report.push(`Backfilled ${result.rowCount} members`);
+        if (result.rowCount > 0) {
+            report.push('Backfilled Rows: ' + JSON.stringify(result.rows));
+        }
 
-        // 3. Verify Counts
+        // 6. Final Counts
         const counts = await db.query(`
             SELECT project_id, COUNT(*) as count 
             FROM project_members 
             GROUP BY project_id
         `);
-        report.push('Current Member Counts: ' + JSON.stringify(counts.rows));
+        report.push('Final Member Counts per Project: ' + JSON.stringify(counts.rows));
 
         res.json({ success: true, report });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, stack: err.stack });
     }
 });
 
