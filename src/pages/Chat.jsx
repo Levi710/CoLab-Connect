@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, MoreVertical, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Chat() {
     const { requestId } = useParams(); // requestId here acts as projectId or 'all'
-    const navigate = useNavigate();
     const { currentUser } = useAuth();
 
     const [rooms, setRooms] = useState([]);

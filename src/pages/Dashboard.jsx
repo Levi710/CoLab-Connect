@@ -4,15 +4,7 @@ import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Z
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
-const loadRazorpay = () => {
-    return new Promise((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-    });
-};
+
 
 export default function Dashboard() {
     const navigate = useNavigate();

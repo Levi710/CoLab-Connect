@@ -129,7 +129,7 @@ export default function Home() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
                 {/* Search Bar */}
                 <div className="max-w-3xl mx-auto mb-16">
-                    <form onSubmit={handleSearch} className="bg-dark-surface border border-white/10 rounded-full p-2 flex shadow-xl shadow-black/50 backdrop-blur-xl">
+                    <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface border border-white/10 rounded-full p-2 flex shadow-xl shadow-black/50 backdrop-blur-xl">
                         <div className="flex-shrink-0 pl-4 pr-2 flex items-center border-r border-white/5">
                             <select
                                 value={filterCategory}

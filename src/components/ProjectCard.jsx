@@ -4,7 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 
-export default function ProjectCard({ project, isFeatured, isSponsored, isOwner }) {
+export default function ProjectCard({ project, isSponsored, isOwner }) {
     const { currentUser } = useAuth();
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [note, setNote] = useState('');

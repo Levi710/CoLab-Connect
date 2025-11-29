@@ -4,7 +4,7 @@ import { User, Award, Briefcase, X, Plus, Search, Check } from 'lucide-react';
 import skillsData from '../data/skills.json';
 
 export default function Profile() {
-    const { currentUser, login } = useAuth();
+    const { currentUser } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState('');
     const [selectedSkills, setSelectedSkills] = useState([]);
