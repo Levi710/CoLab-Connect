@@ -17,18 +17,6 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null); // { id, username }
 
-    // Impression Tracking
-    useEffect(() => {
-        const trackView = async () => {
-            try {
-                await api.projects.view(project.id);
-            } catch (err) {
-                console.error('Failed to track view', err);
-            }
-        };
-        trackView();
-    }, [project.id]);
-
     const handleLike = async (e) => {
         e.preventDefault();
         if (!currentUser) return alert('Please login to like projects');
@@ -84,6 +72,17 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         }
     };
 
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm('Delete this comment?')) return;
+        try {
+            await api.projects.deleteComment(commentId);
+            setComments(comments.filter(c => c.id !== commentId));
+        } catch (err) {
+            console.error('Failed to delete comment:', err);
+            alert('Failed to delete comment');
+        }
+    };
+
     const handleDelete = async () => {
         if (!window.confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
         try {
@@ -109,6 +108,16 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         } catch (error) {
             console.error('Failed to apply:', error);
             alert('Failed to send application. Please try again.');
+        }
+    };
+
+    const handleInterestClick = async () => {
+        setShowApplyModal(true);
+        // Track impression on click
+        try {
+            await api.projects.view(project.id);
+        } catch (err) {
+            console.error('Failed to track view', err);
         }
     };
 
@@ -139,6 +148,17 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             className="absolute top-1 right-2 text-[10px] text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             Reply
+                        </button>
+                    )}
+
+                    {/* Delete Button for Owner or Comment Author */}
+                    {(isOwner || (currentUser && currentUser.id === comment.user_id)) && (
+                        <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="absolute top-1 right-12 text-[10px] text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete Comment"
+                        >
+                            <Trash2 className="w-3 h-3" />
                         </button>
                     )}
                 </div>
@@ -247,7 +267,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             </span>
                         ) : (
                             <button
-                                onClick={() => setShowApplyModal(true)}
+                                onClick={handleInterestClick}
                                 className="text-sm font-medium text-primary hover:text-white transition-colors flex items-center gap-1 group/btn"
                             >
                                 I'm Interested
@@ -280,22 +300,25 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                         <button onClick={() => setReplyTo(null)}><X className="w-3 h-3" /></button>
                                     </div>
                                 )}
-                                <form onSubmit={handleAddComment} className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={!newComment.trim()}
-                                        className="p-1.5 rounded-full bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
-                                    >
-                                        <Send className="h-3 w-3" />
-                                    </button>
-                                </form>
+                                {/* Hide top-level comment input for owner */}
+                                {(!isOwner || replyTo) && (
+                                    <form onSubmit={handleAddComment} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newComment}
+                                            onChange={(e) => setNewComment(e.target.value)}
+                                            placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
+                                            className="flex-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!newComment.trim()}
+                                            className="p-1.5 rounded-full bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
+                                        >
+                                            <Send className="h-3 w-3" />
+                                        </button>
+                                    </form>
+                                )}
                             </div>
                         )}
                     </div>

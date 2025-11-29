@@ -116,6 +116,14 @@ export const api = {
             if (!res.ok) throw new Error('Failed to add comment');
             return res.json();
         },
+        deleteComment: async (commentId) => {
+            const res = await fetch(`${API_URL}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to delete comment');
+            return res.json();
+        },
         getMyProjects: async () => {
             const res = await fetch(`${API_URL}/projects/my`, {
                 headers: getHeaders(),

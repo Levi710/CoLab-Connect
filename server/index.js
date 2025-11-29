@@ -189,6 +189,29 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
+    const commentId = req.params.id;
+    try {
+        const commentRes = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+        if (commentRes.rows.length === 0) return res.status(404).json({ error: 'Comment not found' });
+        const comment = commentRes.rows[0];
+
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [comment.project_id]);
+        const projectOwnerId = projectRes.rows[0].user_id;
+
+        // Allow deletion if user is the comment author OR the project owner
+        if (req.user.id !== comment.user_id && req.user.id !== projectOwnerId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        await db.query('DELETE FROM comments WHERE id = $1', [commentId]);
+        res.json({ message: 'Comment deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete comment' });
+    }
+});
+
 // --- AI Analysis Route ---
 app.get('/api/ai/analysis', authenticateToken, async (req, res) => {
     try {
