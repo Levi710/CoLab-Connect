@@ -112,6 +112,37 @@ async function initDb() {
             console.log('Checked/Backfilled project owners');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // ... (migrations continued)
+
+        // Migration: Create notifications table if not exists
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    type VARCHAR(50), -- 'request_accepted', 'request_received', etc.
+                    content TEXT NOT NULL,
+                    related_id INTEGER, -- e.g., project_id or request_id
+                    is_read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            console.log('Checked/Created notifications table');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Add image_url and is_edited to messages if not exists
+        try {
+            await db.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT');
+            await db.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE');
+            console.log('Checked/Added image_url and is_edited to messages');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Add updated_at to projects if not exists (for edit tracking)
+        try {
+            await db.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP');
+            console.log('Checked/Added updated_at to projects');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         console.log('Database schema initialized');
     } catch (err) {
         console.error('Error initializing database schema:', err);
@@ -278,6 +309,26 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// --- Notification Routes ---
+
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query('DELETE FROM notifications WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+        res.json({ message: 'Notification deleted' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete notification' });
+    }
+});
+
 // --- Project Routes ---
 
 app.get('/api/projects', async (req, res) => {
@@ -313,6 +364,43 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to create project' });
+    }
+});
+
+app.put('/api/projects/:id', authenticateToken, async (req, res) => {
+    const { title, description, category, status, lookingFor, pollQuestion, memberLimit } = req.body;
+    const projectId = req.params.id;
+
+    try {
+        // Fetch project to check ownership and time limit
+        const projectRes = await db.query('SELECT * FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
+
+        const project = projectRes.rows[0];
+        if (project.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        // Check premium status for time limit override
+        const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+        const isPremium = userRes.rows[0].is_premium;
+
+        if (!isPremium) {
+            const createdAt = new Date(project.created_at);
+            const now = new Date();
+            const diffMinutes = (now - createdAt) / 1000 / 60;
+            if (diffMinutes > 30) {
+                return res.status(403).json({ error: 'Edit time limit exceeded (30 mins). Upgrade to Premium to edit anytime.' });
+            }
+        }
+
+        const result = await db.query(
+            'UPDATE projects SET title = $1, description = $2, category = $3, status = $4, looking_for = $5, poll_question = $6, member_limit = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
+            [title, description, category, status, lookingFor, pollQuestion, memberLimit, projectId]
+        );
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update project' });
     }
 });
 
@@ -392,7 +480,7 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
         if (!request) return res.status(404).json({ error: 'Request not found' });
 
         // Verify ownership
-        const projectRes = await db.query('SELECT user_id, member_limit FROM projects WHERE id = $1', [request.project_id]);
+        const projectRes = await db.query('SELECT user_id, member_limit, title FROM projects WHERE id = $1', [request.project_id]);
         if (projectRes.rows[0].user_id !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -416,6 +504,17 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
             'UPDATE requests SET status = $1 WHERE id = $2 RETURNING *',
             [status, requestId]
         );
+
+        // Create Notification
+        const notificationContent = status === 'accepted'
+            ? `Your request to join "${projectRes.rows[0].title}" was accepted!`
+            : `Your request to join "${projectRes.rows[0].title}" was rejected.`;
+
+        await db.query(
+            'INSERT INTO notifications (user_id, type, content, related_id) VALUES ($1, $2, $3, $4)',
+            [request.user_id, 'request_' + status, notificationContent, request.project_id]
+        );
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -466,7 +565,7 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
 });
 
 app.post('/api/messages', authenticateToken, async (req, res) => {
-    const { projectId, content } = req.body;
+    const { projectId, content, image_url } = req.body;
     try {
         // Verify membership
         const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
@@ -474,9 +573,17 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Not a member of this project' });
         }
 
+        // Check premium if sending image
+        if (image_url) {
+            const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+            if (!userRes.rows[0].is_premium) {
+                return res.status(403).json({ error: 'Image sending is a Premium feature' });
+            }
+        }
+
         const result = await db.query(
-            'INSERT INTO messages (project_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
-            [projectId, req.user.id, content]
+            'INSERT INTO messages (project_id, sender_id, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
+            [projectId, req.user.id, content, image_url]
         );
 
         // Fetch sender details to return complete message object
@@ -490,7 +597,39 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/messages/:id', authenticateToken, async (req, res) => {
+    const { content } = req.body;
+    const messageId = req.params.id;
+
+    try {
+        const msgRes = await db.query('SELECT * FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+
+        const message = msgRes.rows[0];
+        if (message.sender_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        // Check time limit (10 mins)
+        const createdAt = new Date(message.created_at);
+        const now = new Date();
+        const diffMinutes = (now - createdAt) / 1000 / 60;
+
+        if (diffMinutes > 10) {
+            return res.status(403).json({ error: 'Edit time limit exceeded (10 mins)' });
+        }
+
+        const result = await db.query(
+            'UPDATE messages SET content = $1, is_edited = TRUE WHERE id = $2 RETURNING *',
+            [content, messageId]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update message' });
+    }
+});
+
 // --- Member Management Routes ---
+// ... (rest of the file)
 
 app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) => {
     const projectId = req.params.projectId;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap } from 'lucide-react';
+import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap, Trash2 } from 'lucide-react';
 import { api } from '../api';
 
 const loadRazorpay = () => {
@@ -18,8 +18,11 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState('projects');
     const [isPremium, setIsPremium] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
+    const [editFormData, setEditFormData] = useState({});
     const [myProjects, setMyProjects] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [loadingAi, setLoadingAi] = useState(false);
@@ -27,14 +30,16 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [user, projectsData, requestsData] = await Promise.all([
+                const [user, projectsData, requestsData, notificationsData] = await Promise.all([
                     api.auth.me(),
                     api.projects.getMyProjects(),
-                    api.requests.getMyProjectRequests()
+                    api.requests.getMyProjectRequests(),
+                    api.notifications.getAll()
                 ]);
                 setIsPremium(user.is_premium);
                 setMyProjects(projectsData);
                 setRequests(requestsData);
+                setNotifications(notificationsData);
 
                 if (user.is_premium) {
                     fetchAiAnalysis();
@@ -76,6 +81,47 @@ export default function Dashboard() {
             alert('Failed to update request status');
         }
     };
+
+    const handleEditClick = (project) => {
+        setEditingProject(project);
+        setEditFormData({
+            title: project.title,
+            description: project.description,
+            category: project.category,
+            status: project.status,
+            lookingFor: project.looking_for,
+            memberLimit: project.member_limit
+        });
+    };
+
+    const handleEditChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const updated = await api.projects.update(editingProject.id, editFormData);
+            setMyProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
+            setEditingProject(null);
+            alert('Project updated successfully!');
+        } catch (error) {
+            console.error('Failed to update project:', error);
+            alert(error.message || 'Failed to update project');
+        }
+    };
+
+    const handleDeleteNotification = async (id) => {
+        try {
+            await api.notifications.delete(id);
+            setNotifications(notifications.filter(n => n.id !== id));
+        } catch (error) {
+            console.error('Failed to delete notification:', error);
+        }
+    };
+
+    const pendingRequests = requests.filter(r => r.status === 'pending');
 
     if (loading) return <div className="text-center py-20">Loading dashboard...</div>;
 
@@ -133,7 +179,7 @@ export default function Dashboard() {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-400">Pending Requests</p>
-                            <p className="text-2xl font-semibold text-white">{requests.length}</p>
+                            <p className="text-2xl font-semibold text-white">{pendingRequests.length}</p>
                         </div>
                     </div>
                 </div>
@@ -228,7 +274,7 @@ export default function Dashboard() {
                         onClick={() => setActiveTab('inbox')}
                         className={`${activeTab === 'inbox' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
                     >
-                        Inbox <span className="ml-2 bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-xs border border-red-500/20">{requests.length}</span>
+                        Inbox <span className="ml-2 bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-xs border border-red-500/20">{pendingRequests.length + notifications.length}</span>
                     </button>
                 </nav>
             </div>
@@ -258,6 +304,18 @@ export default function Dashboard() {
                                                 <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
                                                 {project.impressions} Impressions
                                             </p>
+                                            <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
+                                                <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-500" />
+                                                {project.impressions} Impressions
+                                            </p>
+                                        </div>
+                                        <div className="mt-2 sm:mt-0">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEditClick(project); }}
+                                                className="text-sm text-primary hover:text-white underline"
+                                            >
+                                                Edit
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -326,6 +384,32 @@ export default function Dashboard() {
                             No pending requests.
                         </div>
                     )}
+
+                    {/* Notifications Section */}
+                    <h3 className="text-lg font-bold text-white mt-8 mb-4">Notifications</h3>
+                    {notifications.length > 0 ? (
+                        <div className="space-y-4">
+                            {notifications.map((notification) => (
+                                <div key={notification.id} className="bg-[#13161f] shadow-lg sm:rounded-lg p-6 border border-white/5 flex justify-between items-center">
+                                    <div>
+                                        <p className="text-gray-300">{notification.content}</p>
+                                        <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteNotification(notification.id)}
+                                        className="text-gray-400 hover:text-red-400 p-2 transition-colors"
+                                        title="Delete Notification"
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-6 text-center text-gray-500 bg-[#13161f] rounded-lg shadow border border-white/5">
+                            No new notifications.
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -347,21 +431,6 @@ export default function Dashboard() {
                                 </button>
                             </div>
                             <div className="sm:flex sm:items-start">
-                                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                    <h3 className="text-lg leading-6 font-bold text-white" id="modal-title">
-                                        Upgrade to Premium
-                                    </h3>
-                                    <div className="mt-2">
-                                        <p className="text-sm text-gray-400">
-                                            Get access to advanced analytics, boosted project visibility, and more.
-                                        </p>
-                                        <ul className="mt-4 space-y-2 text-left text-sm text-gray-300">
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Advanced AI Insights & Growth Charts</li>
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Sponsored Project Status (Top of Feed)</li>
-                                            <li className="flex items-center"><Check className="h-4 w-4 text-green-400 mr-2" /> Priority Support</li>
-                                        </ul>
-                                    </div>
-                                </div>
                             </div>
                             <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                 <button
@@ -379,6 +448,63 @@ export default function Dashboard() {
                                     Maybe Later
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Project Modal */}
+            {editingProject && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-dark/80 backdrop-blur-sm transition-opacity" onClick={() => setEditingProject(null)}></div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                        <div className="inline-block align-bottom bg-[#13161f] rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl border border-white/10 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                            <h3 className="text-lg leading-6 font-bold text-white mb-4">Edit Project</h3>
+                            <form onSubmit={handleEditSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300">Title</label>
+                                    <input type="text" name="title" value={editFormData.title} onChange={handleEditChange} className="mt-1 block w-full bg-dark border border-white/10 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300">Description</label>
+                                    <textarea name="description" rows="3" value={editFormData.description} onChange={handleEditChange} className="mt-1 block w-full bg-dark border border-white/10 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300">Category</label>
+                                        <select name="category" value={editFormData.category} onChange={handleEditChange} className="mt-1 block w-full bg-dark border border-white/10 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                            <option value="Tech">Tech</option>
+                                            <option value="Social Impact">Social Impact</option>
+                                            <option value="Art">Art</option>
+                                            <option value="Education">Education</option>
+                                            <option value="Business">Business</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300">Status</label>
+                                        <select name="status" value={editFormData.status} onChange={handleEditChange} className="mt-1 block w-full bg-dark border border-white/10 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                            <option value="Idea">Just an Idea</option>
+                                            <option value="Prototype">Prototype Ready</option>
+                                            <option value="In Progress">In Development</option>
+                                            <option value="Launched">Launched</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300">Looking For</label>
+                                    <input type="text" name="lookingFor" value={editFormData.lookingFor} onChange={handleEditChange} className="mt-1 block w-full bg-dark border border-white/10 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+                                </div>
+                                <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                                    <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm">
+                                        Save Changes
+                                    </button>
+                                    <button type="button" onClick={() => setEditingProject(null)} className="mt-3 w-full inline-flex justify-center rounded-md border border-white/10 shadow-sm px-4 py-2 bg-transparent text-base font-medium text-gray-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:col-start-1 sm:text-sm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

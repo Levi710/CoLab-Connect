@@ -57,18 +57,13 @@ export const RefundPolicy = () => (
         <p className="text-gray-300">You may cancel your Premium subscription at any time. Your subscription will remain active until the end of the current billing period.</p>
 
         <h2 className="text-xl font-semibold mt-6 mb-3 text-white">3. Refund Requests</h2>
-        <p className="text-gray-300">If you believe you have been charged in error, please contact our support team within 7 days of the charge. We review refund requests on a case-by-case basis.</p>
+        <p className="text-gray-300">If you believe you have been charged in error, please contact our support team within 1 day of the charge. We review refund requests on a case-by-case basis.</p>
 
         <p className="mt-6 text-gray-300">For any billing questions, please contact support@colabconnect.com.</p>
     </PolicyLayout>
 );
 
-export const ShippingPolicy = () => (
-    <PolicyLayout title="Shipping Policy" lastUpdated={new Date().toLocaleDateString()}>
-        <p className="text-gray-300">CoLab Connect is a digital platform and does not sell physical goods. Therefore, we do not have a shipping policy as no physical products are shipped to users.</p>
-        <p className="mt-4 text-gray-300">All services and features are delivered digitally through our website and application immediately upon activation.</p>
-    </PolicyLayout>
-);
+
 
 export const ContactUs = () => (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -80,9 +75,9 @@ export const ContactUs = () => (
                 <div className="bg-white/5 p-6 rounded-lg border border-white/10">
                     <h2 className="text-xl font-semibold mb-4 text-white">Get in Touch</h2>
                     <div className="space-y-3 text-gray-300">
-                        <p><strong>Email:</strong> support@colabconnect.com</p>
-                        <p><strong>Address:</strong> 123 Tech Park, Innovation Way, Bangalore, India 560001</p>
-                        <p><strong>Phone:</strong> +91 98765 43210</p>
+                        <p><strong>Email:</strong> ayushkishor111@gmail.com</p>
+                        <p><strong>Address:</strong> KIIT University, Bhubaneswar, Odisha, India</p>
+                        <p><strong>Phone:</strong> 7667958180</p>
                     </div>
                 </div>
             </div>

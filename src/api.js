@@ -45,6 +45,23 @@ export const api = {
             return res.json();
         },
     },
+    notifications: {
+        getAll: async () => {
+            const res = await fetch(`${API_URL}/notifications`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch notifications');
+            return res.json();
+        },
+        delete: async (id) => {
+            const res = await fetch(`${API_URL}/notifications/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to delete notification');
+            return res.json();
+        }
+    },
     projects: {
         getAll: async () => {
             const res = await fetch(`${API_URL}/projects`);
@@ -67,6 +84,33 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch my projects');
             return res.json();
         },
+        update: async (id, projectData) => {
+            const res = await fetch(`${API_URL}/projects/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(projectData),
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to update project');
+            }
+            return res.json();
+        },
+        getMembers: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch members');
+            return res.json();
+        },
+        removeMember: async (projectId, userId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/members/${userId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to remove member');
+            return res.json();
+        }
     },
     requests: {
         create: async (requestData) => {
@@ -109,9 +153,24 @@ export const api = {
                 headers: getHeaders(),
                 body: JSON.stringify(messageData),
             });
-            if (!res.ok) throw new Error('Failed to send message');
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to send message');
+            }
             return res.json();
         },
+        edit: async (messageId, content) => {
+            const res = await fetch(`${API_URL}/messages/${messageId}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify({ content }),
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to edit message');
+            }
+            return res.json();
+        }
     },
     chat: {
         getRooms: async () => {
@@ -121,21 +180,6 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch chat rooms');
             return res.json();
         },
-        getMembers: async (projectId) => {
-            const res = await fetch(`${API_URL}/projects/${projectId}/members`, {
-                headers: getHeaders(),
-            });
-            if (!res.ok) throw new Error('Failed to fetch members');
-            return res.json();
-        },
-        removeMember: async (projectId, userId) => {
-            const res = await fetch(`${API_URL}/projects/${projectId}/members/${userId}`, {
-                method: 'DELETE',
-                headers: getHeaders(),
-            });
-            if (!res.ok) throw new Error('Failed to remove member');
-            return res.json();
-        }
     },
     payment: {
         createOrder: async () => {

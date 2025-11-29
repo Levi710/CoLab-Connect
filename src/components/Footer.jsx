@@ -21,9 +21,6 @@ export default function Footer() {
                         <Link to="/refund-policy" className="text-sm text-gray-400 hover:text-primary transition-colors">
                             Refund Policy
                         </Link>
-                        <Link to="/shipping-policy" className="text-sm text-gray-400 hover:text-primary transition-colors">
-                            Shipping Policy
-                        </Link>
                         <Link to="/contact-us" className="text-sm text-gray-400 hover:text-primary transition-colors">
                             Contact Us
                         </Link>
