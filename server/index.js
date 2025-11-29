@@ -183,6 +183,34 @@ async function initDb() {
             console.log('Checked/Added updated_at to projects');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // Migration: Create likes table
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS likes (
+                    id SERIAL PRIMARY KEY,
+                    project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(project_id, user_id)
+                )
+            `);
+            console.log('Checked/Created likes table');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Create comments table
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS comments (
+                    id SERIAL PRIMARY KEY,
+                    project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            console.log('Checked/Created comments table');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         console.log('Database schema initialized');
     } catch (err) {
         console.error('Error initializing database schema:', err);
@@ -444,12 +472,81 @@ app.put('/api/projects/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/projects/my', authenticateToken, async (req, res) => {
+// --- Social Features Routes ---
+
+app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
+    const projectId = req.params.id;
+    const userId = req.user.id;
+
     try {
-        const result = await db.query('SELECT * FROM projects WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        // Check if already liked
+        const check = await db.query('SELECT id FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+
+        if (check.rows.length > 0) {
+            // Unlike
+            await db.query('DELETE FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+        } else {
+            // Like
+            await db.query('INSERT INTO likes (project_id, user_id) VALUES ($1, $2)', [projectId, userId]);
+        }
+
+        // Update project likes count
+        const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
+        const newCount = parseInt(countRes.rows[0].count);
+
+        await db.query('UPDATE projects SET likes = $1 WHERE id = $2', [newCount, projectId]);
+
+        res.json({ likes: newCount, liked: check.rows.length === 0 });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to toggle like' });
+    }
+});
+
+app.get('/api/projects/:id/comments', async (req, res) => {
+    const projectId = req.params.id;
+    try {
+        const result = await db.query(`
+            SELECT c.*, u.username, u.photo_url 
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.project_id = $1
+            ORDER BY c.created_at DESC
+        `, [projectId]);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch user projects' });
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+});
+
+app.post('/api/projects/:id/comments', authenticateToken, async (req, res) => {
+    const projectId = req.params.id;
+    const { content } = req.body;
+    const userId = req.user.id;
+
+    if (!content || !content.trim()) {
+        return res.status(400).json({ error: 'Comment content is required' });
+    }
+
+    try {
+        const result = await db.query(`
+            INSERT INTO comments (project_id, user_id, content)
+            VALUES ($1, $2, $3)
+            RETURNING *
+        `, [projectId, userId, content]);
+
+        const newComment = result.rows[0];
+
+        // Fetch user details for the response
+        const userRes = await db.query('SELECT username, photo_url FROM users WHERE id = $1', [userId]);
+        newComment.username = userRes.rows[0].username;
+        newComment.photo_url = userRes.rows[0].photo_url;
+
+        res.json(newComment);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to add comment' });
     }
 });
 

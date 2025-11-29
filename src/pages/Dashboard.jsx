@@ -177,12 +177,12 @@ export default function Dashboard() {
                 <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
                     <div className="flex items-center">
                         <div className="p-3 rounded-full bg-green-500/10 text-green-400">
-                            <Users className="h-6 w-6" />
+                            <MessageSquare className="h-6 w-6" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-400">Total Impressions</p>
+                            <p className="text-sm font-medium text-gray-400">Total Comments</p>
                             <p className="text-2xl font-semibold text-white">
-                                {myProjects.reduce((acc, curr) => acc + (curr.impressions || 0), 0)}
+                                {myProjects.reduce((acc, curr) => acc + parseInt(curr.comments_count || 0), 0)}
                             </p>
                         </div>
                     </div>
@@ -190,7 +190,7 @@ export default function Dashboard() {
                 <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
                     <div className="flex items-center">
                         <div className="p-3 rounded-full bg-amber-500/10 text-amber-400">
-                            <MessageSquare className="h-6 w-6" />
+                            <Users className="h-6 w-6" />
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-400">Pending Requests</p>

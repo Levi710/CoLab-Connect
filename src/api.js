@@ -77,6 +77,28 @@ export const api = {
             if (!res.ok) throw new Error('Failed to create project');
             return res.json();
         },
+        toggleLike: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/like`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to toggle like');
+            return res.json();
+        },
+        getComments: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/comments`);
+            if (!res.ok) throw new Error('Failed to fetch comments');
+            return res.json();
+        },
+        addComment: async (projectId, content) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/comments`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ content }),
+            });
+            if (!res.ok) throw new Error('Failed to add comment');
+            return res.json();
+        },
         getMyProjects: async () => {
             const res = await fetch(`${API_URL}/projects/my`, {
                 headers: getHeaders(),

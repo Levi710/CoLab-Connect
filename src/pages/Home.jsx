@@ -43,10 +43,34 @@ export default function Home() {
         setFilterCategory(searchParams.get('category') || 'All');
     }, [searchParams]);
 
+    // Debounce search: Update URL params after 2 seconds of inactivity
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearchParams(prev => {
+                const newParams = new URLSearchParams(prev);
+                if (searchTerm) newParams.set('q', searchTerm);
+                else newParams.delete('q');
+
+                if (filterCategory && filterCategory !== 'All') newParams.set('category', filterCategory);
+                else newParams.delete('category');
+
+                return newParams;
+            });
+        }, 2000); // 2 seconds delay as requested
+
+        return () => clearTimeout(timer);
+    }, [searchTerm, filterCategory, setSearchParams]);
+
+    // Handle immediate filter change (optional, but usually filters are immediate. User asked for search throttling)
+    // For now, I'll include category in the debounce to keep it consistent with the "wait" request, 
+    // or I could separate them. I'll keep them together for simplicity.
+
+    /* 
     const handleSearch = (e) => {
         e.preventDefault();
-        setSearchParams({ q: searchTerm, category: filterCategory });
-    };
+        // Search is now handled by the debounce effect
+    }; 
+    */
 
     // Filter projects based on URL params (source of truth)
     const currentSearch = searchParams.get('q') || '';
@@ -130,9 +154,9 @@ export default function Home() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <button type="submit" className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40">
-                            Search
-                        </button>
+                        <div className="px-4 py-3 text-gray-400">
+                            {searchTerm ? 'Searching...' : <Search className="w-5 h-5" />}
+                        </div>
                     </form>
                 </div>
 
