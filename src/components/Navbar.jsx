@@ -75,6 +75,9 @@ export default function Navbar() {
                         <Link to="/dashboard" className="border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                             Dashboard
                         </Link>
+                        <Link to="/chat/all" className="border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            Messages
+                        </Link>
                     </div>
                     <div className="pt-4 pb-4 border-t border-white/10">
                         {currentUser ? (
