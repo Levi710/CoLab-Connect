@@ -403,7 +403,8 @@ app.get('/api/projects', async (req, res) => {
     try {
         const result = await db.query(`
             SELECT p.*, 
-            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count 
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count
             FROM projects p 
             ORDER BY created_at DESC
         `);

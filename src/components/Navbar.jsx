@@ -14,9 +14,10 @@ export default function Navbar() {
     };
 
     const location = useLocation();
+    const pathname = location?.pathname || '/';
 
     const getMobileLinkClass = (path) => {
-        const isActive = location.pathname === path;
+        const isActive = pathname === path;
         return isActive
             ? "bg-primary/10 border-primary text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
             : "border-transparent text-gray-300 hover:bg-white/5 hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium";
@@ -31,13 +32,13 @@ export default function Navbar() {
                             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">CoLab Connect</span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <Link to="/" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname === '/' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                            <Link to="/" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Discovery
                             </Link>
-                            <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                            <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Dashboard
                             </Link>
-                            <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${location.pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                            <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Messages
                             </Link>
                         </div>

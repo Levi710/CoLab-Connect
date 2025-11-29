@@ -219,7 +219,7 @@ export default function ProjectCard({ project, isFeatured, isSponsored, isOwner 
                         )}
                     </div>
                 )}
-            </div >
+            </div>
 
             {/* Apply Modal */}
             {
