@@ -483,6 +483,30 @@ app.get('/api/requests/my-projects', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/requests/:id', authenticateToken, async (req, res) => {
+    const requestId = req.params.id;
+    try {
+        const requestRes = await db.query('SELECT * FROM requests WHERE id = $1', [requestId]);
+        const request = requestRes.rows[0];
+
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+
+        // Verify ownership (project owner can delete) OR requester can delete
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [request.project_id]);
+
+        // Allow if user is the requester OR the project owner
+        if (request.user_id !== req.user.id && projectRes.rows[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        await db.query('DELETE FROM requests WHERE id = $1', [requestId]);
+        res.json({ message: 'Request deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete request' });
+    }
+});
+
 app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
     const { status } = req.body; // 'accepted' or 'rejected'
     const requestId = req.params.id;
@@ -507,10 +531,12 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
             }
 
             // Add to project_members
-            await db.query(
-                'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+            console.log(`Adding user ${request.user_id} to project ${request.project_id} as ${request.role}`);
+            const insertRes = await db.query(
+                'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *',
                 [request.project_id, request.user_id, request.role]
             );
+            console.log('Insert result:', insertRes.rows);
         }
 
         const result = await db.query(
