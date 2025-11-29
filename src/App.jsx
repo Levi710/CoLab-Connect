@@ -7,7 +7,7 @@ import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import CreateProject from './pages/CreateProject';
 import Chat from './pages/Chat';
-import { PrivacyPolicy, TermsAndConditions, RefundPolicy, ShippingPolicy, ContactUs } from './pages/Policies';
+import { PrivacyPolicy, TermsAndConditions, RefundPolicy, ContactUs } from './pages/Policies';
 
 function App() {
   return (
@@ -25,7 +25,6 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/contact-us" element={<ContactUs />} />
         </Routes>
       </Layout>
