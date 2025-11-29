@@ -287,4 +287,13 @@ export const api = {
             return res.json();
         },
     },
+    users: {
+        getProfile: async (userId) => {
+            const res = await fetch(`${API_URL}/users/${userId}/profile`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch user profile');
+            return res.json();
+        }
+    }
 };

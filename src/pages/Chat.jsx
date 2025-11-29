@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, MoreVertical, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -219,13 +219,13 @@ export default function Chat() {
                                     return (
                                         <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`flex max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden mx-2 border border-white/10">
+                                                <Link to={`/profile/${msg.sender_id}`} className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden mx-2 border border-white/10 hover:opacity-80 transition-opacity">
                                                     {msg.sender_photo ? (
                                                         <img src={msg.sender_photo} alt={msg.sender_name} className="h-full w-full object-cover" />
                                                     ) : (
                                                         <User className="h-5 w-5 text-gray-400" />
                                                     )}
-                                                </div>
+                                                </Link>
                                                 <div>
                                                     {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
                                                     <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>

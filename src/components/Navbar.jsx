@@ -88,6 +88,9 @@ export default function Navbar() {
                         <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
                             Messages
                         </Link>
+                        <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
+                            Create Project
+                        </Link>
                     </div>
                     <div className="pt-4 pb-4 border-t border-white/10">
                         {currentUser ? (

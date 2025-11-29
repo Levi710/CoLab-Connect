@@ -320,6 +320,33 @@ app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// --- User Routes ---
+app.get('/api/users/:id/profile', authenticateToken, async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const userRes = await db.query('SELECT id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [userId]);
+        if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        const user = userRes.rows[0];
+
+        // Get user's projects
+        const projectsRes = await db.query(`
+            SELECT p.*, u.username as owner_name, u.photo_url as owner_photo,
+            (SELECT COUNT(*) FROM likes l WHERE l.project_id = p.id) as likes_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count
+            FROM projects p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.user_id = $1
+            ORDER BY p.created_at DESC
+        `, [userId]);
+
+        res.json({ ...user, projects: projectsRes.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+});
+
 // --- Project Routes ---
 app.get('/api/projects', async (req, res) => {
     try {

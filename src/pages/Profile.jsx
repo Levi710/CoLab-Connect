@@ -1,16 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Award, Briefcase, X, Plus, Search, Check } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { User, Award, Briefcase, X, Plus, Search, Check, Lock } from 'lucide-react';
 import skillsData from '../data/skills.json';
+import ProjectCard from '../components/ProjectCard';
 
 export default function Profile() {
     const { currentUser } = useAuth();
+    const { id } = useParams();
+    const [profileUser, setProfileUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState('');
     const [selectedSkills, setSelectedSkills] = useState([]);
     const [photoUrl, setPhotoUrl] = useState('');
     const [backgroundUrl, setBackgroundUrl] = useState('');
     const [loading, setLoading] = useState(false);
+    const [userProjects, setUserProjects] = useState([]);
 
     // Skills Selector State
     const [skillSearch, setSkillSearch] = useState('');
@@ -20,16 +25,50 @@ export default function Profile() {
     // Combine all skills for search
     const allSkills = [...skillsData.tech, ...skillsData.non_tech];
 
+    const isOwnProfile = !id || (currentUser && currentUser.id === parseInt(id));
+
     useEffect(() => {
-        if (currentUser) {
-            setBio(currentUser.bio || '');
-            // Parse skills string back to array if needed, or handle as comma-separated string
-            const userSkills = currentUser.skills ? currentUser.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
-            setSelectedSkills(userSkills);
-            setPhotoUrl(currentUser.photo_url || '');
-            setBackgroundUrl(currentUser.background_url || '');
-        }
-    }, [currentUser]);
+        const fetchProfile = async () => {
+            if (isOwnProfile) {
+                if (currentUser) {
+                    setProfileUser(currentUser);
+                    setBio(currentUser.bio || '');
+                    const userSkills = currentUser.skills ? currentUser.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+                    setSelectedSkills(userSkills);
+                    setPhotoUrl(currentUser.photo_url || '');
+                    setBackgroundUrl(currentUser.background_url || '');
+
+                    // Fetch own projects
+                    try {
+                        const { api } = await import('../api');
+                        const projects = await api.projects.getMyProjects();
+                        setUserProjects(projects);
+                    } catch (err) {
+                        console.error("Failed to fetch my projects", err);
+                    }
+                }
+            } else {
+                setLoading(true);
+                try {
+                    const { api } = await import('../api');
+                    const data = await api.users.getProfile(id);
+                    setProfileUser(data);
+                    setBio(data.bio || '');
+                    const userSkills = data.skills ? data.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+                    setSelectedSkills(userSkills);
+                    setPhotoUrl(data.photo_url || '');
+                    setBackgroundUrl(data.background_url || '');
+                    setUserProjects(data.projects || []);
+                } catch (err) {
+                    console.error("Failed to fetch user profile", err);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchProfile();
+    }, [currentUser, id, isOwnProfile]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -42,10 +81,18 @@ export default function Profile() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    if (!currentUser) {
+    if (!profileUser && !loading) {
         return (
             <div className="container mx-auto px-4 py-8 text-center">
-                <p className="text-gray-500">Please log in to view your profile.</p>
+                <p className="text-gray-500">Profile not found or please log in.</p>
+            </div>
+        );
+    }
+
+    if (loading && !profileUser) {
+        return (
+            <div className="container mx-auto px-4 py-8 text-center">
+                <p className="text-gray-500">Loading profile...</p>
             </div>
         );
     }
@@ -124,7 +171,7 @@ export default function Profile() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <div className="bg-dark-surface shadow-xl rounded-lg overflow-hidden border border-white/10">
+            <div className="bg-dark-surface shadow-xl rounded-lg overflow-hidden border border-white/10 mb-8">
                 <div
                     className="h-32 bg-cover bg-center relative"
                     style={{
@@ -132,7 +179,7 @@ export default function Profile() {
                         backgroundColor: backgroundUrl ? 'transparent' : '#4f46e5' // indigo-600
                     }}
                 >
-                    {isEditing && (
+                    {isEditing && isOwnProfile && (
                         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                             <label className="cursor-pointer bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-md transition-colors backdrop-blur-sm border border-white/20">
                                 <span>Change Cover</span>
@@ -152,14 +199,14 @@ export default function Profile() {
                             <img
                                 className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md inline-block object-cover bg-dark"
                                 src={photoUrl}
-                                alt={currentUser.username}
+                                alt={profileUser.username}
                             />
                         ) : (
                             <div className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md bg-dark flex items-center justify-center inline-block">
                                 <User className="h-12 w-12 text-gray-400" />
                             </div>
                         )}
-                        {isEditing && (
+                        {isEditing && isOwnProfile && (
                             <div className="mt-2">
                                 <label className="block text-sm font-medium text-gray-300 mb-1">Change Photo</label>
                                 <input
@@ -176,32 +223,35 @@ export default function Profile() {
                     <div className="flex justify-between items-start">
                         <div>
                             <h3 className="text-2xl font-bold leading-6 text-white">
-                                {currentUser.username}
+                                {profileUser.username}
                             </h3>
                             <p className="mt-1 max-w-2xl text-sm text-gray-400">
-                                {currentUser.email}
+                                {profileUser.email}
                             </p>
                         </div>
                         <div className="flex gap-2">
                             <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-primary/10 text-primary h-fit border border-primary/20">
-                                {currentUser.is_premium ? 'Premium Plan' : 'Free Plan'}
+                                {profileUser.is_premium ? 'Premium Plan' : 'Free Plan'}
                             </span>
-                            <button
-                                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
-                                disabled={loading}
-                            >
-                                {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
-                            </button>
-                            {isEditing && (
+                            {isOwnProfile && (
+                                <button
+                                    onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
+                                </button>
+                            )}
+                            {isEditing && isOwnProfile && (
                                 <button
                                     onClick={() => {
                                         setIsEditing(false);
                                         // Reset state
-                                        setBio(currentUser.bio || '');
-                                        setSelectedSkills(currentUser.skills ? currentUser.skills.split(',').map(s => s.trim()).filter(Boolean) : []);
-                                        setPhotoUrl(currentUser.photo_url || '');
-                                        setBackgroundUrl(currentUser.background_url || '');
+                                        setBio(profileUser.bio || '');
+                                        const userSkills = profileUser.skills ? profileUser.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+                                        setSelectedSkills(userSkills);
+                                        setPhotoUrl(profileUser.photo_url || '');
+                                        setBackgroundUrl(profileUser.background_url || '');
                                     }}
                                     className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-transparent hover:bg-white/5 focus:outline-none transition-colors"
                                 >
@@ -307,6 +357,36 @@ export default function Profile() {
                         </div>
                     </dl>
                 </div>
+            </div>
+
+            {/* User Projects Section */}
+            <div className="mt-8">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    {isOwnProfile ? 'My Projects' : `${profileUser.username}'s Projects`}
+                </h3>
+                {userProjects.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {userProjects.map(project => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                isOwner={isOwnProfile}
+                                onDelete={isOwnProfile ? async (id) => {
+                                    if (window.confirm('Are you sure you want to delete this project?')) {
+                                        const { api } = await import('../api');
+                                        await api.projects.delete(id);
+                                        setUserProjects(userProjects.filter(p => p.id !== id));
+                                    }
+                                } : undefined}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10 bg-dark-surface rounded-lg border border-white/5">
+                        <p className="text-gray-500">No projects found.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
