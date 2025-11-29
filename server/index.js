@@ -125,6 +125,20 @@ async function initDb() {
             console.log('Checked/Backfilled project owners');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // Migration: Backfill members from accepted requests
+        try {
+            await db.query(`
+                INSERT INTO project_members (project_id, user_id, role)
+                SELECT r.project_id, r.user_id, r.role
+                FROM requests r
+                WHERE r.status = 'accepted'
+                AND NOT EXISTS (
+                    SELECT 1 FROM project_members pm WHERE pm.project_id = r.project_id AND pm.user_id = r.user_id
+                )
+            `);
+            console.log('Checked/Backfilled members from accepted requests');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         // ... (migrations continued)
 
         // Migration: Create notifications table if not exists
@@ -533,7 +547,7 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
             // Add to project_members
             console.log(`Adding user ${request.user_id} to project ${request.project_id} as ${request.role}`);
             const insertRes = await db.query(
-                'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *',
+                'INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT (project_id, user_id) DO NOTHING RETURNING *',
                 [request.project_id, request.user_id, request.role]
             );
             console.log('Insert result:', insertRes.rows);
