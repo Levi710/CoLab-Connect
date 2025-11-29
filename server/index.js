@@ -51,6 +51,19 @@ async function initDb() {
             console.log('Checked/Added background_url column');
         } catch (e) { console.log('Migration note:', e.message); }
 
+        // Migration: Add image_url and is_edited to messages
+        try {
+            await db.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT');
+            await db.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE');
+            console.log('Checked/Added messages columns');
+        } catch (e) { console.log('Migration note:', e.message); }
+
+        // Migration: Add updated_at to projects
+        try {
+            await db.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+            console.log('Checked/Added projects columns');
+        } catch (e) { console.log('Migration note:', e.message); }
+
         // Migration: Add status to requests if not exists
         try {
             await db.query('ALTER TABLE requests ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT \'pending\'');

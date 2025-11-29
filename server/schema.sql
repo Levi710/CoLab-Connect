@@ -54,3 +54,13 @@ CREATE TABLE IF NOT EXISTS messages (
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  type VARCHAR(50), -- 'request_accepted', 'request_rejected', 'new_request'
+  content TEXT,
+  related_id INTEGER, -- project_id or request_id
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
