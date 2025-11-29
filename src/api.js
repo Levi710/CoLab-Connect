@@ -233,6 +233,17 @@ export const api = {
                 throw new Error(error.error || 'Failed to edit message');
             }
             return res.json();
+        },
+        delete: async (messageId) => {
+            const res = await fetch(`${API_URL}/messages/${messageId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to delete message');
+            }
+            return res.json();
         }
     },
     chat: {

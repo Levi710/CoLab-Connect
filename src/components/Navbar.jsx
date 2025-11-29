@@ -7,6 +7,25 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = React.useState(false);
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
+    const [unreadCount, setUnreadCount] = React.useState(0);
+
+    React.useEffect(() => {
+        if (currentUser) {
+            const fetchUnread = async () => {
+                try {
+                    const { api } = await import('../api');
+                    const rooms = await api.chat.getRooms();
+                    const totalUnread = rooms.reduce((acc, room) => acc + parseInt(room.unread_count || 0), 0);
+                    setUnreadCount(totalUnread);
+                } catch (err) {
+                    console.error('Failed to fetch unread count', err);
+                }
+            };
+            fetchUnread();
+            const interval = setInterval(fetchUnread, 10000); // Poll every 10s
+            return () => clearInterval(interval);
+        }
+    }, [currentUser]);
 
     const handleLogout = () => {
         logout();
@@ -40,6 +59,11 @@ export default function Navbar() {
                             </Link>
                             <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Messages
+                                {unreadCount > 0 && (
+                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {unreadCount}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     </div>
@@ -95,6 +119,11 @@ export default function Navbar() {
                         </Link>
                         <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
                             Messages
+                            {unreadCount > 0 && (
+                                <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {unreadCount}
+                                </span>
+                            )}
                         </Link>
                         <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
                             Create Project

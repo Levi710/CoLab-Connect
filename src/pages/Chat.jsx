@@ -77,8 +77,11 @@ export default function Chat() {
     }, [selectedRoom]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+        // Only scroll if the last message is new or we just loaded
+        if (messages.length > 0) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages.length, selectedRoom?.id]);
 
     const handleSend = async (e) => {
         e.preventDefault();
@@ -139,6 +142,17 @@ export default function Chat() {
         setEditContent(msg.content);
     };
 
+    const handleDelete = async (msgId) => {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+        try {
+            await api.messages.delete(msgId);
+            setMessages(prev => prev.filter(m => m.id !== msgId));
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+            alert(error.message || 'Failed to delete message');
+        }
+    };
+
     const handleRemoveMember = async (userId) => {
         if (!confirm('Are you sure you want to remove this member?')) return;
         try {
@@ -172,7 +186,14 @@ export default function Chat() {
                                 onClick={() => setSelectedRoom(room)}
                                 className={`p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${selectedRoom?.id === room.id ? 'bg-primary/10 border-l-4 border-l-primary' : ''}`}
                             >
-                                <h3 className="font-semibold text-gray-200 truncate">{room.title}</h3>
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold text-gray-200 truncate">{room.title}</h3>
+                                    {room.unread_count > 0 && (
+                                        <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {room.unread_count}
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-xs text-gray-500 mt-1 truncate">{room.my_role}</p>
                             </div>
                         ))
@@ -245,6 +266,15 @@ export default function Chat() {
                                                                 className="ml-2 text-gray-500 hover:text-white text-[10px] underline"
                                                             >
                                                                 Edit
+                                                            </button>
+                                                        )}
+                                                        {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
+                                                            <button
+                                                                onClick={() => handleDelete(msg.id)}
+                                                                className="ml-2 text-red-500 hover:text-red-400 text-[10px]"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="h-3 w-3" />
                                                             </button>
                                                         )}
                                                     </div>

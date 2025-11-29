@@ -48,6 +48,7 @@ async function initDb() {
             { name: 'messages_project_id', query: 'ALTER TABLE messages ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id)' },
             { name: 'messages_request_id_nullable', query: 'ALTER TABLE messages ALTER COLUMN request_id DROP NOT NULL' },
             { name: 'comments_parent_id', query: 'ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE' },
+            { name: 'project_members_last_read_at', query: 'ALTER TABLE project_members ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP' },
             { name: 'projects_impressions', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0' }
         ];
 
@@ -667,6 +668,15 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
             [request.user_id, 'request_' + status, `Your request to join ${projectRes.rows[0].title} was ${status}`, request.project_id]
         );
 
+        // Send System Message to Project Chat
+        if (status === 'accepted') {
+            const systemContent = `System: ${request.user_name || 'A new member'} has joined the project.`;
+            await db.query(
+                'INSERT INTO messages (project_id, sender_id, content) VALUES ($1, $2, $3)',
+                [request.project_id, null, systemContent] // sender_id null for system
+            );
+        }
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -678,7 +688,8 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
 app.get('/api/chat/rooms', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`
-            SELECT p.*, pm.role as my_role
+            SELECT p.*, pm.role as my_role,
+            (SELECT COUNT(*) FROM messages m WHERE m.project_id = p.id AND m.created_at > pm.last_read_at) as unread_count
             FROM projects p
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.user_id = $1
@@ -697,10 +708,13 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
         const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
         if (memberCheck.rows.length === 0) return res.status(403).json({ error: 'Not a member of this project' });
 
+        // Update last_read_at
+        await db.query('UPDATE project_members SET last_read_at = CURRENT_TIMESTAMP WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+
         const result = await db.query(`
             SELECT m.*, u.username as sender_name, u.photo_url as sender_photo
             FROM messages m
-            JOIN users u ON m.sender_id = u.id
+            LEFT JOIN users u ON m.sender_id = u.id
             WHERE m.project_id = $1
             ORDER BY m.created_at ASC
         `, [projectId]);
@@ -754,6 +768,50 @@ app.put('/api/messages/:id', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to update message' });
+    }
+});
+
+app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
+    const messageId = req.params.id;
+    try {
+        const msgRes = await db.query('SELECT * FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        const message = msgRes.rows[0];
+
+        if (message.sender_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        const createdAt = new Date(message.created_at);
+        const now = new Date();
+        const diffMinutes = (now - createdAt) / 1000 / 60;
+        if (diffMinutes > 10) return res.status(403).json({ error: 'Delete time limit exceeded (10 mins)' });
+
+        await db.query('DELETE FROM messages WHERE id = $1', [messageId]);
+        res.json({ message: 'Message deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete message' });
+    }
+});
+
+app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
+    const commentId = req.params.id;
+    try {
+        const commentRes = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+        if (commentRes.rows.length === 0) return res.status(404).json({ error: 'Comment not found' });
+        const comment = commentRes.rows[0];
+
+        if (comment.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        const createdAt = new Date(comment.created_at);
+        const now = new Date();
+        const diffMinutes = (now - createdAt) / 1000 / 60;
+        if (diffMinutes > 10) return res.status(403).json({ error: 'Delete time limit exceeded (10 mins)' });
+
+        await db.query('DELETE FROM comments WHERE id = $1', [commentId]);
+        res.json({ message: 'Comment deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete comment' });
     }
 });
 

@@ -177,8 +177,8 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                         </button>
                     )}
 
-                    {/* Delete Button for Owner or Comment Author */}
-                    {(isOwner || (currentUser && currentUser.id === comment.user_id)) && (
+                    {/* Delete Button for Owner or Comment Author (10 min limit for author) */}
+                    {(isOwner || (currentUser && currentUser.id === comment.user_id && (new Date() - new Date(comment.created_at) < 10 * 60 * 1000))) && (
                         <button
                             onClick={() => handleDeleteComment(comment.id)}
                             className="absolute top-1 right-12 text-[10px] text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
