@@ -138,6 +138,14 @@ export const api = {
             if (!res.ok) throw new Error('Failed to update request status');
             return res.json();
         },
+        delete: async (requestId) => {
+            const res = await fetch(`${API_URL}/requests/${requestId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to delete request');
+            return res.json();
+        },
     },
     messages: {
         getProjectMessages: async (projectId) => {

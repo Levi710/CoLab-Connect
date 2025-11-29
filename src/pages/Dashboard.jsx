@@ -82,6 +82,17 @@ export default function Dashboard() {
         }
     };
 
+    const handleDeleteRequest = async (requestId) => {
+        if (!confirm('Are you sure you want to delete this request?')) return;
+        try {
+            await api.requests.delete(requestId);
+            setRequests(requests.filter(r => r.id !== requestId));
+        } catch (error) {
+            console.error('Failed to delete request:', error);
+            alert('Failed to delete request');
+        }
+    };
+
     const handleEditClick = (project) => {
         setEditingProject(project);
         setEditFormData({
@@ -376,6 +387,13 @@ export default function Dashboard() {
                                             <MessageSquare className="h-4 w-4 mr-2" /> Chat
                                         </button>
                                     )}
+                                    <button
+                                        onClick={() => handleDeleteRequest(request.id)}
+                                        className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-gray-400 hover:text-red-400 hover:bg-white/5 focus:outline-none"
+                                        title="Delete Request"
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                    </button>
                                 </div>
                             </div>
                         </div>

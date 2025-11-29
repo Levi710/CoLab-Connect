@@ -505,11 +505,6 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
             [status, requestId]
         );
 
-        // Create Notification
-        const notificationContent = status === 'accepted'
-            ? `Your request to join "${projectRes.rows[0].title}" was accepted!`
-            : `Your request to join "${projectRes.rows[0].title}" was rejected.`;
-
         await db.query(
             'INSERT INTO notifications (user_id, type, content, related_id) VALUES ($1, $2, $3, $4)',
             [request.user_id, 'request_' + status, notificationContent, request.project_id]
@@ -556,7 +551,7 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
             JOIN users u ON m.sender_id = u.id
             WHERE m.project_id = $1
             ORDER BY m.created_at ASC
-        `, [projectId]);
+            `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -639,7 +634,7 @@ app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) 
             FROM project_members pm
             JOIN users u ON pm.user_id = u.id
             WHERE pm.project_id = $1
-        `, [projectId]);
+            `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -670,5 +665,5 @@ app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async 
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} `);
 });
