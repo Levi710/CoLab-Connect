@@ -414,6 +414,24 @@ app.get('/api/projects', async (req, res) => {
     }
 });
 
+
+app.get('/api/projects/my', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT p.*, 
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count
+            FROM projects p 
+            WHERE p.user_id = $1
+            ORDER BY created_at DESC
+        `, [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch my projects' });
+    }
+});
+
 app.post('/api/projects', authenticateToken, async (req, res) => {
     const { title, description, category, status, lookingFor, pollQuestion, memberLimit } = req.body;
     try {
