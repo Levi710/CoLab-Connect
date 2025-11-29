@@ -719,6 +719,50 @@ app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async 
     }
 });
 
+app.get('/api/debug/fix-members', authenticateToken, async (req, res) => {
+    try {
+        const report = [];
+
+        // 1. Ensure Constraint Exists
+        try {
+            await db.query(`
+                ALTER TABLE project_members 
+                ADD CONSTRAINT project_members_project_id_user_id_key 
+                UNIQUE (project_id, user_id)
+            `);
+            report.push('Added UNIQUE constraint to project_members');
+        } catch (e) {
+            report.push(`Constraint check: ${e.message}`); // Likely "already exists"
+        }
+
+        // 2. Backfill
+        const result = await db.query(`
+            INSERT INTO project_members (project_id, user_id, role)
+            SELECT r.project_id, r.user_id, r.role
+            FROM requests r
+            WHERE r.status = 'accepted'
+            AND NOT EXISTS (
+                SELECT 1 FROM project_members pm WHERE pm.project_id = r.project_id AND pm.user_id = r.user_id
+            )
+            RETURNING *
+        `);
+        report.push(`Backfilled ${result.rowCount} members`);
+
+        // 3. Verify Counts
+        const counts = await db.query(`
+            SELECT project_id, COUNT(*) as count 
+            FROM project_members 
+            GROUP BY project_id
+        `);
+        report.push('Current Member Counts: ' + JSON.stringify(counts.rows));
+
+        res.json({ success: true, report });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} `);
 });
