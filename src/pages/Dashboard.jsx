@@ -41,8 +41,9 @@ export default function Dashboard() {
                 setRequests(requestsData);
                 setNotifications(notificationsData);
 
-                // Always fetch AI analysis
-                fetchAiAnalysis();
+                if (user.is_premium) {
+                    fetchAiAnalysis();
+                }
             } catch (err) {
                 console.error('Failed to fetch dashboard data:', err);
             } finally {
@@ -139,8 +140,19 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Host Dashboard</h1>
-                <h1 className="text-3xl font-bold text-white">Host Dashboard</h1>
-                {/* Premium button removed */}
+                {!isPremium && (
+                    <button
+                        onClick={() => setShowPremiumModal(true)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-secondary to-primary hover:shadow-lg hover:shadow-primary/25 transition-all shadow-md"
+                    >
+                        Upgrade to Premium
+                    </button>
+                )}
+                {isPremium && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary/10 text-secondary border border-secondary/20">
+                        <Zap className="h-4 w-4 mr-1 fill-current" /> Premium Member
+                    </span>
+                )}
             </div>
 
             {/* Analytics Overview */}
@@ -190,9 +202,10 @@ export default function Dashboard() {
                     <h2 className="text-lg font-semibold text-white flex items-center">
                         <TrendingUp className="h-5 w-5 mr-2 text-primary" /> AI Advanced Insights
                     </h2>
+                    {!isPremium && <Lock className="h-5 w-5 text-gray-500" />}
                 </div>
 
-                {aiAnalysis ? (
+                {isPremium && aiAnalysis ? (
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -236,8 +249,26 @@ export default function Dashboard() {
                             </ul>
                         </div>
                     </div>
-                ) : (
+                ) : isPremium && loadingAi ? (
                     <div className="text-center py-10 text-gray-400">Generating AI Analysis...</div>
+                ) : (
+                    <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                        <p className="text-gray-300 mb-4 font-medium">Unlock detailed growth charts and AI-powered suggestions.</p>
+                        <button
+                            onClick={() => setShowPremiumModal(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover"
+                        >
+                            Upgrade to Premium
+                        </button>
+                    </div>
+                )}
+                {/* Background placeholder for non-premium */}
+                {!isPremium && (
+                    <div className="h-64 flex items-end justify-between space-x-2 px-4 opacity-10">
+                        {[30, 45, 35, 60, 55, 70, 85].map((h, i) => (
+                            <div key={i} className="w-full bg-gray-500 rounded-t-sm" style={{ height: `${h}%` }}></div>
+                        ))}
+                    </div>
                 )}
             </div>
 

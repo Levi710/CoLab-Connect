@@ -224,11 +224,11 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
 
 app.get('/api/ai/analysis', authenticateToken, async (req, res) => {
     try {
-        // Premium check removed - accessible to all
-        // const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
-        // if (!userRes.rows[0].is_premium) {
-        //     return res.status(403).json({ error: 'Premium access required' });
-        // }
+        // Check if user is premium
+        const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+        if (!userRes.rows[0].is_premium) {
+            return res.status(403).json({ error: 'Premium access required' });
+        }
 
         // Mock AI Analysis Data
         const analysisData = {
@@ -392,18 +392,18 @@ app.put('/api/projects/:id', authenticateToken, async (req, res) => {
         const project = projectRes.rows[0];
         if (project.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
-        // Premium check removed - accessible to all
-        // const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
-        // const isPremium = userRes.rows[0].is_premium;
+        // Check premium status for time limit override
+        const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+        const isPremium = userRes.rows[0].is_premium;
 
-        // if (!isPremium) {
-        //     const createdAt = new Date(project.created_at);
-        //     const now = new Date();
-        //     const diffMinutes = (now - createdAt) / 1000 / 60;
-        //     if (diffMinutes > 30) {
-        //         return res.status(403).json({ error: 'Edit time limit exceeded (30 mins). Upgrade to Premium to edit anytime.' });
-        //     }
-        // }
+        if (!isPremium) {
+            const createdAt = new Date(project.created_at);
+            const now = new Date();
+            const diffMinutes = (now - createdAt) / 1000 / 60;
+            if (diffMinutes > 30) {
+                return res.status(403).json({ error: 'Edit time limit exceeded (30 mins). Upgrade to Premium to edit anytime.' });
+            }
+        }
 
         const result = await db.query(
             'UPDATE projects SET title = $1, description = $2, category = $3, status = $4, looking_for = $5, poll_question = $6, member_limit = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
@@ -581,13 +581,13 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Not a member of this project' });
         }
 
-        // Premium check removed - accessible to all
-        // if (image_url) {
-        //     const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
-        //     if (!userRes.rows[0].is_premium) {
-        //         return res.status(403).json({ error: 'Image sending is a Premium feature' });
-        //     }
-        // }
+        // Check premium if sending image
+        if (image_url) {
+            const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+            if (!userRes.rows[0].is_premium) {
+                return res.status(403).json({ error: 'Image sending is a Premium feature' });
+            }
+        }
 
         const result = await db.query(
             'INSERT INTO messages (project_id, sender_id, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
