@@ -434,10 +434,14 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
 
 app.post('/api/projects', authenticateToken, async (req, res) => {
     const { title, description, category, status, lookingFor, pollQuestion, memberLimit } = req.body;
+    console.log('Creating project:', { user_id: req.user.id, title, category, memberLimit });
+
     try {
+        const limit = parseInt(memberLimit) || 5;
+
         const result = await db.query(
             'INSERT INTO projects (user_id, title, description, category, status, looking_for, poll_question, member_limit) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-            [req.user.id, title, description, category, status, lookingFor, pollQuestion, memberLimit || 5]
+            [req.user.id, title, description, category, status, lookingFor, pollQuestion, limit]
         );
         const project = result.rows[0];
 
@@ -448,66 +452,6 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
         );
 
         res.json(project);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to create project' });
-    }
-});
-
-app.put('/api/projects/:id', authenticateToken, async (req, res) => {
-    const { title, description, category, status, lookingFor, pollQuestion, memberLimit } = req.body;
-    const projectId = req.params.id;
-
-    try {
-        // Fetch project to check ownership and time limit
-        const projectRes = await db.query('SELECT * FROM projects WHERE id = $1', [projectId]);
-        if (projectRes.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
-
-        const project = projectRes.rows[0];
-        if (project.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
-
-        // Check premium status for time limit override
-        const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
-        const isPremium = userRes.rows[0].is_premium;
-
-        if (!isPremium) {
-            const createdAt = new Date(project.created_at);
-            const now = new Date();
-            const diffMinutes = (now - createdAt) / 1000 / 60;
-            if (diffMinutes > 30) {
-                return res.status(403).json({ error: 'Edit time limit exceeded (30 mins). Upgrade to Premium to edit anytime.' });
-            }
-        }
-
-        const result = await db.query(
-            'UPDATE projects SET title = $1, description = $2, category = $3, status = $4, looking_for = $5, poll_question = $6, member_limit = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
-            [title, description, category, status, lookingFor, pollQuestion, memberLimit, projectId]
-        );
-        res.json(result.rows[0]);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to update project' });
-    }
-});
-
-// --- Social Features Routes ---
-
-app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
-    const projectId = req.params.id;
-    const userId = req.user.id;
-
-    try {
-        // Check if already liked
-        const check = await db.query('SELECT id FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
-
-        if (check.rows.length > 0) {
-            // Unlike
-            await db.query('DELETE FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
-        } else {
-            // Like
-            await db.query('INSERT INTO likes (project_id, user_id) VALUES ($1, $2)', [projectId, userId]);
-        }
 
         // Update project likes count
         const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
