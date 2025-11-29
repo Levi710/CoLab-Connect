@@ -48,7 +48,15 @@ export default function Navbar() {
                             <PlusCircle className="h-6 w-6" />
                         </Link>
                         <Link to="/profile" className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                            <User className="h-6 w-6" />
+                            {currentUser && currentUser.photo_url ? (
+                                <img
+                                    className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
+                                    src={currentUser.photo_url}
+                                    alt={currentUser.username}
+                                />
+                            ) : (
+                                <User className="h-6 w-6" />
+                            )}
                         </Link>
                         {currentUser ? (
                             <button
@@ -97,7 +105,15 @@ export default function Navbar() {
                             <>
                                 <div className="flex items-center px-4">
                                     <div className="flex-shrink-0">
-                                        <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
+                                        {currentUser.photo_url ? (
+                                            <img
+                                                className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
+                                                src={currentUser.photo_url}
+                                                alt={currentUser.username}
+                                            />
+                                        ) : (
+                                            <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
+                                        )}
                                     </div>
                                     <div className="ml-3">
                                         <div className="text-base font-medium text-white">{currentUser.username}</div>
