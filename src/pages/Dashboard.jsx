@@ -415,10 +415,10 @@ export default function Dashboard() {
                                     </div>
                                     <button
                                         onClick={() => handleDeleteNotification(notification.id)}
-                                        className="text-gray-400 hover:text-red-400 p-2 transition-colors"
+                                        className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none"
                                         title="Delete Notification"
                                     >
-                                        <Trash2 className="h-5 w-5" />
+                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
                                     </button>
                                 </div>
                             ))}
