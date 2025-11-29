@@ -323,6 +323,12 @@ app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
 // --- User Routes ---
 app.get('/api/users/:id/profile', authenticateToken, async (req, res) => {
     const userId = req.params.id;
+    console.log(`Fetching profile for userId: ${userId}`); // Debug log
+
+    if (!userId || userId === 'undefined' || userId === 'null') {
+        return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
     try {
         const userRes = await db.query('SELECT id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [userId]);
         if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
@@ -342,7 +348,7 @@ app.get('/api/users/:id/profile', authenticateToken, async (req, res) => {
 
         res.json({ ...user, projects: projectsRes.rows });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching user profile:', err);
         res.status(500).json({ error: 'Failed to fetch user profile' });
     }
 });

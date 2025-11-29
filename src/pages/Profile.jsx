@@ -27,8 +27,26 @@ export default function Profile() {
 
     const isOwnProfile = !id || (currentUser && currentUser.id === parseInt(id));
 
+
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowSkillDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const [error, setError] = useState(null); // Add error state
+
+    // ... (existing code)
+
     useEffect(() => {
         const fetchProfile = async () => {
+            setError(null); // Reset error
             if (isOwnProfile) {
                 if (currentUser) {
                     setProfileUser(currentUser);
@@ -51,6 +69,7 @@ export default function Profile() {
                 setLoading(true);
                 try {
                     const { api } = await import('../api');
+                    console.log('Fetching profile for ID:', id); // Debug log
                     const data = await api.users.getProfile(id);
                     setProfileUser(data);
                     setBio(data.bio || '');
@@ -61,6 +80,7 @@ export default function Profile() {
                     setUserProjects(data.projects || []);
                 } catch (err) {
                     console.error("Failed to fetch user profile", err);
+                    setError(err.message || 'Failed to load profile');
                 } finally {
                     setLoading(false);
                 }
@@ -70,16 +90,16 @@ export default function Profile() {
         fetchProfile();
     }, [currentUser, id, isOwnProfile]);
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowSkillDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // ... (existing code)
+
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8 text-center">
+                <p className="text-red-500 mb-2">{error}</p>
+                <p className="text-gray-500">Profile not found or please log in.</p>
+            </div>
+        );
+    }
 
     if (!profileUser && !loading) {
         return (
