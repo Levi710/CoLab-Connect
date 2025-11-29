@@ -124,7 +124,7 @@ export default function Profile() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-dark-surface shadow-xl rounded-lg overflow-hidden border border-white/10">
                 <div
                     className="h-32 bg-cover bg-center relative"
                     style={{
@@ -134,7 +134,7 @@ export default function Profile() {
                 >
                     {isEditing && (
                         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                            <label className="cursor-pointer bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-md transition-colors backdrop-blur-sm">
+                            <label className="cursor-pointer bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-md transition-colors backdrop-blur-sm border border-white/20">
                                 <span>Change Cover</span>
                                 <input
                                     type="file"
@@ -150,23 +150,23 @@ export default function Profile() {
                     <div className="-mt-16 mb-4">
                         {photoUrl ? (
                             <img
-                                className="h-24 w-24 rounded-full border-4 border-white shadow-md inline-block object-cover bg-white"
+                                className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md inline-block object-cover bg-dark"
                                 src={photoUrl}
                                 alt={currentUser.username}
                             />
                         ) : (
-                            <div className="h-24 w-24 rounded-full border-4 border-white shadow-md bg-gray-200 flex items-center justify-center inline-block">
+                            <div className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md bg-dark flex items-center justify-center inline-block">
                                 <User className="h-12 w-12 text-gray-400" />
                             </div>
                         )}
                         {isEditing && (
                             <div className="mt-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Change Photo</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Change Photo</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageUpload}
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                    className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">Max 5MB</p>
                             </div>
@@ -175,20 +175,20 @@ export default function Profile() {
 
                     <div className="flex justify-between items-start">
                         <div>
-                            <h3 className="text-2xl font-bold leading-6 text-gray-900">
+                            <h3 className="text-2xl font-bold leading-6 text-white">
                                 {currentUser.username}
                             </h3>
-                            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p className="mt-1 max-w-2xl text-sm text-gray-400">
                                 {currentUser.email}
                             </p>
                         </div>
                         <div className="flex gap-2">
-                            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800 h-fit">
+                            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-primary/10 text-primary h-fit border border-primary/20">
                                 {currentUser.is_premium ? 'Premium Plan' : 'Free Plan'}
                             </span>
                             <button
                                 onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-colors"
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
                                 disabled={loading}
                             >
                                 {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
@@ -203,7 +203,7 @@ export default function Profile() {
                                         setPhotoUrl(currentUser.photo_url || '');
                                         setBackgroundUrl(currentUser.background_url || '');
                                     }}
-                                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors"
+                                    className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-transparent hover:bg-white/5 focus:outline-none transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -212,41 +212,41 @@ export default function Profile() {
                     </div>
                 </div>
 
-                <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <div className="border-t border-white/5 px-4 py-5 sm:px-6">
                     <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                            <dt className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-2">
+                            <dt className="text-sm font-medium text-gray-400 flex items-center gap-2 mb-2">
                                 <Briefcase className="h-4 w-4" /> Bio
                             </dt>
-                            <dd className="mt-1 text-sm text-gray-900">
+                            <dd className="mt-1 text-sm text-gray-200">
                                 {isEditing ? (
                                     <textarea
                                         rows={4}
-                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md border p-3"
+                                        className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm bg-dark border-white/10 rounded-md border p-3 text-white placeholder-gray-500"
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
                                         placeholder="Tell us about yourself..."
                                     />
                                 ) : (
-                                    <p className="whitespace-pre-wrap">{bio || <span className="text-gray-400 italic">No bio added yet.</span>}</p>
+                                    <p className="whitespace-pre-wrap">{bio || <span className="text-gray-500 italic">No bio added yet.</span>}</p>
                                 )}
                             </dd>
                         </div>
 
                         <div className="sm:col-span-2">
-                            <dt className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-2">
+                            <dt className="text-sm font-medium text-gray-400 flex items-center gap-2 mb-2">
                                 <Award className="h-4 w-4" /> Skills
                             </dt>
-                            <dd className="mt-1 text-sm text-gray-900">
+                            <dd className="mt-1 text-sm text-gray-200">
                                 {isEditing ? (
                                     <div className="space-y-3">
                                         <div className="flex flex-wrap gap-2 mb-2">
                                             {selectedSkills.map(skill => (
-                                                <span key={skill} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                                <span key={skill} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
                                                     {skill}
                                                     <button
                                                         onClick={() => removeSkill(skill)}
-                                                        className="ml-1.5 inline-flex items-center justify-center text-indigo-400 hover:text-indigo-600 focus:outline-none"
+                                                        className="ml-1.5 inline-flex items-center justify-center text-primary hover:text-white focus:outline-none"
                                                     >
                                                         <X className="h-3 w-3" />
                                                     </button>
@@ -257,11 +257,11 @@ export default function Profile() {
                                         <div className="relative" ref={dropdownRef}>
                                             <div className="relative rounded-md shadow-sm">
                                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <Search className="h-4 w-4 text-gray-400" />
+                                                    <Search className="h-4 w-4 text-gray-500" />
                                                 </div>
                                                 <input
                                                     type="text"
-                                                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md border p-2"
+                                                    className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm bg-dark border-white/10 rounded-md border p-2 text-white placeholder-gray-500"
                                                     placeholder="Search skills (e.g. React, Design)..."
                                                     value={skillSearch}
                                                     onChange={(e) => {
@@ -273,12 +273,12 @@ export default function Profile() {
                                             </div>
 
                                             {showSkillDropdown && (
-                                                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                                <div className="absolute z-10 mt-1 w-full bg-dark-surface shadow-xl max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm border border-white/10">
                                                     {filteredSkills.length > 0 ? (
                                                         filteredSkills.map((skill) => (
                                                             <div
                                                                 key={skill}
-                                                                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50 text-gray-900"
+                                                                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-white/5 text-gray-200"
                                                                 onClick={() => addSkill(skill)}
                                                             >
                                                                 <span className="block truncate">{skill}</span>
@@ -297,10 +297,10 @@ export default function Profile() {
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
                                         {selectedSkills.length > 0 ? selectedSkills.map((skill) => (
-                                            <span key={skill} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            <span key={skill} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
                                                 {skill}
                                             </span>
-                                        )) : <span className="text-gray-400 italic">No skills added yet.</span>}
+                                        )) : <span className="text-gray-500 italic">No skills added yet.</span>}
                                     </div>
                                 )}
                             </dd>

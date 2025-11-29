@@ -39,16 +39,16 @@ export default function CreateProject() {
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-8">
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+            <div className="bg-dark-surface rounded-2xl shadow-xl overflow-hidden border border-white/10">
+                <div className="bg-gradient-to-r from-primary to-secondary px-8 py-6">
                     <h1 className="text-2xl font-bold text-white">Pitch Your Project</h1>
-                    <p className="text-indigo-100 mt-1">Share your vision and find the perfect team.</p>
+                    <p className="text-white/80 mt-1">Share your vision and find the perfect team.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
                     {/* Title */}
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
                             Project Title
                         </label>
                         <input
@@ -56,7 +56,7 @@ export default function CreateProject() {
                             id="title"
                             name="title"
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., EcoTrack - Carbon Footprint AI"
                             value={formData.title}
                             onChange={handleChange}
@@ -65,7 +65,7 @@ export default function CreateProject() {
 
                     {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
                             Description
                         </label>
                         <textarea
@@ -73,7 +73,7 @@ export default function CreateProject() {
                             name="description"
                             rows="4"
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="Describe your project, its goals, and why it matters..."
                             value={formData.description}
                             onChange={handleChange}
@@ -83,13 +83,13 @@ export default function CreateProject() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Category */}
                         <div>
-                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
                                 Category
                             </label>
                             <select
                                 id="category"
                                 name="category"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-dark"
                                 value={formData.category}
                                 onChange={handleChange}
                             >
@@ -104,13 +104,13 @@ export default function CreateProject() {
 
                         {/* Status */}
                         <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1">
                                 Current Status
                             </label>
                             <select
                                 id="status"
                                 name="status"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&>option]:bg-dark"
                                 value={formData.status}
                                 onChange={handleChange}
                             >
@@ -124,14 +124,14 @@ export default function CreateProject() {
 
                     {/* Looking For */}
                     <div>
-                        <label htmlFor="lookingFor" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="lookingFor" className="block text-sm font-medium text-gray-300 mb-1">
                             Who are you looking for?
                         </label>
                         <input
                             type="text"
                             id="lookingFor"
                             name="lookingFor"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., React Developer, UI Designer, Marketing Lead"
                             value={formData.lookingFor}
                             onChange={handleChange}
@@ -141,7 +141,7 @@ export default function CreateProject() {
 
                     {/* Member Limit */}
                     <div>
-                        <label htmlFor="memberLimit" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="memberLimit" className="block text-sm font-medium text-gray-300 mb-1">
                             Team Size Limit
                         </label>
                         <input
@@ -150,7 +150,7 @@ export default function CreateProject() {
                             name="memberLimit"
                             min="2"
                             max="50"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., 5"
                             value={formData.memberLimit || 5}
                             onChange={handleChange}
@@ -159,16 +159,16 @@ export default function CreateProject() {
                     </div>
 
                     {/* Poll Question */}
-                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                        <label htmlFor="pollQuestion" className="block text-sm font-medium text-indigo-900 mb-1">
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <label htmlFor="pollQuestion" className="block text-sm font-medium text-primary mb-1">
                             Add a Poll (Optional)
                         </label>
-                        <p className="text-xs text-indigo-700 mb-2">Engage the community by asking a question.</p>
+                        <p className="text-xs text-gray-400 mb-2">Engage the community by asking a question.</p>
                         <input
                             type="text"
                             id="pollQuestion"
                             name="pollQuestion"
-                            className="w-full px-4 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., Would you use this feature?"
                             value={formData.pollQuestion}
                             onChange={handleChange}
@@ -180,7 +180,7 @@ export default function CreateProject() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-lg shadow-primary/20 transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Publishing...' : 'Publish Project'}
                         </button>
