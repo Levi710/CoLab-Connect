@@ -694,7 +694,6 @@ app.put('/api/messages/:id', authenticateToken, async (req, res) => {
 
 app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) => {
     const projectId = req.params.projectId;
-    console.log(`Fetching members for project ${projectId}`);
     try {
         const result = await db.query(`
             SELECT pm.*, u.username, u.photo_url, u.email
@@ -702,7 +701,6 @@ app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) 
             JOIN users u ON pm.user_id = u.id
             WHERE pm.project_id = $1
             `, [projectId]);
-        console.log(`Found ${result.rows.length} members for project ${projectId}`);
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching members:', err);

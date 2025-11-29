@@ -63,9 +63,7 @@ export default function Chat() {
 
         const fetchMembers = async () => {
             try {
-                console.log('Fetching members for room:', selectedRoom.id);
                 const data = await api.chat.getMembers(selectedRoom.id);
-                console.log('Members data received:', data);
                 setMembers(data);
             } catch (error) {
                 console.error('Failed to fetch members:', error);
