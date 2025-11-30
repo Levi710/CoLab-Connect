@@ -108,18 +108,20 @@ export default function Home() {
                     {/* 3D Demo Placeholder */}
                     <div className="relative max-w-4xl mx-auto mt-12">
                         <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-2xl blur opacity-30 animate-pulse"></div>
-                        <div className="relative bg-dark-surface rounded-2xl border border-white/10 aspect-video flex items-center justify-center overflow-hidden shadow-2xl">
-                            <div className="text-center">
-                                <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg shadow-primary/20">
-                                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <p className="text-gray-400 font-medium">Watch the Demo</p>
-                            </div>
-                            {/* Grid overlay for video placeholder */}
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+                        <div className="relative bg-dark-surface rounded-2xl border border-white/10 aspect-video flex items-center justify-center overflow-hidden shadow-2xl group">
+                            <video
+                                className="w-full h-full object-cover"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                controls
+                            >
+                                <source src="/demo.mp4" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                            {/* Overlay Gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent pointer-events-none"></div>
                         </div>
                     </div>
                 </div>
