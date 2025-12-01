@@ -93,7 +93,22 @@ export default function Dashboard() {
         setMyProjects(prev => prev.filter(p => p.id !== projectId));
     };
 
-    if (loading) return <div className="text-center py-20">Loading dashboard...</div>;
+    if (loading) return (
+        <div className="container mx-auto px-4 py-8 animate-pulse">
+            <div className="h-8 w-64 bg-white/10 rounded mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-[#13161f] p-6 rounded-lg border border-white/5 h-32"></div>
+                ))}
+            </div>
+            <div className="h-64 bg-[#13161f] rounded-lg border border-white/5 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-[#13161f] rounded-xl h-64 border border-white/5"></div>
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <div className="container mx-auto px-4 py-8">
