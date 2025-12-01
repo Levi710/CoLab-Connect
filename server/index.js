@@ -874,11 +874,18 @@ app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) 
 app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async (req, res) => {
     const { projectId, userId } = req.params;
     try {
-        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        const projectRes = await db.query('SELECT user_id, title FROM projects WHERE id = $1', [projectId]);
         if (projectRes.rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Only project owner can remove members' });
         if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'Cannot remove yourself' });
 
         await db.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+
+        // Send Notification to removed member
+        await db.query(
+            'INSERT INTO notifications (user_id, type, content, related_id) VALUES ($1, $2, $3, $4)',
+            [userId, 'project_kicked', `You have been removed from the project "${projectRes.rows[0].title}"`, projectId]
+        );
+
         res.json({ message: 'Member removed' });
     } catch (err) {
         console.error(err);
