@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { useToast } from '../context/ToastContext';
 import { Github, Linkedin, Twitter } from 'lucide-react';
-import { api } from '../api';
+
 
 export default function Creators() {
     const { addToast } = useToast();

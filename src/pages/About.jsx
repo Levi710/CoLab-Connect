@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Zap, Shield, Globe, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Zap, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function About() {
     const [openFaq, setOpenFaq] = React.useState(null);

@@ -8,7 +8,7 @@ import ProjectCard from '../components/ProjectCard';
 import skillsData from '../data/skills.json';
 
 export default function Profile() {
-    const { currentUser } = useAuth();
+    const { currentUser, loading: authLoading } = useAuth();
     const { addToast } = useToast();
     const { id } = useParams();
     const [profileUser, setProfileUser] = useState(null);
@@ -17,7 +17,7 @@ export default function Profile() {
     const [selectedSkills, setSelectedSkills] = useState([]);
     const [photoUrl, setPhotoUrl] = useState('');
     const [backgroundUrl, setBackgroundUrl] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [userProjects, setUserProjects] = useState([]);
     const [viewingImage, setViewingImage] = useState(null);
 
@@ -35,6 +35,8 @@ export default function Profile() {
 
     useEffect(() => {
         const fetchProfile = async () => {
+            if (authLoading) return; // Wait for auth to load
+
             setError(null);
             if (isOwnProfile) {
                 if (currentUser) {
@@ -44,6 +46,7 @@ export default function Profile() {
                     setSelectedSkills(userSkills);
                     setPhotoUrl(currentUser.photo_url || '');
                     setBackgroundUrl(currentUser.background_url || '');
+                    setLoading(false);
 
                     // Fetch own projects
                     try {
@@ -53,6 +56,9 @@ export default function Profile() {
                     } catch (err) {
                         console.error("Failed to fetch my projects", err);
                     }
+                } else {
+                    // Not logged in and trying to view own profile (e.g. /profile)
+                    setLoading(false);
                 }
             } else {
                 setLoading(true);
@@ -77,7 +83,7 @@ export default function Profile() {
         };
 
         fetchProfile();
-    }, [currentUser, id, isOwnProfile]);
+    }, [currentUser, id, isOwnProfile, authLoading]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -90,28 +96,28 @@ export default function Profile() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    if (error) {
-        return (
-            <div className="container mx-auto px-4 py-8 text-center">
-                <p className="text-red-500 mb-2">{error}</p>
-                <p className="text-gray-500">Profile not found or please log in.</p>
-            </div>
-        );
-    }
-
-    if (!profileUser && !loading) {
-        return (
-            <div className="container mx-auto px-4 py-8 text-center">
-                <p className="text-gray-500">Profile not found or please log in.</p>
-            </div>
-        );
-    }
-
-    if (loading) return (
+    if (authLoading || loading) return (
         <div className="min-h-screen bg-[#0b0f19]">
             <SkeletonLoader type="profile" />
         </div>
     );
+
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8 text-center text-white pt-24">
+                <p className="text-red-500 mb-2">{error}</p>
+                <p className="text-gray-500">Profile not found.</p>
+            </div>
+        );
+    }
+
+    if (!profileUser) {
+        return (
+            <div className="container mx-auto px-4 py-8 text-center text-white pt-24">
+                <p className="text-gray-500">Please log in to view your profile.</p>
+            </div>
+        );
+    }
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
