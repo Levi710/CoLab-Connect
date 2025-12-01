@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const Razorpay = require('razorpay');
 
 const app = express();
@@ -203,6 +204,60 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+// --- Auth Routes ---
+app.post('/api/auth/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    try {
+        const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userExists.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const publicId = crypto.randomUUID(); // Generate UUID
+
+        const newUser = await db.query(
+            'INSERT INTO users (username, email, password_hash, public_id) VALUES ($1, $2, $3, $4) RETURNING id, public_id, username, email, is_premium',
+            [username, email, hashedPassword, publicId]
+        );
+
+        const token = jwt.sign({ id: newUser.rows[0].id, email: newUser.rows[0].email }, JWT_SECRET);
+        res.json({ token, user: newUser.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Registration failed' });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const userRes = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userRes.rows.length === 0) return res.status(400).json({ error: 'User not found' });
+
+        const user = userRes.rows[0];
+        const validPassword = await bcrypt.compare(password, user.password_hash);
+        if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
+
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET);
+
+        // Return public_id and other safe fields
+        const { password_hash, ...safeUser } = user;
+        res.json({ token, user: safeUser });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [req.user.id]);
+        res.json(userRes.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch user' });
+    }
+});
 
 
 
@@ -611,10 +666,12 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
 // --- User Profile Routes ---
 app.get('/api/users/:id/profile', async (req, res) => {
     const { id } = req.params;
+    console.log(`[DEBUG] Fetching profile for ID: ${id}`);
     try {
         let userRes;
         // Check if id is UUID (public_id) or Integer (id)
         const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+        console.log(`[DEBUG] Is UUID: ${isUuid}`);
 
         if (isUuid) {
             userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE public_id = $1', [id]);
@@ -623,7 +680,10 @@ app.get('/api/users/:id/profile', async (req, res) => {
             userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [id]);
         }
 
-        if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+        if (userRes.rows.length === 0) {
+            console.log('[DEBUG] User not found in DB');
+            return res.status(404).json({ error: 'User not found' });
+        }
         const user = userRes.rows[0];
 
         // Fetch user's projects
