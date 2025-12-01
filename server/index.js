@@ -49,7 +49,8 @@ async function initDb() {
             { name: 'messages_request_id_nullable', query: 'ALTER TABLE messages ALTER COLUMN request_id DROP NOT NULL' },
             { name: 'comments_parent_id', query: 'ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE' },
             { name: 'project_members_last_read_at', query: 'ALTER TABLE project_members ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP' },
-            { name: 'projects_impressions', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0' }
+            { name: 'projects_impressions', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0' },
+            { name: 'users_password_hash_rename', query: 'ALTER TABLE users RENAME COLUMN password TO password_hash' }
         ];
 
         for (const migration of migrations) {
