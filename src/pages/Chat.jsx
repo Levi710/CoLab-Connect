@@ -270,31 +270,27 @@ export default function Chat() {
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
-                                                    msg.sender_public_id ? (
-                                                        <div
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
+                                                    <div
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (msg.sender_public_id) {
                                                                 console.log('Navigating to profile:', msg.sender_public_id);
                                                                 navigate(`/profile/${msg.sender_public_id}`);
-                                                            }}
-                                                            className="mr-2 flex-shrink-0 self-start mt-5 relative z-10 cursor-pointer block"
-                                                        >
-                                                            <img
-                                                                src={msg.sender_photo || '/logo.svg'}
-                                                                alt={msg.sender_name}
-                                                                title={msg.sender_public_id || 'No ID'}
-                                                                className="w-8 h-8 rounded-full object-cover border border-white/10"
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mr-2 flex-shrink-0 self-start mt-5">
-                                                            <img
-                                                                src={msg.sender_photo || '/logo.svg'}
-                                                                alt={msg.sender_name}
-                                                                className="w-8 h-8 rounded-full object-cover border border-white/10"
-                                                            />
-                                                        </div>
-                                                    )
+                                                            } else {
+                                                                console.log('No public ID for user:', msg.sender_name);
+                                                                alert(`User profile not available. (ID missing)`);
+                                                            }
+                                                        }}
+                                                        className="mr-2 flex-shrink-0 self-start mt-5 relative z-50 cursor-pointer block"
+                                                        style={{ pointerEvents: 'auto' }}
+                                                    >
+                                                        <img
+                                                            src={msg.sender_photo || '/logo.svg'}
+                                                            alt={msg.sender_name}
+                                                            title={msg.sender_public_id || 'No ID'}
+                                                            className="w-8 h-8 rounded-full object-cover border border-white/10"
+                                                        />
+                                                    </div>
                                                 )}
                                                 <div className="max-w-[70%]">
                                                     {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
