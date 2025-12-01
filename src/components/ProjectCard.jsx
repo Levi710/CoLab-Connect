@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock, TrendingUp, Send, Trash2, Image as ImageIcon } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function ProjectCard({ project, isSponsored, isOwner, onDelete, onEdit }) {
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [note, setNote] = useState('');
 
@@ -20,7 +22,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     const handleLike = async (e) => {
         e.preventDefault();
-        if (!currentUser) return alert('Please login to like projects');
+        if (!currentUser) return addToast('Please login to like projects', 'info');
 
         // Optimistic update
         const prevLikes = likes;
@@ -37,6 +39,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             setLikes(prevLikes);
             setIsLiked(prevIsLiked);
             console.error(err);
+            addToast('Failed to like project', 'error');
         }
     };
 
@@ -49,6 +52,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 setComments(data);
             } catch (err) {
                 console.error(err);
+                addToast('Failed to load comments', 'error');
             } finally {
                 setLoadingComments(false);
             }
@@ -58,7 +62,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     const handleAddComment = async (e) => {
         e.preventDefault();
-        if (!currentUser) return alert('Please login to comment');
+        if (!currentUser) return addToast('Please login to comment', 'info');
         if (!newComment.trim()) return;
 
         try {
@@ -67,9 +71,10 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             setComments([comment, ...comments]);
             setNewComment('');
             setReplyTo(null);
+            addToast('Comment added', 'success');
         } catch (err) {
             console.error(err);
-            alert('Failed to post comment');
+            addToast('Failed to post comment', 'error');
         }
     };
 
@@ -78,14 +83,15 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         try {
             await api.projects.deleteComment(commentId);
             setComments(comments.filter(c => c.id !== commentId));
+            addToast('Comment deleted', 'success');
         } catch (err) {
             console.error('Failed to delete comment:', err);
-            alert('Failed to delete comment');
+            addToast('Failed to delete comment', 'error');
         }
     };
 
     const handleCommentLike = async (commentId) => {
-        if (!currentUser) return alert('Please login to like comments');
+        if (!currentUser) return addToast('Please login to like comments', 'info');
         try {
             const res = await api.projects.toggleCommentLike(commentId);
             setComments(comments.map(c =>
@@ -93,6 +99,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             ));
         } catch (err) {
             console.error('Failed to like comment:', err);
+            addToast('Failed to like comment', 'error');
         }
     };
 
@@ -101,9 +108,10 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         try {
             await api.projects.delete(project.id);
             if (onDelete) onDelete(project.id);
+            addToast('Project deleted', 'success');
         } catch (err) {
             console.error('Failed to delete project:', err);
-            alert('Failed to delete project');
+            addToast('Failed to delete project', 'error');
         }
     };
 
@@ -115,15 +123,15 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 role: 'Collaborator',
                 note: note
             });
-            alert('Application sent successfully!');
+            addToast('Application sent successfully!', 'success');
             setShowApplyModal(false);
             setNote('');
         } catch (error) {
             console.error('Failed to apply:', error);
             if (error.message.includes('already requested')) {
-                alert('You have already requested to join this project.');
+                addToast('You have already requested to join this project.', 'info');
             } else {
-                alert(error.message || 'Failed to send application. Please try again.');
+                addToast(error.message || 'Failed to send application. Please try again.', 'error');
             }
         }
     };

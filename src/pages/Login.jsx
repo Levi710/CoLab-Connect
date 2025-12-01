@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
 
 export default function Login() {
@@ -11,6 +12,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const { login, register } = useAuth();
     const navigate = useNavigate();
+    const { addToast } = useToast();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,12 +20,16 @@ export default function Login() {
         try {
             if (isLogin) {
                 await login(email, password);
+                addToast('Welcome back!', 'success');
             } else {
                 await register(username, email, password);
+                addToast('Account created successfully!', 'success');
             }
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to authenticate. Please check your credentials.');
+            const errorMessage = err.response?.data?.error || 'Failed to authenticate. Please check your credentials.';
+            setError(errorMessage);
+            addToast(errorMessage, 'error');
         }
     };
 
