@@ -21,6 +21,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(true);
     const [userProjects, setUserProjects] = useState([]);
     const [viewingImage, setViewingImage] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Skills Selector State
     const [skillSearch, setSkillSearch] = useState('');
@@ -168,17 +169,16 @@ export default function Profile() {
     );
 
     const handleDeleteAccount = async () => {
-        if (window.confirm('Are you sure you want to delete your account? This action is irreversible and will remove all your data.')) {
-            try {
-                const { api } = await import('../api');
-                await api.users.deleteAccount();
-                logout();
-                addToast('Account deleted successfully.', 'success');
-                navigate('/');
-            } catch (error) {
-                console.error('Failed to delete account:', error);
-                addToast('Failed to delete account.', 'error');
-            }
+        setShowDeleteModal(false);
+        try {
+            const { api } = await import('../api');
+            await api.users.deleteAccount();
+            logout();
+            addToast('Account deleted successfully.', 'success');
+            navigate('/');
+        } catch (error) {
+            console.error('Failed to delete account:', error);
+            addToast('Failed to delete account.', 'error');
         }
     };
 
@@ -317,7 +317,7 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div>
                             <h3 className="text-2xl font-bold leading-6 text-white">
                                 {profileUser.username}
@@ -326,7 +326,7 @@ export default function Profile() {
                                 {profileUser.email}
                             </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-primary/10 text-primary h-fit border border-primary/20">
                                 {profileUser.is_premium ? 'Premium Plan' : 'Free Plan'}
                             </span>
@@ -341,8 +341,8 @@ export default function Profile() {
                             )}
                             {isOwnProfile && !isEditing && (
                                 <button
-                                    onClick={handleDeleteAccount}
-                                    className="inline-flex items-center px-4 py-2 border border-red-500/50 text-sm font-medium rounded-md shadow-sm text-red-500 bg-transparent hover:bg-red-500/10 focus:outline-none transition-colors ml-2"
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="inline-flex items-center px-4 py-2 border border-red-500/50 text-sm font-medium rounded-md shadow-sm text-red-500 bg-transparent hover:bg-red-500/10 focus:outline-none transition-colors"
                                 >
                                     Delete Account
                                 </button>
@@ -494,6 +494,67 @@ export default function Profile() {
                     </div>
                 )}
             </div>
+
+            {/* Delete Account Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-dark/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => setShowDeleteModal(false)}></div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-[#13161f] rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl border border-white/10 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                            <div className="absolute top-0 right-0 pt-4 pr-4">
+                                <button
+                                    type="button"
+                                    className="bg-transparent rounded-md text-gray-400 hover:text-white focus:outline-none"
+                                    onClick={() => setShowDeleteModal(false)}
+                                >
+                                    <span className="sr-only">Close</span>
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+                            <div className="sm:flex sm:items-start">
+                                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 className="text-lg leading-6 font-bold text-white" id="modal-title">
+                                        Delete Account
+                                    </h3>
+                                    <div className="mt-2">
+                                        <p className="text-sm text-gray-400">
+                                            Are you absolutely sure you want to delete your account? This action is <span className="text-red-500 font-semibold">irreversible</span> and will permanently remove:
+                                        </p>
+                                        <ul className="mt-3 text-sm text-gray-400 list-disc list-inside space-y-1">
+                                            <li>Your user profile and personal data</li>
+                                            <li>All your projects and their content</li>
+                                            <li>Messages and chat history</li>
+                                            <li>Requests and notifications</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
+                                <button
+                                    type="button"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm"
+                                    onClick={handleDeleteAccount}
+                                >
+                                    Delete Account
+                                </button>
+                                <button
+                                    type="button"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-white/10 shadow-sm px-4 py-2 bg-transparent text-base font-medium text-gray-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
+                                    onClick={() => setShowDeleteModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

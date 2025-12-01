@@ -159,6 +159,24 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
+                <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5 relative">
+                    <div className="flex items-center">
+                        <div className="p-3 rounded-full bg-purple-500/10 text-purple-400">
+                            <BarChart className="h-6 w-6" />
+                        </div>
+                        <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-400">Total Impressions</p>
+                            <p className={`text-2xl font-semibold text-white ${!isPremium ? 'blur-sm' : ''}`}>
+                                {currentUser?.profile_views || 0}
+                            </p>
+                        </div>
+                    </div>
+                    {!isPremium && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-dark/30 backdrop-blur-[2px] rounded-lg">
+                            <Lock className="h-6 w-6 text-gray-400" />
+                        </div>
+                    )}
+                </div>
                 {/* Removed Pending Requests Card */}
             </div>
 

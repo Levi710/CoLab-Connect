@@ -52,7 +52,8 @@ async function initDb() {
             { name: 'project_members_last_read_at', query: 'ALTER TABLE project_members ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP' },
             { name: 'projects_impressions', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0' },
             { name: 'users_password_hash_rename', query: 'ALTER TABLE users RENAME COLUMN password TO password_hash' },
-            { name: 'users_public_id', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS public_id VARCHAR(50) UNIQUE' }
+            { name: 'users_public_id', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS public_id VARCHAR(50) UNIQUE' },
+            { name: 'users_profile_views', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0' }
         ];
 
         for (const migration of migrations) {
@@ -259,7 +260,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
-        const userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [req.user.id]);
+        const userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium, profile_views FROM users WHERE id = $1', [req.user.id]);
         res.json(userRes.rows[0]);
     } catch (err) {
         console.error(err);
@@ -684,10 +685,10 @@ app.get('/api/users/:id/profile', async (req, res) => {
         console.log(`[DEBUG] Is UUID: ${isUuid}`);
 
         if (isUuid) {
-            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE public_id = $1', [id]);
+            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium, profile_views FROM users WHERE public_id = $1', [id]);
         } else {
             // Fallback for integer IDs (though frontend should use public_id)
-            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [id]);
+            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium, profile_views FROM users WHERE id = $1', [id]);
         }
 
         if (userRes.rows.length === 0) {
@@ -695,6 +696,10 @@ app.get('/api/users/:id/profile', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         const user = userRes.rows[0];
+
+        // Increment profile views
+        await db.query('UPDATE users SET profile_views = profile_views + 1 WHERE id = $1', [user.id]);
+        user.profile_views = (user.profile_views || 0) + 1;
 
         // Fetch user's projects
         const projectsRes = await db.query(`
