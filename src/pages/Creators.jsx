@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { useToast } from '../context/ToastContext';
+import { api } from '../api';
 import { Github, Linkedin, Twitter } from 'lucide-react';
 
 
@@ -15,8 +16,7 @@ export default function Creators() {
 
     const fetchCreators = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/creators');
-            const data = await res.json();
+            const data = await api.creators.getAll();
 
             // Override for Ayush and Suprovo
             const updatedData = data.map(creator => {

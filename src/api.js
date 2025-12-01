@@ -321,5 +321,12 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch user profile');
             return res.json();
         }
+    },
+    creators: {
+        getAll: async () => {
+            const res = await fetch(`${API_URL}/creators`);
+            if (!res.ok) throw new Error('Failed to fetch creators');
+            return res.json();
+        }
     }
 };
