@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import SkeletonLoader from '../components/SkeletonLoader';
 
 export default function Chat() {
     const { requestId } = useParams(); // requestId here acts as projectId or 'all'
+    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { addToast } = useToast();
 
@@ -270,15 +271,21 @@ export default function Chat() {
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
                                                     msg.sender_public_id ? (
-                                                        <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start mt-5 relative z-10">
+                                                        <div
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log('Navigating to profile:', msg.sender_public_id);
+                                                                navigate(`/profile/${msg.sender_public_id}`);
+                                                            }}
+                                                            className="mr-2 flex-shrink-0 self-start mt-5 relative z-10 cursor-pointer block"
+                                                        >
                                                             <img
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
                                                                 title={msg.sender_public_id || 'No ID'}
-                                                                onClick={() => alert(`Debug: ID=${msg.sender_public_id}`)}
                                                                 className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                             />
-                                                        </Link>
+                                                        </div>
                                                     ) : (
                                                         <div className="mr-2 flex-shrink-0 self-start mt-5">
                                                             <img
