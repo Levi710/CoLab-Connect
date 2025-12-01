@@ -161,7 +161,7 @@ export default function Dashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h3 className="text-sm font-medium text-gray-400 mb-2">Project Growth Trend</h3>
-                                <div className="h-40 flex items-end justify-between space-x-2 px-2 bg-dark rounded p-4 border border-white/5">
+                                <div className="h-40 flex items-end justify-between space-x-2 px-2 bg-dark rounded p-4 border border-white/5 overflow-x-auto custom-scrollbar">
                                     {aiAnalysis.projectGrowth.map((h, i) => (
                                         <div key={i} className="w-full bg-primary rounded-t-sm relative group" style={{ height: `${h * 5}%` }}>
                                             <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white text-dark text-xs py-1 px-2 rounded z-10 font-bold">
