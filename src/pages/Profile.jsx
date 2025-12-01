@@ -208,9 +208,9 @@ export default function Profile() {
                 </div>
             )}
 
-            <div className="bg-dark-surface shadow-xl rounded-lg overflow-hidden border border-white/10 mb-8">
+            <div className="bg-dark-surface shadow-xl rounded-lg border border-white/10 mb-8">
                 <div
-                    className="h-32 bg-cover bg-center relative group"
+                    className="h-32 bg-cover bg-center relative group rounded-t-lg"
                     style={{
                         backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : 'none',
                         backgroundColor: backgroundUrl ? 'transparent' : '#4f46e5'
