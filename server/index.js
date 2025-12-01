@@ -712,6 +712,53 @@ app.get('/api/users/:id/profile', async (req, res) => {
     }
 });
 
+app.delete('/api/users/me', authenticateToken, async (req, res) => {
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+        const userId = req.user.id;
+
+        // 1. Delete Notifications
+        await client.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+
+        // 2. Delete Messages sent by user
+        await client.query('DELETE FROM messages WHERE sender_id = $1', [userId]);
+
+        // 3. Delete Project Memberships
+        await client.query('DELETE FROM project_members WHERE user_id = $1', [userId]);
+
+        // 4. Delete Requests made by user
+        await client.query('DELETE FROM requests WHERE user_id = $1', [userId]);
+
+        // 5. Handle Owned Projects
+        const projectsRes = await client.query('SELECT id FROM projects WHERE user_id = $1', [userId]);
+        const projectIds = projectsRes.rows.map(p => p.id);
+
+        if (projectIds.length > 0) {
+            // Delete messages in these projects
+            await client.query('DELETE FROM messages WHERE project_id = ANY($1)', [projectIds]);
+            // Delete members in these projects
+            await client.query('DELETE FROM project_members WHERE project_id = ANY($1)', [projectIds]);
+            // Delete requests for these projects
+            await client.query('DELETE FROM requests WHERE project_id = ANY($1)', [projectIds]);
+            // Delete the projects
+            await client.query('DELETE FROM projects WHERE user_id = $1', [userId]);
+        }
+
+        // 6. Delete User
+        await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+        await client.query('COMMIT');
+        res.json({ message: 'Account deleted successfully' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete account' });
+    } finally {
+        client.release();
+    }
+});
+
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
     const { bio, skills, photo_url, background_url } = req.body;
     try {

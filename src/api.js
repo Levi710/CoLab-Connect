@@ -320,6 +320,14 @@ export const api = {
             });
             if (!res.ok) throw new Error('Failed to fetch user profile');
             return res.json();
+        },
+        deleteAccount: async () => {
+            const res = await fetch(`${API_URL}/users/me`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to delete account');
+            return res.json();
         }
     },
     creators: {

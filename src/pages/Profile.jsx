@@ -8,7 +8,7 @@ import ProjectCard from '../components/ProjectCard';
 import skillsData from '../data/skills.json';
 
 export default function Profile() {
-    const { currentUser, loading: authLoading } = useAuth();
+    const { currentUser, loading: authLoading, logout } = useAuth();
     const { addToast } = useToast();
     const navigate = useNavigate();
     const { id } = useParams();
@@ -167,6 +167,21 @@ export default function Profile() {
         !selectedSkills.includes(skill)
     );
 
+    const handleDeleteAccount = async () => {
+        if (window.confirm('Are you sure you want to delete your account? This action is irreversible and will remove all your data.')) {
+            try {
+                const { api } = await import('../api');
+                await api.users.deleteAccount();
+                logout();
+                addToast('Account deleted successfully.', 'success');
+                navigate('/');
+            } catch (error) {
+                console.error('Failed to delete account:', error);
+                addToast('Failed to delete account.', 'error');
+            }
+        }
+    };
+
     const handleSave = async () => {
         setLoading(true);
         try {
@@ -322,6 +337,14 @@ export default function Profile() {
                                     disabled={loading}
                                 >
                                     {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
+                                </button>
+                            )}
+                            {isOwnProfile && !isEditing && (
+                                <button
+                                    onClick={handleDeleteAccount}
+                                    className="inline-flex items-center px-4 py-2 border border-red-500/50 text-sm font-medium rounded-md shadow-sm text-red-500 bg-transparent hover:bg-red-500/10 focus:outline-none transition-colors ml-2"
+                                >
+                                    Delete Account
                                 </button>
                             )}
                             {isEditing && isOwnProfile && (
