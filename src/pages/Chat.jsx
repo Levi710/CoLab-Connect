@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -33,7 +33,7 @@ export default function Chat() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages.length, selectedRoom?.id]);
 
     useEffect(() => {
         fetchRooms();
@@ -41,7 +41,12 @@ export default function Chat() {
 
     useEffect(() => {
         if (selectedRoom) {
-            fetchMessages();
+            const loadData = async () => {
+                setLoading(true);
+                await Promise.all([fetchMessages(), fetchMembers()]);
+                setLoading(false);
+            };
+            loadData();
             const interval = setInterval(fetchMessages, 3000); // Poll for new messages
             return () => clearInterval(interval);
         }
@@ -263,13 +268,13 @@ export default function Chat() {
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
-                                                    <div className="mr-2 flex-shrink-0 self-end">
+                                                    <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start">
                                                         <img
-                                                            src={msg.sender_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender_name)}&background=random`}
+                                                            src={msg.sender_photo || '/logo.svg'}
                                                             alt={msg.sender_name}
-                                                            className="w-8 h-8 rounded-full object-cover"
+                                                            className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                         />
-                                                    </div>
+                                                    </Link>
                                                 )}
                                                 <div className="max-w-[70%]">
                                                     {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}

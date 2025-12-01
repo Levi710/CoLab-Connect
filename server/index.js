@@ -867,7 +867,7 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
         await db.query('UPDATE project_members SET last_read_at = CURRENT_TIMESTAMP WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
 
         const result = await db.query(`
-            SELECT m.*, u.username as sender_name, u.photo_url as sender_photo
+            SELECT m.*, u.username as sender_name, u.photo_url as sender_photo, u.public_id as sender_public_id
             FROM messages m
             LEFT JOIN users u ON m.sender_id = u.id
             JOIN project_members pm ON pm.project_id = m.project_id AND pm.user_id = $2
