@@ -1,3 +1,12 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { User, Briefcase, Award, X, Eye, Plus, Search } from 'lucide-react';
+import SkeletonLoader from '../components/SkeletonLoader';
+import ProjectCard from '../components/ProjectCard';
+import skillsData from '../data/skills.json';
+
 export default function Profile() {
     const { currentUser } = useAuth();
     const { addToast } = useToast();

@@ -83,13 +83,19 @@ export default function Navbar() {
                                     </span>
                                 )}
                             </Link>
+                            <Link to="/about" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/about' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                About
+                            </Link>
+                            <Link to="/creators" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/creators' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                Creators
+                            </Link>
                         </div>
                     </div>
                     <div className="hidden sm:ml-6 sm:flex sm:items-center">
                         <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                             <PlusCircle className="h-6 w-6" />
                         </Link>
-                        <Link to="/profile" className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                             {currentUser && currentUser.photo_url ? (
                                 <img
                                     className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
@@ -126,77 +132,79 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {isOpen && (
-                <div className="sm:hidden bg-dark border-b border-white/10">
-                    <div className="pt-2 pb-3 space-y-1">
-                        <Link to="/" className={getMobileLinkClass('/')}>
-                            Discovery
-                        </Link>
-                        <Link to="/dashboard" className={getMobileLinkClass('/dashboard')}>
-                            Dashboard
-                        </Link>
-                        <Link to="/inbox" className={getMobileLinkClass('/inbox')}>
-                            Inbox
-                            {inboxCount > 0 && (
-                                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                    {inboxCount}
-                                </span>
-                            )}
-                        </Link>
-                        <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
-                            Messages
-                            {unreadCount > 0 && (
-                                <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </Link>
-                        <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
-                            Create Project
-                        </Link>
-                    </div>
-                    <div className="pt-4 pb-4 border-t border-white/10">
-                        {currentUser ? (
-                            <>
-                                <div className="flex items-center px-4">
-                                    <div className="flex-shrink-0">
-                                        {currentUser.photo_url ? (
-                                            <img
-                                                className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
-                                                src={currentUser.photo_url}
-                                                alt={currentUser.username}
-                                            />
-                                        ) : (
-                                            <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
-                                        )}
+            {
+                isOpen && (
+                    <div className="sm:hidden bg-dark border-b border-white/10">
+                        <div className="pt-2 pb-3 space-y-1">
+                            <Link to="/" className={getMobileLinkClass('/')}>
+                                Discovery
+                            </Link>
+                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')}>
+                                Dashboard
+                            </Link>
+                            <Link to="/inbox" className={getMobileLinkClass('/inbox')}>
+                                Inbox
+                                {inboxCount > 0 && (
+                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {inboxCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
+                                Messages
+                                {unreadCount > 0 && (
+                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
+                                Create Project
+                            </Link>
+                        </div>
+                        <div className="pt-4 pb-4 border-t border-white/10">
+                            {currentUser ? (
+                                <>
+                                    <div className="flex items-center px-4">
+                                        <div className="flex-shrink-0">
+                                            {currentUser.photo_url ? (
+                                                <img
+                                                    className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
+                                                    src={currentUser.photo_url}
+                                                    alt={currentUser.username}
+                                                />
+                                            ) : (
+                                                <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
+                                            )}
+                                        </div>
+                                        <div className="ml-3">
+                                            <div className="text-base font-medium text-white">{currentUser.username}</div>
+                                            <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
+                                        </div>
                                     </div>
-                                    <div className="ml-3">
-                                        <div className="text-base font-medium text-white">{currentUser.username}</div>
-                                        <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
+                                    <div className="mt-3 space-y-1">
+                                        <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
+                                            Your Profile
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
+                                        >
+                                            Sign out
+                                        </button>
                                     </div>
-                                </div>
+                                </>
+                            ) : (
                                 <div className="mt-3 space-y-1">
-                                    <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
-                                        Your Profile
+                                    <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
+                                        Login
                                     </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
-                                    >
-                                        Sign out
-                                    </button>
                                 </div>
-                            </>
-                        ) : (
-                            <div className="mt-3 space-y-1">
-                                <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
-                                    Login
-                                </Link>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </nav>
+                )
+            }
+        </nav >
     );
 }

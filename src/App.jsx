@@ -19,6 +19,9 @@ const TermsAndConditions = lazy(() => import('./pages/Policies').then(module => 
 const RefundPolicy = lazy(() => import('./pages/Policies').then(module => ({ default: module.RefundPolicy })));
 const ContactUs = lazy(() => import('./pages/Policies').then(module => ({ default: module.ContactUs })));
 
+const About = lazy(() => import('./pages/About'));
+const Creators = lazy(() => import('./pages/Creators'));
+
 function App() {
   return (
     <ToastProvider>
@@ -31,6 +34,8 @@ function App() {
           }>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/creators" element={<Creators />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:id" element={<Profile />} />

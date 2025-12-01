@@ -245,7 +245,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center space-x-3 min-w-0">
-                            <Link to={`/profile/${project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                            <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
                                 {project.owner_photo ? (
                                     <img src={project.owner_photo} alt={project.owner_name} className="h-full w-full object-cover" />
                                 ) : (
