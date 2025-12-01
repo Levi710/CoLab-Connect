@@ -130,13 +130,13 @@ export default function Home() {
             {/* Main Content Area */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
                 {/* Search Bar */}
-                <div className="max-w-3xl mx-auto mb-16">
-                    <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface border border-white/10 rounded-full p-2 flex shadow-xl shadow-black/50 backdrop-blur-xl">
-                        <div className="flex-shrink-0 pl-4 pr-2 flex items-center border-r border-white/5">
+                <div className="max-w-3xl mx-auto mb-16 px-4 sm:px-0">
+                    <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface border border-white/10 rounded-2xl sm:rounded-full p-2 flex flex-col sm:flex-row shadow-xl shadow-black/50 backdrop-blur-xl">
+                        <div className="flex-shrink-0 pl-2 sm:pl-4 pr-2 flex items-center border-b sm:border-b-0 sm:border-r border-white/5 mb-2 sm:mb-0 pb-2 sm:pb-0">
                             <select
                                 value={filterCategory}
                                 onChange={(e) => setFilterCategory(e.target.value)}
-                                className="bg-transparent text-gray-300 text-sm font-medium focus:outline-none cursor-pointer hover:text-white transition-colors [&>option]:bg-[#13161f] [&>option]:text-gray-300"
+                                className="w-full sm:w-auto bg-transparent text-gray-300 text-sm font-medium focus:outline-none cursor-pointer hover:text-white transition-colors [&>option]:bg-[#13161f] [&>option]:text-gray-300 py-2 sm:py-0"
                             >
                                 <option value="All" className="bg-[#13161f]">All Categories</option>
                                 <option value="Tech" className="bg-[#13161f]">Technology</option>
@@ -152,12 +152,12 @@ export default function Home() {
                         <input
                             type="text"
                             placeholder="Search for projects..."
-                            className="flex-1 bg-transparent border-none px-4 text-white placeholder-gray-500 focus:ring-0"
+                            className="flex-1 bg-transparent border-none px-4 py-2 sm:py-0 text-white placeholder-gray-500 focus:ring-0 w-full"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <div className="px-4 py-3 text-gray-400">
-                            {searchTerm ? 'Searching...' : <Search className="w-5 h-5" />}
+                        <div className="px-4 py-2 sm:py-3 text-gray-400 flex justify-end sm:block">
+                            {searchTerm ? <span className="text-xs">Searching...</span> : <Search className="w-5 h-5" />}
                         </div>
                     </form>
                 </div>
