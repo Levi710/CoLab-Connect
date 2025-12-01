@@ -163,38 +163,46 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             </Link>
             <div className="flex-1">
                 <div className="bg-white/5 rounded-lg rounded-tl-none p-2 text-xs group relative">
-                    <Link to={`/profile/${comment.user_id}`} className="font-bold text-gray-300 mr-2 hover:text-primary transition-colors">{comment.username}</Link>
-                    <span className="text-gray-400">{comment.content}</span>
+                    <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1">
+                            <Link to={`/profile/${comment.user_id}`} className="font-bold text-gray-300 mr-2 hover:text-primary transition-colors">{comment.username}</Link>
+                            <span className="text-gray-400 break-words">{comment.content}</span>
+                        </div>
 
-                    {/* Like Button */}
-                    <button
-                        onClick={() => handleCommentLike(comment.id)}
-                        className="absolute bottom-1 right-2 flex items-center gap-1 text-gray-500 hover:text-pink-500 transition-colors"
-                    >
-                        <Heart className={`w-3 h-3 ${comment.likes_count > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
-                        <span className="text-[10px]">{comment.likes_count || 0}</span>
-                    </button>
+                        {/* Actions Container */}
+                        <div className="flex items-center gap-2 flex-shrink-0 self-start mt-0.5">
+                            {/* Reply Button for Owner */}
+                            {isOwner && !isReply && (
+                                <button
+                                    onClick={() => setReplyTo({ id: comment.id, username: comment.username })}
+                                    className="text-[10px] text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Reply"
+                                >
+                                    Reply
+                                </button>
+                            )}
 
-                    {/* Reply Button for Owner */}
-                    {isOwner && !isReply && (
-                        <button
-                            onClick={() => setReplyTo({ id: comment.id, username: comment.username })}
-                            className="absolute top-1 right-2 text-[10px] text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            Reply
-                        </button>
-                    )}
+                            {/* Delete Button */}
+                            {(isOwner || (currentUser && currentUser.id === comment.user_id && (new Date() - new Date(comment.created_at) < 10 * 60 * 1000))) && (
+                                <button
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Delete Comment"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                </button>
+                            )}
 
-                    {/* Delete Button for Owner or Comment Author (10 min limit for author) */}
-                    {(isOwner || (currentUser && currentUser.id === comment.user_id && (new Date() - new Date(comment.created_at) < 10 * 60 * 1000))) && (
-                        <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="absolute top-1 right-12 text-[10px] text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete Comment"
-                        >
-                            <Trash2 className="w-3 h-3" />
-                        </button>
-                    )}
+                            {/* Like Button */}
+                            <button
+                                onClick={() => handleCommentLike(comment.id)}
+                                className="flex items-center gap-1 text-gray-500 hover:text-pink-500 transition-colors"
+                            >
+                                <Heart className={`w-3 h-3 ${comment.likes_count > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                <span className="text-[10px]">{comment.likes_count || 0}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <span className="text-[10px] text-gray-600 ml-1">{new Date(comment.created_at).toLocaleDateString()}</span>
 
