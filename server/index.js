@@ -608,6 +608,54 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
     }
 });
 
+// --- User Profile Routes ---
+app.get('/api/users/:id/profile', async (req, res) => {
+    const { id } = req.params;
+    try {
+        let userRes;
+        // Check if id is UUID (public_id) or Integer (id)
+        const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
+        if (isUuid) {
+            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE public_id = $1', [id]);
+        } else {
+            // Fallback for integer IDs (though frontend should use public_id)
+            userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [id]);
+        }
+
+        if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+        const user = userRes.rows[0];
+
+        // Fetch user's projects
+        const projectsRes = await db.query(`
+            SELECT p.*, 
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count 
+            FROM projects p 
+            WHERE p.user_id = $1 
+            ORDER BY p.created_at DESC
+        `, [user.id]);
+
+        res.json({ ...user, projects: projectsRes.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
+app.put('/api/users/profile', authenticateToken, async (req, res) => {
+    const { bio, skills, photo_url, background_url } = req.body;
+    try {
+        const result = await db.query(
+            'UPDATE users SET bio = $1, skills = $2, photo_url = $3, background_url = $4 WHERE id = $5 RETURNING id, public_id, username, email, bio, skills, photo_url, background_url, is_premium',
+            [bio, skills, photo_url, background_url, req.user.id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
 app.put('/api/messages/:id', authenticateToken, async (req, res) => {
     const { content } = req.body;
     const messageId = req.params.id;
