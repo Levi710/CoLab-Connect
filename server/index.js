@@ -230,12 +230,20 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
+    console.log(`[DEBUG] Login attempt for email: ${email}`);
     try {
         const userRes = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userRes.rows.length === 0) return res.status(400).json({ error: 'User not found' });
+        if (userRes.rows.length === 0) {
+            console.log('[DEBUG] User not found');
+            return res.status(400).json({ error: 'User not found' });
+        }
 
         const user = userRes.rows[0];
+        console.log(`[DEBUG] User found: ${user.username}`);
+
         const validPassword = await bcrypt.compare(password, user.password_hash);
+        console.log(`[DEBUG] Password valid: ${validPassword}`);
+
         if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
 
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET);
@@ -244,7 +252,7 @@ app.post('/api/auth/login', async (req, res) => {
         const { password_hash, ...safeUser } = user;
         res.json({ token, user: safeUser });
     } catch (err) {
-        console.error(err);
+        console.error('[DEBUG] Login error:', err);
         res.status(500).json({ error: 'Login failed' });
     }
 });
