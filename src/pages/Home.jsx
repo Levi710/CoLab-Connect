@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, TrendingUp, Star } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -86,7 +87,15 @@ export default function Home() {
     // Simple logic for project of the month: most likes from FILTERED projects
     const projectOfTheMonth = [...filteredProjects].sort((a, b) => b.likes - a.likes)[0];
 
-    if (loading) return <div className="text-center py-20">Loading projects...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30 pt-20 pb-32">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <SkeletonLoader count={6} />
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30">

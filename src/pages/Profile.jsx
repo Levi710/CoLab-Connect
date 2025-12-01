@@ -1,11 +1,3 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useParams } from 'react-router-dom';
-import { User, Award, Briefcase, X, Plus, Search, Check, Lock, Eye } from 'lucide-react';
-import skillsData from '../data/skills.json';
-import ProjectCard from '../components/ProjectCard';
-import { useToast } from '../context/ToastContext';
-
 export default function Profile() {
     const { currentUser } = useAuth();
     const { addToast } = useToast();
@@ -106,13 +98,11 @@ export default function Profile() {
         );
     }
 
-    if (loading && !profileUser) {
-        return (
-            <div className="container mx-auto px-4 py-8 text-center">
-                <p className="text-gray-500">Loading profile...</p>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="min-h-screen bg-[#0b0f19]">
+            <SkeletonLoader type="profile" />
+        </div>
+    );
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
