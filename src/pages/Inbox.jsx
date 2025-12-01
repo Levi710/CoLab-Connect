@@ -19,6 +19,14 @@ export default function Inbox() {
             ]);
             setRequests(requestsData);
             setNotifications(notificationsData);
+
+            // Mark unread notifications as read
+            const unreadIds = notificationsData.filter(n => !n.is_read).map(n => n.id);
+            if (unreadIds.length > 0) {
+                // We can do this in parallel or one by one. Since we don't have a bulk endpoint, we'll do one by one for now.
+                // Ideally we should add a bulk endpoint, but for now this works.
+                unreadIds.forEach(id => api.notifications.markAsRead(id).catch(console.error));
+            }
         } catch (err) {
             console.error('Failed to fetch inbox data:', err);
         } finally {

@@ -161,6 +161,56 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// --- Auth Routes ---
+app.post('/api/auth/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await db.query(
+            'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, is_premium, photo_url, background_url',
+            [username, email, hashedPassword]
+        );
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        res.json({ token, user });
+    } catch (err) {
+        if (err.code === '23505') { // Unique violation
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+        console.error(err);
+        res.status(500).json({ error: 'Registration failed' });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+        if (!user) return res.status(400).json({ error: 'User not found' });
+
+        const validPassword = await bcrypt.compare(password, user.password_hash);
+        if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
+
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        // Don't send password_hash back
+        delete user.password_hash;
+        res.json({ token, user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, username, email, is_premium, photo_url, background_url FROM users WHERE id = $1', [req.user.id]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch user' });
+    }
+});
+
 // --- Payment Routes ---
 app.post('/api/payment/order', authenticateToken, async (req, res) => {
     const options = {
@@ -283,7 +333,15 @@ app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
         await db.query('DELETE FROM notifications WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
         res.json({ message: 'Notification deleted' });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to delete notification' });
+    }
+});
+
+app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
+    try {
+        await db.query('UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to mark notification as read' });
     }
 });
 
@@ -617,6 +675,11 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
         const projectRes = await db.query('SELECT user_id, member_limit, title FROM projects WHERE id = $1', [request.project_id]);
         if (projectRes.rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
+        // Prevent duplicate updates
+        if (request.status === status) {
+            return res.json(request);
+        }
+
         if (status === 'accepted') {
             const membersRes = await db.query('SELECT COUNT(*) FROM project_members WHERE project_id = $1', [request.project_id]);
             const memberCount = parseInt(membersRes.rows[0].count);
@@ -681,9 +744,10 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
             SELECT m.*, u.username as sender_name, u.photo_url as sender_photo
             FROM messages m
             LEFT JOIN users u ON m.sender_id = u.id
-            WHERE m.project_id = $1
+            JOIN project_members pm ON pm.project_id = m.project_id AND pm.user_id = $2
+            WHERE m.project_id = $1 AND m.created_at >= pm.joined_at
             ORDER BY m.created_at ASC
-        `, [projectId]);
+        `, [projectId, req.user.id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -759,25 +823,33 @@ app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
-    const commentId = req.params.id;
+
+
+// --- Read Receipts Route ---
+app.get('/api/messages/:id/read-receipts', authenticateToken, async (req, res) => {
+    const messageId = req.params.id;
     try {
-        const commentRes = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
-        if (commentRes.rows.length === 0) return res.status(404).json({ error: 'Comment not found' });
-        const comment = commentRes.rows[0];
+        // Check if user is member of the project
+        const msgRes = await db.query('SELECT project_id FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
 
-        if (comment.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+        const projectId = msgRes.rows[0].project_id;
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) return res.status(403).json({ error: 'Unauthorized' });
 
-        const createdAt = new Date(comment.created_at);
-        const now = new Date();
-        const diffMinutes = (now - createdAt) / 1000 / 60;
-        if (diffMinutes > 10) return res.status(403).json({ error: 'Delete time limit exceeded (10 mins)' });
+        const result = await db.query(`
+            SELECT u.id, u.username, u.photo_url, pm.last_read_at as read_at
+            FROM project_members pm
+            JOIN users u ON pm.user_id = u.id
+            WHERE pm.project_id = $1 
+            AND pm.last_read_at >= (SELECT created_at FROM messages WHERE id = $2)
+            AND pm.user_id != (SELECT sender_id FROM messages WHERE id = $2)
+        `, [projectId, messageId]);
 
-        await db.query('DELETE FROM comments WHERE id = $1', [commentId]);
-        res.json({ message: 'Comment deleted' });
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to delete comment' });
+        res.status(500).json({ error: 'Failed to fetch read receipts' });
     }
 });
 

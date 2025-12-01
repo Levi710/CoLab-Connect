@@ -25,7 +25,8 @@ export default function Navbar() {
                     setUnreadCount(totalUnread);
 
                     const pendingRequests = requests.filter(r => r.status === 'pending');
-                    setInboxCount(pendingRequests.length + notifications.length);
+                    const unreadNotifications = notifications.filter(n => !n.is_read);
+                    setInboxCount(pendingRequests.length + unreadNotifications.length);
                 } catch (err) {
                     console.error('Failed to fetch navbar data', err);
                 }

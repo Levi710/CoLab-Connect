@@ -60,6 +60,14 @@ export const api = {
             });
             if (!res.ok) throw new Error('Failed to delete notification');
             return res.json();
+        },
+        markAsRead: async (id) => {
+            const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+                method: 'PUT',
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to mark notification as read');
+            return res.json();
         }
     },
     projects: {
