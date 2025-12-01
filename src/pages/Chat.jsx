@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,6 @@ import SkeletonLoader from '../components/SkeletonLoader';
 
 export default function Chat() {
     const { requestId } = useParams(); // requestId here acts as projectId or 'all'
-    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { addToast } = useToast();
 
@@ -270,27 +269,18 @@ export default function Chat() {
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
-                                                    <div
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (msg.sender_public_id) {
-                                                                console.log('Navigating to profile:', msg.sender_public_id);
-                                                                navigate(`/profile/${msg.sender_public_id}`);
-                                                            } else {
-                                                                console.log('No public ID for user:', msg.sender_name);
-                                                                alert(`User profile not available. (ID missing)`);
-                                                            }
-                                                        }}
+                                                    <Link
+                                                        to={`/profile/${msg.sender_public_id || msg.sender_id}`}
                                                         className="mr-2 flex-shrink-0 self-start mt-5 relative z-50 cursor-pointer block"
                                                         style={{ pointerEvents: 'auto' }}
                                                     >
                                                         <img
                                                             src={msg.sender_photo || '/logo.svg'}
                                                             alt={msg.sender_name}
-                                                            title={msg.sender_public_id || 'No ID'}
+                                                            title={msg.sender_public_id || msg.sender_id}
                                                             className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                         />
-                                                    </div>
+                                                    </Link>
                                                 )}
                                                 <div className="max-w-[70%]">
                                                     {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
