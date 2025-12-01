@@ -8,21 +8,30 @@ export default function Navbar() {
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
     const [unreadCount, setUnreadCount] = React.useState(0);
+    const [inboxCount, setInboxCount] = React.useState(0);
 
     React.useEffect(() => {
         if (currentUser) {
-            const fetchUnread = async () => {
+            const fetchData = async () => {
                 try {
                     const { api } = await import('../api');
-                    const rooms = await api.chat.getRooms();
+                    const [rooms, requests, notifications] = await Promise.all([
+                        api.chat.getRooms(),
+                        api.requests.getMyProjectRequests(),
+                        api.notifications.getAll()
+                    ]);
+
                     const totalUnread = rooms.reduce((acc, room) => acc + parseInt(room.unread_count || 0), 0);
                     setUnreadCount(totalUnread);
+
+                    const pendingRequests = requests.filter(r => r.status === 'pending');
+                    setInboxCount(pendingRequests.length + notifications.length);
                 } catch (err) {
-                    console.error('Failed to fetch unread count', err);
+                    console.error('Failed to fetch navbar data', err);
                 }
             };
-            fetchUnread();
-            const interval = setInterval(fetchUnread, 10000); // Poll every 10s
+            fetchData();
+            const interval = setInterval(fetchData, 10000); // Poll every 10s
             return () => clearInterval(interval);
         }
     }, [currentUser]);
@@ -56,6 +65,14 @@ export default function Navbar() {
                             </Link>
                             <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Dashboard
+                            </Link>
+                            <Link to="/inbox" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/inbox' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                Inbox
+                                {inboxCount > 0 && (
+                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {inboxCount}
+                                    </span>
+                                )}
                             </Link>
                             <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Messages
@@ -116,6 +133,14 @@ export default function Navbar() {
                         </Link>
                         <Link to="/dashboard" className={getMobileLinkClass('/dashboard')}>
                             Dashboard
+                        </Link>
+                        <Link to="/inbox" className={getMobileLinkClass('/inbox')}>
+                            Inbox
+                            {inboxCount > 0 && (
+                                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {inboxCount}
+                                </span>
+                            )}
                         </Link>
                         <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
                             Messages

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Inbox from './pages/Inbox';
 import CreateProject from './pages/CreateProject';
 import Chat from './pages/Chat';
 import { PrivacyPolicy, TermsAndConditions, RefundPolicy, ContactUs } from './pages/Policies';
@@ -22,6 +23,7 @@ function App() {
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-project" element={<CreateProject />} />
+            <Route path="/inbox" element={<Inbox />} /> {/* Added Inbox route */}
             <Route path="/chat/:requestId?" element={<Chat />} />
 
             {/* Policy Routes */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Users, ThumbsUp, MessageSquare, Check, X, TrendingUp, Lock, Zap, Trash2 } from 'lucide-react';
+import { BarChart, Users, ThumbsUp, MessageSquare, TrendingUp, Lock, Zap } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import ProjectCard from '../components/ProjectCard';
@@ -14,8 +14,7 @@ export default function Dashboard() {
     const [editingProject, setEditingProject] = useState(null);
     const [editFormData, setEditFormData] = useState({});
     const [myProjects, setMyProjects] = useState([]);
-    const [requests, setRequests] = useState([]);
-    const [notifications, setNotifications] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [loadingAi, setLoadingAi] = useState(false);
@@ -23,16 +22,12 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [user, projectsData, requestsData, notificationsData] = await Promise.all([
+                const [user, projectsData] = await Promise.all([
                     api.auth.me(),
-                    api.projects.getMyProjects(),
-                    api.requests.getMyProjectRequests(),
-                    api.notifications.getAll()
+                    api.projects.getMyProjects()
                 ]);
                 setIsPremium(user.is_premium);
                 setMyProjects(projectsData);
-                setRequests(requestsData);
-                setNotifications(notificationsData);
 
                 if (user.is_premium) {
                     fetchAiAnalysis();
@@ -280,124 +275,25 @@ export default function Dashboard() {
                     >
                         My Projects
                     </button>
-                    <button
-                        onClick={() => setActiveTab('inbox')}
-                        className={`${activeTab === 'inbox' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-                    >
-                        Inbox <span className="ml-2 bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-xs border border-red-500/20">{pendingRequests.length + notifications.length}</span>
-                    </button>
                 </nav>
             </div>
 
             {/* Content */}
-            {activeTab === 'projects' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {myProjects.length > 0 ? myProjects.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            project={project}
-                            isOwner={true}
-                            onDelete={handleDeleteProject}
-                            onEdit={handleEditClick}
-                        />
-                    )) : (
-                        <div className="col-span-full p-6 text-center text-gray-500 bg-[#13161f] rounded-lg border border-white/5">
-                            You haven't created any projects yet.
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {requests.length > 0 ? requests.map((request) => (
-                        <div key={request.id} className="bg-[#13161f] shadow-lg sm:rounded-lg p-6 border border-white/5">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="text-lg leading-6 font-medium text-white">
-                                        {request.user_name} <span className="text-gray-500 text-sm font-normal">wants to join</span> {request.project_title}
-                                    </h3>
-                                    <p className="mt-1 text-sm text-gray-400">Role: {request.role}</p>
-                                    <div className="mt-3 text-sm text-gray-300 bg-white/5 p-3 rounded border border-white/10">
-                                        "{request.note}"
-                                    </div>
-                                    <div className="mt-2">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'accepted' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                                            request.status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                                                'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                            }`}>
-                                            {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex space-x-2">
-                                    {request.status === 'pending' && (
-                                        <>
-                                            <button
-                                                onClick={() => handleRequestStatus(request.id, 'accepted')}
-                                                className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                                title="Accept"
-                                            >
-                                                <Check className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleRequestStatus(request.id, 'rejected')}
-                                                className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                title="Reject"
-                                            >
-                                                <X className="h-5 w-5" />
-                                            </button>
-                                        </>
-                                    )}
-                                    {request.status === 'accepted' && (
-                                        <button
-                                            onClick={() => navigate(`/chat/${request.project_id}`)}
-                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                                        >
-                                            <MessageSquare className="h-4 w-4 mr-2" /> Chat
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => handleDeleteRequest(request.id)}
-                                        className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none"
-                                        title="Delete Request"
-                                    >
-                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="p-6 text-center text-gray-500 bg-[#13161f] rounded-lg shadow border border-white/5">
-                            No pending requests.
-                        </div>
-                    )}
-
-                    {/* Notifications Section */}
-                    <h3 className="text-lg font-bold text-white mt-8 mb-4">Notifications</h3>
-                    {notifications.length > 0 ? (
-                        <div className="space-y-4">
-                            {notifications.map((notification) => (
-                                <div key={notification.id} className="bg-[#13161f] shadow-lg sm:rounded-lg p-6 border border-white/5 flex justify-between items-center">
-                                    <div>
-                                        <p className="text-gray-300">{notification.content}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => handleDeleteNotification(notification.id)}
-                                        className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none"
-                                        title="Delete Notification"
-                                    >
-                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="p-6 text-center text-gray-500 bg-[#13161f] rounded-lg shadow border border-white/5">
-                            No new notifications.
-                        </div>
-                    )}
-                </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myProjects.length > 0 ? myProjects.map((project) => (
+                    <ProjectCard
+                        key={project.id}
+                        project={project}
+                        isOwner={true}
+                        onDelete={handleDeleteProject}
+                        onEdit={handleEditClick}
+                    />
+                )) : (
+                    <div className="col-span-full p-6 text-center text-gray-500 bg-[#13161f] rounded-lg border border-white/5">
+                        You haven't created any projects yet.
+                    </div>
+                )}
+            </div>
 
             {/* Premium Modal */}
             {showPremiumModal && (
