@@ -912,27 +912,7 @@ app.get('/api/creators', async (req, res) => {
     }
 });
 
-app.put('/api/creators/:id', authenticateToken, async (req, res) => {
-    const { name, role, bio, image_url } = req.body;
-    const creatorId = req.params.id;
 
-    // Admin check removed as requested
-    // const userRes = await db.query('SELECT email FROM users WHERE id = $1', [req.user.id]);
-    // if (userRes.rows[0].email !== 'levi@gmail.com') {
-    //     return res.status(403).json({ error: 'Unauthorized: Admin access required' });
-    // }
-
-    try {
-        const result = await db.query(
-            'UPDATE creators SET name = $1, role = $2, bio = $3, image_url = $4 WHERE id = $5 RETURNING *',
-            [name, role, bio, image_url, creatorId]
-        );
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to update creator' });
-    }
-});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

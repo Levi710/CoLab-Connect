@@ -24,6 +24,12 @@ export default function Footer() {
                         <Link to="/contact-us" className="text-sm text-gray-400 hover:text-primary transition-colors">
                             Contact Us
                         </Link>
+                        <Link to="/about" className="text-sm text-gray-400 hover:text-primary transition-colors">
+                            About
+                        </Link>
+                        <Link to="/creators" className="text-sm text-gray-400 hover:text-primary transition-colors">
+                            Creators
+                        </Link>
                     </div>
                 </div>
             </div>

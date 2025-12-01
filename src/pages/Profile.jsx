@@ -29,7 +29,7 @@ export default function Profile() {
     // Combine all skills for search
     const allSkills = [...skillsData.tech, ...skillsData.non_tech];
 
-    const isOwnProfile = !id || (currentUser && currentUser.id === parseInt(id));
+    const isOwnProfile = !id || (currentUser && (currentUser.public_id === id || currentUser.id == id));
 
     const [error, setError] = useState(null);
 
