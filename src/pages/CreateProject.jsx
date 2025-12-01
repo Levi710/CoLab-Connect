@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function CreateProject() {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -33,7 +35,7 @@ export default function CreateProject() {
         const currentCount = formData.images.length;
 
         if (currentCount + files.length > maxImages) {
-            alert(`You can only upload up to ${maxImages} images. ${currentUser?.is_premium ? '' : 'Upgrade to Premium for more!'}`);
+            addToast(`You can only upload up to ${maxImages} images. ${currentUser?.is_premium ? '' : 'Upgrade to Premium for more!'}`, 'error');
             return;
         }
 
@@ -64,7 +66,7 @@ export default function CreateProject() {
             navigate('/dashboard');
         } catch (err) {
             console.error('Failed to create project:', err);
-            alert('Failed to create project. Please try again.');
+            addToast('Failed to create project. Please try again.', 'error');
         } finally {
             setLoading(false);
         }

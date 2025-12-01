@@ -4,9 +4,11 @@ import { useParams } from 'react-router-dom';
 import { User, Award, Briefcase, X, Plus, Search, Check, Lock, Eye } from 'lucide-react';
 import skillsData from '../data/skills.json';
 import ProjectCard from '../components/ProjectCard';
+import { useToast } from '../context/ToastContext';
 
 export default function Profile() {
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const { id } = useParams();
     const [profileUser, setProfileUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -116,7 +118,7 @@ export default function Profile() {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                alert('File size exceeds 5MB limit.');
+                addToast('File size exceeds 5MB limit.', 'error');
                 return;
             }
             const reader = new FileReader();
@@ -131,7 +133,7 @@ export default function Profile() {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                alert('File size exceeds 5MB limit.');
+                addToast('File size exceeds 5MB limit.', 'error');
                 return;
             }
             const reader = new FileReader();
@@ -172,10 +174,11 @@ export default function Profile() {
                 background_url: backgroundUrl
             });
 
+            addToast('Profile updated successfully!', 'success');
             window.location.reload();
         } catch (error) {
             console.error('Failed to update profile:', error);
-            alert('Failed to update profile. Please try again.');
+            addToast('Failed to update profile. Please try again.', 'error');
         } finally {
             setLoading(false);
             setIsEditing(false);

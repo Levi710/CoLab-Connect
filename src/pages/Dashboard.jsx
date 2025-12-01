@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Users, ThumbsUp, MessageSquare, TrendingUp, Lock, Zap } from 'lucide-react';
+import { BarChart, Users, ThumbsUp, MessageSquare, TrendingUp, Lock, Zap, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import ProjectCard from '../components/ProjectCard';
+import { useToast } from '../context/ToastContext';
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const [activeTab, setActiveTab] = useState('projects');
     const [isPremium, setIsPremium] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -57,30 +59,6 @@ export default function Dashboard() {
         window.open('https://rzp.io/rzp/CmYvunI', '_blank');
     };
 
-    const handleRequestStatus = async (requestId, status) => {
-        try {
-            await api.requests.updateStatus(requestId, status);
-            // Update local state
-            setRequests(requests.map(req =>
-                req.id === requestId ? { ...req, status } : req
-            ));
-        } catch (error) {
-            console.error('Failed to update status:', error);
-            alert('Failed to update request status');
-        }
-    };
-
-    const handleDeleteRequest = async (requestId) => {
-        if (!confirm('Are you sure you want to delete this request?')) return;
-        try {
-            await api.requests.delete(requestId);
-            setRequests(requests.filter(r => r.id !== requestId));
-        } catch (error) {
-            console.error('Failed to delete request:', error);
-            alert('Failed to delete request');
-        }
-    };
-
     const handleEditClick = (project) => {
         setEditingProject(project);
         setEditFormData({
@@ -104,27 +82,16 @@ export default function Dashboard() {
             const updated = await api.projects.update(editingProject.id, editFormData);
             setMyProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
             setEditingProject(null);
-            alert('Project updated successfully!');
+            addToast('Project updated successfully!', 'success');
         } catch (error) {
             console.error('Failed to update project:', error);
-            alert(error.message || 'Failed to update project');
+            addToast(error.message || 'Failed to update project', 'error');
         }
     };
 
     const handleDeleteProject = (projectId) => {
         setMyProjects(prev => prev.filter(p => p.id !== projectId));
     };
-
-    const handleDeleteNotification = async (id) => {
-        try {
-            await api.notifications.delete(id);
-            setNotifications(notifications.filter(n => n.id !== id));
-        } catch (error) {
-            console.error('Failed to delete notification:', error);
-        }
-    };
-
-    const pendingRequests = requests.filter(r => r.status === 'pending');
 
     if (loading) return <div className="text-center py-20">Loading dashboard...</div>;
 
@@ -177,17 +144,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#13161f] p-6 rounded-lg shadow-lg border border-white/5">
-                    <div className="flex items-center">
-                        <div className="p-3 rounded-full bg-amber-500/10 text-amber-400">
-                            <Users className="h-6 w-6" />
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-400">Pending Requests</p>
-                            <p className="text-2xl font-semibold text-white">{pendingRequests.length}</p>
-                        </div>
-                    </div>
-                </div>
+                {/* Removed Pending Requests Card */}
             </div>
 
             {/* Advanced Insights (Premium Only) */}

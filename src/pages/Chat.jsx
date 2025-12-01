@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { Send, ArrowLeft, User, Users, MoreVertical, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Chat() {
     const { requestId } = useParams(); // requestId here acts as projectId or 'all'
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
 
     const [rooms, setRooms] = useState([]);
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -95,7 +97,7 @@ export default function Chat() {
             // Optimistic update handled by poll or re-fetch
         } catch (error) {
             console.error('Failed to send message:', error);
-            alert('Failed to send message');
+            addToast('Failed to send message', 'error');
         }
     };
 
@@ -104,7 +106,7 @@ export default function Chat() {
         if (!file) return;
 
         if (!isPremium) {
-            alert('Image sending is a Premium feature.');
+            addToast('Image sending is a Premium feature.', 'error');
             return;
         }
 
@@ -118,7 +120,7 @@ export default function Chat() {
                 });
             } catch (error) {
                 console.error('Failed to send image:', error);
-                alert('Failed to send image');
+                addToast('Failed to send image', 'error');
             }
         };
         reader.readAsDataURL(file);
@@ -135,7 +137,7 @@ export default function Chat() {
             setEditContent('');
         } catch (error) {
             console.error('Failed to edit message:', error);
-            alert(error.message || 'Failed to edit message');
+            addToast(error.message || 'Failed to edit message', 'error');
         }
     };
 
@@ -151,7 +153,7 @@ export default function Chat() {
             setMessages(prev => prev.filter(m => m.id !== msgId));
         } catch (error) {
             console.error('Failed to delete message:', error);
-            alert(error.message || 'Failed to delete message');
+            addToast(error.message || 'Failed to delete message', 'error');
         }
     };
 
@@ -160,10 +162,10 @@ export default function Chat() {
         try {
             await api.chat.removeMember(selectedRoom.id, userId);
             setMembers(prev => prev.filter(m => m.user_id !== userId));
-            alert('Member removed');
+            addToast('Member removed', 'success');
         } catch (error) {
             console.error('Failed to remove member:', error);
-            alert('Failed to remove member');
+            addToast('Failed to remove member', 'error');
         }
     };
 
