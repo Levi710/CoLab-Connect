@@ -275,6 +275,7 @@ export default function Chat() {
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
                                                                 title={msg.sender_public_id || 'No ID'}
+                                                                onClick={() => alert(`Debug: ID=${msg.sender_public_id}`)}
                                                                 className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                             />
                                                         </Link>
