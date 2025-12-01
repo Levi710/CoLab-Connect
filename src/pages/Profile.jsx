@@ -385,19 +385,19 @@ export default function Profile() {
                                             </div>
 
                                             {showSkillDropdown && (
-                                                <div className="absolute z-10 mt-1 w-full bg-dark-surface shadow-xl max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm border border-white/10">
+                                                <div className="absolute z-50 mt-1 w-full bg-dark-surface shadow-2xl max-h-80 rounded-lg py-2 text-base ring-1 ring-white/10 overflow-auto focus:outline-none sm:text-sm border border-white/10">
                                                     {filteredSkills.length > 0 ? (
                                                         filteredSkills.map((skill) => (
                                                             <div
                                                                 key={skill}
-                                                                className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-white/5 text-gray-200"
+                                                                className="cursor-pointer select-none relative py-3 pl-4 pr-9 hover:bg-white/10 text-gray-200 transition-colors border-b border-white/5 last:border-0"
                                                                 onClick={() => addSkill(skill)}
                                                             >
-                                                                <span className="block truncate">{skill}</span>
+                                                                <span className="block truncate font-medium">{skill}</span>
                                                             </div>
                                                         ))
                                                     ) : (
-                                                        <div className="cursor-default select-none relative py-2 pl-3 pr-9 text-gray-500">
+                                                        <div className="cursor-default select-none relative py-3 pl-4 pr-9 text-gray-500 italic">
                                                             No matching skills found.
                                                         </div>
                                                     )}
