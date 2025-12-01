@@ -13,6 +13,10 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     body {
         @apply overflow-x-hidden bg-[#0b0f19];
     }
