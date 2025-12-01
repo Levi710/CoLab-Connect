@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Send, ArrowLeft, User, Users, Trash2, X } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Send, ArrowLeft, User, Users, MoreVertical, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -250,54 +250,47 @@ export default function Chat() {
                                 </div>
                             ) : (
                                 <div>
-                                    {messages.map((msg) => {
-                                        const isMe = msg.sender_id === currentUser?.id;
-                                        return (
-                                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
-                                                <div className="max-w-[70%]">
-                                                    {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
-                                                    <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>
-                                                        {msg.image_url && (
-                                                            <img src={msg.image_url} alt="Shared" className="max-w-full rounded mb-2" />
-                                                        )}
-                                                        <p className="text-sm">{msg.content}</p>
-                                                    </div>
-                                                    <div className={`flex items-center mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                                        <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                            {msg.is_edited && <span className="italic">(edited)</span>}
-                                                            {isMe && (
-                                                                <button
-                                                                    onClick={() => handleShowSeen(msg.id)}
-                                                                    className="ml-1 hover:text-primary transition-colors"
-                                                                    title="Seen by"
-                                                                >
-                                                                    <Users className="h-3 w-3" />
-                                                                </button>
-                                                            )}
-                                                        </p>
-                                                        {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
-                                                            <button
-                                                                onClick={() => startEditing(msg)}
-                                                                className="ml-2 text-gray-500 hover:text-white text-[10px] underline"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
-                                                            <button
-                                                                onClick={() => handleDelete(msg.id)}
-                                                                className="ml-2 text-red-500 hover:text-red-400 text-[10px]"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 className="h-3 w-3" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                    {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
+                                    <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>
+                                        {msg.image_url && (
+                                            <img src={msg.image_url} alt="Shared" className="max-w-full rounded mb-2" />
+                                        )}
+                                        <p className="text-sm">{msg.content}</p>
+                                    </div>
+                                    <div className={`flex items-center mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                        <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {msg.is_edited && <span className="italic">(edited)</span>}
+                                            {isMe && (
+                                                <button
+                                                    onClick={() => handleShowSeen(msg.id)}
+                                                    className="ml-1 hover:text-primary transition-colors"
+                                                    title="Seen by"
+                                                >
+                                                    <Users className="h-3 w-3" />
+                                                </button>
+                                            )}
+                                        </p>
+                                        {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
+                                            <button
+                                                onClick={() => startEditing(msg)}
+                                                className="ml-2 text-gray-500 hover:text-white text-[10px] underline"
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
+                                        {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
+                                            <button
+                                                onClick={() => handleDelete(msg.id)}
+                                                className="ml-2 text-red-500 hover:text-red-400 text-[10px]"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            )}
                                     <div ref={messagesEndRef} />
                                 </div>
 
