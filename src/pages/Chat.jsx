@@ -269,7 +269,7 @@ export default function Chat() {
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
                                                     msg.sender_public_id ? (
-                                                        <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start">
+                                                        <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start mt-5">
                                                             <img
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
@@ -277,7 +277,7 @@ export default function Chat() {
                                                             />
                                                         </Link>
                                                     ) : (
-                                                        <div className="mr-2 flex-shrink-0 self-start">
+                                                        <div className="mr-2 flex-shrink-0 self-start mt-5">
                                                             <img
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
