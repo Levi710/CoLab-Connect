@@ -23,8 +23,9 @@ export default function Creators() {
                 if (creator.name.includes('Ayush') || creator.name.includes('Levi')) {
                     return {
                         ...creator,
-                        image_url: '/creators/ayush.png',
-                        role: 'Frontend and Backend Developer for this project'
+                        name: 'Ayush Kishor (Levi)',
+                        role: 'Core Developer',
+                        image_url: '/creators/ayush.png'
                     };
                 }
                 if (creator.name.includes('Sarah')) {
