@@ -270,7 +270,7 @@ export default function Chat() {
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
                                                     msg.sender_public_id ? (
-                                                        <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start mt-5">
+                                                        <Link to={`/profile/${msg.sender_public_id}`} className="mr-2 flex-shrink-0 self-start mt-5 relative z-10">
                                                             <img
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
@@ -412,9 +412,13 @@ export default function Chat() {
                                 {members.map(member => (
                                     <div key={member.user_id} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                                                {member.username.charAt(0).toUpperCase()}
-                                            </div>
+                                            {member.photo_url ? (
+                                                <img src={member.photo_url} alt={member.username} className="w-8 h-8 rounded-full object-cover" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                                    {member.username.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
                                             <div>
                                                 <p className="font-medium text-white">{member.username}</p>
                                                 <p className="text-xs text-gray-400 capitalize">{member.role}</p>
