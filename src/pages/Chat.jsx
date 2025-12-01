@@ -265,6 +265,7 @@ export default function Chat() {
                                 <div>
                                     {messages.map((msg) => {
                                         const isMe = msg.sender_id === currentUser?.id;
+                                        // console.log('Message:', msg.id, msg.sender_public_id);
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
@@ -273,6 +274,7 @@ export default function Chat() {
                                                             <img
                                                                 src={msg.sender_photo || '/logo.svg'}
                                                                 alt={msg.sender_name}
+                                                                title={msg.sender_public_id || 'No ID'}
                                                                 className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                             />
                                                         </Link>

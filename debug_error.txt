@@ -1,0 +1,5 @@
+Error: The server does not support SSL connections
+Error: The server does not support SSL connections
+    at C:\Users\ayush\OneDrive\Desktop\project1\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async debugMessages (C:\Users\ayush\OneDrive\Desktop\project1\debug_chat.cjs:12:23)
