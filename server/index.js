@@ -243,42 +243,6 @@ app.get('/api/ai/analysis', authenticateToken, async (req, res) => {
     }
 });
 
-// --- Auth Routes ---
-app.post('/api/auth/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await db.query(
-            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, is_premium',
-            [username, email, hashedPassword]
-        );
-        const user = result.rows[0];
-        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-        res.json({ token, user });
-    } catch (err) {
-        console.error(err);
-        if (err.code === '23505') return res.status(400).json({ error: 'Username or email already exists' });
-        res.status(500).json({ error: 'Registration failed' });
-    }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
-        if (!user) return res.status(400).json({ error: 'User not found' });
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
-        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-        delete user.password;
-        res.json({ token, user });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Login failed' });
-    }
-});
-
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
         const result = await db.query('SELECT id, username, email, bio, skills, photo_url, background_url, is_premium FROM users WHERE id = $1', [req.user.id]);
@@ -287,6 +251,8 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch user' });
     }
 });
+
+
 
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
     const { bio, skills, photo_url, background_url } = req.body;
