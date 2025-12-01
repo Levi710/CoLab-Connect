@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, Filter, TrendingUp, Star } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Home() {
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -86,6 +89,20 @@ export default function Home() {
 
     // Simple logic for project of the month: most likes from FILTERED projects
     const projectOfTheMonth = [...filteredProjects].sort((a, b) => b.likes - a.likes)[0];
+
+    const handleEditProject = (project) => {
+        const isPremium = currentUser?.is_premium;
+        const createdAt = new Date(project.created_at);
+        const now = new Date();
+        const diffInMinutes = (now - createdAt) / 1000 / 60;
+
+        if (diffInMinutes > 30 && !isPremium) {
+            addToast('Editing is restricted to 30 minutes after posting. Upgrade to Premium to edit anytime!', 'error');
+            return;
+        }
+
+        navigate('/create-project', { state: { project } });
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30 pt-20 pb-32">
@@ -181,7 +198,7 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredProjects.filter(p => p.is_featured).map(project => (
-                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} />
+                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
                         ))}
                     </div>
                 </div>
@@ -195,7 +212,7 @@ export default function Home() {
                         </h2>
                         <div className="bg-dark-surface rounded-2xl p-1 border border-white/10 shadow-2xl relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <ProjectCard project={projectOfTheMonth} isSponsored={true} isOwner={projectOfTheMonth.user_id === currentUser?.id} />
+                            <ProjectCard project={projectOfTheMonth} isSponsored={true} isOwner={projectOfTheMonth.user_id === currentUser?.id} onEdit={handleEditProject} />
                         </div>
                     </div>
                 )}
@@ -205,7 +222,7 @@ export default function Home() {
                     <h2 className="text-2xl font-bold text-white mb-8">All Projects</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredProjects.filter(p => !p.is_featured && p.id !== projectOfTheMonth?.id).map(project => (
-                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} />
+                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
                         ))}
                     </div>
                 </div>

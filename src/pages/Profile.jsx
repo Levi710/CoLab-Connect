@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { User, Briefcase, Award, X, Eye, Plus, Search } from 'lucide-react';
@@ -10,6 +10,7 @@ import skillsData from '../data/skills.json';
 export default function Profile() {
     const { currentUser, loading: authLoading } = useAuth();
     const { addToast } = useToast();
+    const navigate = useNavigate();
     const { id } = useParams();
     const [profileUser, setProfileUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -188,6 +189,20 @@ export default function Profile() {
             setLoading(false);
             setIsEditing(false);
         }
+    };
+
+    const handleEditProject = (project) => {
+        const isPremium = currentUser?.is_premium;
+        const createdAt = new Date(project.created_at);
+        const now = new Date();
+        const diffInMinutes = (now - createdAt) / 1000 / 60;
+
+        if (diffInMinutes > 30 && !isPremium) {
+            addToast('Editing is restricted to 30 minutes after posting. Upgrade to Premium to edit anytime!', 'error');
+            return;
+        }
+
+        navigate('/create-project', { state: { project } });
     };
 
     return (
@@ -439,6 +454,7 @@ export default function Profile() {
                                 key={project.id}
                                 project={project}
                                 isOwner={isOwnProfile}
+                                onEdit={handleEditProject}
                                 onDelete={isOwnProfile ? async (id) => {
                                     if (window.confirm('Are you sure you want to delete this project?')) {
                                         const { api } = await import('../api');

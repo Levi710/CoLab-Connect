@@ -2,7 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Zap, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function About() {
+    const { currentUser } = useAuth();
     const [openFaq, setOpenFaq] = React.useState(null);
 
     const toggleFaq = (index) => {
@@ -39,8 +42,8 @@ export default function About() {
                     <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-10">
                         The ultimate platform for developers, designers, and creators to find teammates, build projects, and turn ideas into reality.
                     </p>
-                    <Link to="/" className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary hover:bg-primary-hover transition-colors shadow-lg shadow-primary/25">
-                        Start Collaborating
+                    <Link to={currentUser ? "/dashboard" : "/register"} className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary hover:bg-primary-hover transition-colors shadow-lg shadow-primary/25">
+                        {currentUser ? "Go to Dashboard" : "Start Collaborating"}
                     </Link>
                 </div>
 
@@ -129,9 +132,15 @@ export default function About() {
             <div className="py-20 bg-dark text-center">
                 <h2 className="text-3xl font-bold text-white mb-6">Ready to start your journey?</h2>
                 <div className="flex justify-center gap-4">
-                    <Link to="/register" className="px-8 py-3 rounded-full bg-white text-dark font-bold hover:bg-gray-200 transition-colors">
-                        Sign Up Now
-                    </Link>
+                    {currentUser ? (
+                        <Link to="/dashboard" className="px-8 py-3 rounded-full bg-white text-dark font-bold hover:bg-gray-200 transition-colors">
+                            Go to Dashboard
+                        </Link>
+                    ) : (
+                        <Link to="/register" className="px-8 py-3 rounded-full bg-white text-dark font-bold hover:bg-gray-200 transition-colors">
+                            Sign Up Now
+                        </Link>
+                    )}
                     <Link to="/creators" className="px-8 py-3 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors">
                         Meet the Creators
                     </Link>

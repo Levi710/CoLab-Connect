@@ -86,9 +86,6 @@ export default function Navbar() {
                             <Link to="/about" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/about' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 About
                             </Link>
-                            <Link to="/creators" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/creators' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
-                                Creators
-                            </Link>
                         </div>
                     </div>
                     <div className="hidden sm:ml-6 sm:flex sm:items-center">
@@ -115,7 +112,8 @@ export default function Navbar() {
                                 Logout
                             </button>
                         ) : (
-                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all">
+                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all"
+                            >
                                 Login
                             </Link>
                         )}
@@ -157,6 +155,9 @@ export default function Navbar() {
                                         {unreadCount}
                                     </span>
                                 )}
+                            </Link>
+                            <Link to="/about" className={getMobileLinkClass('/about')}>
+                                About
                             </Link>
                             <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
                                 Create Project

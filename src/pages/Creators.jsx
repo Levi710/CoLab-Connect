@@ -15,9 +15,38 @@ export default function Creators() {
 
     const fetchCreators = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/creators');
+            const res = await fetch('http://localhost:5001/api/creators');
             const data = await res.json();
-            setCreators(data);
+
+            // Override for Ayush and Suprovo
+            const updatedData = data.map(creator => {
+                if (creator.name.includes('Ayush') || creator.name.includes('Levi')) {
+                    return {
+                        ...creator,
+                        image_url: '/creators/ayush.png',
+                        role: 'Frontend and Backend Developer for this project'
+                    };
+                }
+                if (creator.name.includes('Sarah')) {
+                    return {
+                        ...creator,
+                        name: 'Suprovo Mallick',
+                        role: 'AI Developer',
+                        bio: 'Implemented the AI integration for this project, enabling intelligent features and analysis.',
+                        image_url: '/creators/suprovo.jpg'
+                    };
+                }
+                if (creator.name.includes('Marcus')) {
+                    return {
+                        ...creator,
+                        name: 'Shailendra Pratap Singh',
+                        image_url: '/creators/shailendra.jpg'
+                    };
+                }
+                return creator;
+            });
+
+            setCreators(updatedData);
         } catch (error) {
             console.error('Failed to fetch creators:', error);
             addToast('Failed to load creators', 'error');

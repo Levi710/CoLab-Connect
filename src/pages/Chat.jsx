@@ -4,6 +4,7 @@ import { Send, ArrowLeft, User, Users, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 export default function Chat() {
     const { requestId } = useParams(); // requestId here acts as projectId or 'all'
@@ -18,74 +19,72 @@ export default function Chat() {
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [members, setMembers] = useState([]);
     const [isPremium, setIsPremium] = useState(false);
-    const [editingMessage, setEditingMessage] = useState(null);
-    const [editContent, setEditContent] = useState('');
     const [showSeenModal, setShowSeenModal] = useState(false);
     const [seenByUsers, setSeenByUsers] = useState([]);
-    const fileInputRef = useRef(null);
+    const [editingMessage, setEditingMessage] = useState(null);
+    const [editContent, setEditContent] = useState('');
 
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
-    // Fetch Rooms on Mount
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     useEffect(() => {
-        const fetchRooms = async () => {
-            try {
-                const [roomsData, userData] = await Promise.all([
-                    api.chat.getRooms(),
-                    api.auth.me()
-                ]);
-                setRooms(roomsData);
-                setIsPremium(userData.is_premium);
+        scrollToBottom();
+    }, [messages]);
 
-                // Auto-select room if requestId is a number (projectId)
-                if (requestId && requestId !== 'all' && !isNaN(requestId)) {
-                    const room = roomsData.find(r => r.id === parseInt(requestId));
-                    if (room) setSelectedRoom(room);
-                }
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    useEffect(() => {
         fetchRooms();
     }, [requestId]);
 
-    // Fetch Messages & Members when Room Changes
     useEffect(() => {
-        if (!selectedRoom) return;
-
-        const fetchMessages = async () => {
-            try {
-                const data = await api.messages.getProjectMessages(selectedRoom.id);
-                setMessages(data);
-            } catch (error) {
-                console.error('Failed to fetch messages:', error);
-            }
-        };
-
-        const fetchMembers = async () => {
-            try {
-                const data = await api.chat.getMembers(selectedRoom.id);
-                setMembers(data);
-            } catch (error) {
-                console.error('Failed to fetch members:', error);
-            }
-        };
-
-        fetchMessages();
-        fetchMembers();
-
-        const interval = setInterval(fetchMessages, 3000);
-        return () => clearInterval(interval);
+        if (selectedRoom) {
+            fetchMessages();
+            const interval = setInterval(fetchMessages, 3000); // Poll for new messages
+            return () => clearInterval(interval);
+        }
     }, [selectedRoom]);
 
-    useEffect(() => {
-        // Only scroll if the last message is new or we just loaded
-        if (messages.length > 0) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const fetchRooms = async () => {
+        try {
+            const [roomsData, userData] = await Promise.all([
+                api.chat.getRooms(),
+                api.auth.me()
+            ]);
+            setRooms(roomsData);
+            setIsPremium(userData.is_premium);
+
+            // Auto-select room if requestId is a number (projectId)
+            if (requestId && requestId !== 'all' && !isNaN(requestId)) {
+                const room = roomsData.find(r => r.id === parseInt(requestId));
+                if (room) setSelectedRoom(room);
+            }
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        } finally {
+            setLoading(false);
         }
-    }, [messages.length, selectedRoom?.id]);
+    };
+
+    const fetchMessages = async () => {
+        try {
+            const data = await api.messages.getProjectMessages(selectedRoom.id);
+            setMessages(data);
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+        }
+    };
+
+    const fetchMembers = async () => {
+        try {
+            const data = await api.chat.getMembers(selectedRoom.id);
+            setMembers(data);
+        } catch (error) {
+            console.error('Failed to fetch members:', error);
+        }
+    };
 
     const handleSend = async (e) => {
         e.preventDefault();
@@ -157,6 +156,16 @@ export default function Chat() {
         }
     };
 
+    const handleShowSeen = async (msgId) => {
+        try {
+            const users = await api.messages.getReadReceipts(msgId);
+            setSeenByUsers(users);
+            setShowSeenModal(true);
+        } catch (error) {
+            console.error('Failed to fetch read receipts:', error);
+        }
+    };
+
     const handleRemoveMember = async (userId) => {
         if (!confirm('Are you sure you want to remove this member?')) return;
         try {
@@ -169,19 +178,18 @@ export default function Chat() {
         }
     };
 
-    const handleShowSeen = async (msgId) => {
-        try {
-            const users = await api.messages.getReadReceipts(msgId);
-            setSeenByUsers(users);
-            setShowSeenModal(true);
-        } catch (error) {
-            console.error('Failed to fetch read receipts:', error);
-        }
-    };
-
     const isOwner = selectedRoom?.user_id === currentUser?.id;
 
-    if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    if (loading) return (
+        <div className="flex h-[calc(100vh-64px)] bg-dark">
+            <div className="w-full md:w-80 bg-dark-surface border-r border-white/5 p-4">
+                <SkeletonLoader count={5} />
+            </div>
+            <div className="hidden md:flex flex-1 items-center justify-center bg-dark">
+                <div className="text-gray-500">Loading chat...</div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex h-[calc(100vh-64px)] bg-dark">
@@ -254,6 +262,15 @@ export default function Chat() {
                                         const isMe = msg.sender_id === currentUser?.id;
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
+                                                {!isMe && (
+                                                    <div className="mr-2 flex-shrink-0 self-end">
+                                                        <img
+                                                            src={msg.sender_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender_name)}&background=random`}
+                                                            alt={msg.sender_name}
+                                                            className="w-8 h-8 rounded-full object-cover"
+                                                        />
+                                                    </div>
+                                                )}
                                                 <div className="max-w-[70%]">
                                                     {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
                                                     <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>
@@ -366,37 +383,31 @@ export default function Chat() {
             {
                 showMembersModal && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-dark-surface rounded-xl max-w-md w-full p-6 shadow-2xl border border-white/10">
+                        <div className="bg-dark-surface rounded-xl p-6 w-full max-w-md border border-white/10 shadow-2xl">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-white">Project Members</h3>
+                                <h3 className="text-xl font-bold text-white">Project Members</h3>
                                 <button onClick={() => setShowMembersModal(false)} className="text-gray-400 hover:text-white">
-                                    <span className="sr-only">Close</span>
-                                    <X className="h-6 w-6" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                            <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
                                 {members.map(member => (
                                     <div key={member.user_id} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg transition-colors">
-                                        <div className="flex items-center">
-                                            <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden mr-3 border border-white/10">
-                                                {member.photo_url ? (
-                                                    <img src={member.photo_url} alt={member.username} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <User className="h-5 w-5 text-gray-400" />
-                                                )}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                                {member.username.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-200">{member.username}</p>
-                                                <p className="text-xs text-gray-500">{member.role}</p>
+                                                <p className="font-medium text-white">{member.username}</p>
+                                                <p className="text-xs text-gray-400 capitalize">{member.role}</p>
                                             </div>
                                         </div>
                                         {isOwner && member.user_id !== currentUser.id && (
                                             <button
                                                 onClick={() => handleRemoveMember(member.user_id)}
-                                                className="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-red-500/10 transition-colors"
-                                                title="Remove Member"
+                                                className="text-red-500 hover:text-red-400 text-xs px-2 py-1 rounded border border-red-500/20 hover:bg-red-500/10 transition-colors"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                Remove
                                             </button>
                                         )}
                                     </div>
@@ -411,35 +422,30 @@ export default function Chat() {
             {
                 showSeenModal && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-dark-surface rounded-xl max-w-sm w-full p-6 shadow-2xl border border-white/10">
+                        <div className="bg-dark-surface rounded-xl p-6 w-full max-w-sm border border-white/10 shadow-2xl">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-white">Seen By</h3>
+                                <h3 className="text-lg font-bold text-white">Seen by</h3>
                                 <button onClick={() => setShowSeenModal(false)} className="text-gray-400 hover:text-white">
-                                    <span className="sr-only">Close</span>
-                                    <X className="h-6 w-6" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            <div className="space-y-3 max-h-80 overflow-y-auto">
-                                {seenByUsers.length > 0 ? (
-                                    seenByUsers.map((user, idx) => (
-                                        <div key={idx} className="flex items-center p-2 hover:bg-white/5 rounded-lg transition-colors">
-                                            <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden mr-3 border border-white/10">
-                                                {user.photo_url ? (
-                                                    <img src={user.photo_url} alt={user.username} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <User className="h-4 w-4 text-gray-400" />
-                                                )}
-                                            </div>
+                            <div className="space-y-3 max-h-60 overflow-y-auto">
+                                {seenByUsers.length === 0 ? (
+                                    <p className="text-gray-500 text-center">No one yet.</p>
+                                ) : (
+                                    seenByUsers.map(user => (
+                                        <div key={user.id} className="flex items-center gap-3">
+                                            <img
+                                                src={user.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`}
+                                                alt={user.username}
+                                                className="w-8 h-8 rounded-full object-cover"
+                                            />
                                             <div>
-                                                <p className="text-sm font-medium text-gray-200">{user.username}</p>
-                                                <p className="text-[10px] text-gray-500">
-                                                    {new Date(user.read_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </p>
+                                                <p className="font-medium text-white">{user.username}</p>
+                                                <p className="text-xs text-gray-400">{new Date(user.read_at).toLocaleTimeString()}</p>
                                             </div>
                                         </div>
                                     ))
-                                ) : (
-                                    <p className="text-gray-500 text-center py-4">No one has seen this yet.</p>
                                 )}
                             </div>
                         </div>

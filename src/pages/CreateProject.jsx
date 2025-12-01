@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
@@ -9,6 +9,9 @@ export default function CreateProject() {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { addToast } = useToast();
+    const location = useLocation();
+    const editingProject = location.state?.project;
+
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -20,6 +23,21 @@ export default function CreateProject() {
         memberLimit: 5,
         images: []
     });
+
+    useEffect(() => {
+        if (editingProject) {
+            setFormData({
+                title: editingProject.title || '',
+                description: editingProject.description || '',
+                category: editingProject.category || 'Tech',
+                status: editingProject.status || 'Idea',
+                lookingFor: editingProject.lookingFor || editingProject.looking_for || '',
+                pollQuestion: editingProject.pollQuestion || editingProject.poll_question || '',
+                memberLimit: editingProject.member_limit || 5,
+                images: editingProject.images || []
+            });
+        }
+    }, [editingProject]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -62,11 +80,17 @@ export default function CreateProject() {
         e.preventDefault();
         setLoading(true);
         try {
-            await api.projects.create(formData);
+            if (editingProject) {
+                await api.projects.update(editingProject.id, formData);
+                addToast('Project updated successfully!', 'success');
+            } else {
+                await api.projects.create(formData);
+                addToast('Project created successfully!', 'success');
+            }
             navigate('/dashboard');
         } catch (err) {
-            console.error('Failed to create project:', err);
-            addToast('Failed to create project. Please try again.', 'error');
+            console.error('Failed to save project:', err);
+            addToast(err.message || 'Failed to save project. Please try again.', 'error');
         } finally {
             setLoading(false);
         }

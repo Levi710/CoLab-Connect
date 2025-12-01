@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X, MessageSquare, Trash2, Bell, UserPlus } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../context/ToastContext';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 export default function Inbox() {
     const navigate = useNavigate();
@@ -78,7 +79,17 @@ export default function Inbox() {
         }
     };
 
-    if (loading) return <div className="text-center py-20 text-gray-400">Loading inbox...</div>;
+    if (loading) return (
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+            <h1 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                <Bell className="h-8 w-8 text-primary" /> Inbox
+            </h1>
+            <div className="space-y-8">
+                <SkeletonLoader count={3} />
+                <SkeletonLoader count={3} />
+            </div>
+        </div>
+    );
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">

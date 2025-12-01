@@ -288,6 +288,7 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.get('/api/projects/my', authenticateToken, async (req, res) => {
+    console.log(`[DEBUG] Fetching projects for user ID: ${req.user.id}`);
     try {
         const result = await db.query(`
             SELECT p.*, u.public_id as owner_public_id,
@@ -298,6 +299,7 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
             WHERE p.user_id = $1
             ORDER BY created_at DESC
         `, [req.user.id]);
+        console.log(`[DEBUG] Found ${result.rows.length} projects`);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
