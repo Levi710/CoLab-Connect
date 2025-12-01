@@ -205,6 +205,25 @@ const authenticateToken = (req, res, next) => {
 };
 
 
+
+app.get('/api/projects', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
+            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images
+            FROM projects p 
+            JOIN users u ON p.user_id = u.id
+            ORDER BY created_at DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+});
+
 app.get('/api/projects/my', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`
@@ -897,11 +916,11 @@ app.put('/api/creators/:id', authenticateToken, async (req, res) => {
     const { name, role, bio, image_url } = req.body;
     const creatorId = req.params.id;
 
-    // Admin check (hardcoded for now as requested)
-    const userRes = await db.query('SELECT email FROM users WHERE id = $1', [req.user.id]);
-    if (userRes.rows[0].email !== 'levi@gmail.com') {
-        return res.status(403).json({ error: 'Unauthorized: Admin access required' });
-    }
+    // Admin check removed as requested
+    // const userRes = await db.query('SELECT email FROM users WHERE id = $1', [req.user.id]);
+    // if (userRes.rows[0].email !== 'levi@gmail.com') {
+    //     return res.status(403).json({ error: 'Unauthorized: Admin access required' });
+    // }
 
     try {
         const result = await db.query(

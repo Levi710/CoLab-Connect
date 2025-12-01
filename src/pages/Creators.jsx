@@ -12,7 +12,7 @@ export default function Creators() {
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
 
-    const isAdmin = currentUser?.email === 'levi@gmail.com';
+    const isAdmin = !!currentUser; // Allow any logged-in user to edit as requested
 
     useEffect(() => {
         fetchCreators();
