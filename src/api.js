@@ -244,6 +244,13 @@ export const api = {
                 throw new Error(error.error || 'Failed to delete message');
             }
             return res.json();
+        },
+        getReadReceipts: async (messageId) => {
+            const res = await fetch(`${API_URL}/messages/${messageId}/read-receipts`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch read receipts');
+            return res.json();
         }
     },
     chat: {

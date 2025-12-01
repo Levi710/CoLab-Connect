@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Send, ArrowLeft, User, Users, MoreVertical, Trash2 } from 'lucide-react';
+import { Send, ArrowLeft, User, Users, MoreVertical, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,6 +18,8 @@ export default function Chat() {
     const [isPremium, setIsPremium] = useState(false);
     const [editingMessage, setEditingMessage] = useState(null);
     const [editContent, setEditContent] = useState('');
+    const [showSeenModal, setShowSeenModal] = useState(false);
+    const [seenByUsers, setSeenByUsers] = useState([]);
     const fileInputRef = useRef(null);
 
     const messagesEndRef = useRef(null);
@@ -165,6 +167,16 @@ export default function Chat() {
         }
     };
 
+    const handleShowSeen = async (msgId) => {
+        try {
+            const users = await api.messages.getReadReceipts(msgId);
+            setSeenByUsers(users);
+            setShowSeenModal(true);
+        } catch (error) {
+            console.error('Failed to fetch read receipts:', error);
+        }
+    };
+
     const isOwner = selectedRoom?.user_id === currentUser?.id;
 
     if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -256,9 +268,18 @@ export default function Chat() {
                                                         <p className="text-sm">{msg.content}</p>
                                                     </div>
                                                     <div className={`flex items-center mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                                        <p className="text-[10px] text-gray-500">
+                                                        <p className="text-[10px] text-gray-500 flex items-center gap-1">
                                                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                            {msg.is_edited && <span className="ml-1 italic">(edited)</span>}
+                                                            {msg.is_edited && <span className="italic">(edited)</span>}
+                                                            {isMe && (
+                                                                <button
+                                                                    onClick={() => handleShowSeen(msg.id)}
+                                                                    className="ml-1 hover:text-primary transition-colors"
+                                                                    title="Seen by"
+                                                                >
+                                                                    <Users className="h-3 w-3" />
+                                                                </button>
+                                                            )}
                                                         </p>
                                                         {isMe && (new Date() - new Date(msg.created_at) < 10 * 60 * 1000) && (
                                                             <button
@@ -354,9 +375,7 @@ export default function Chat() {
                             <h3 className="text-lg font-bold text-white">Project Members</h3>
                             <button onClick={() => setShowMembersModal(false)} className="text-gray-400 hover:text-white">
                                 <span className="sr-only">Close</span>
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <X className="h-6 w-6" />
                             </button>
                         </div>
                         <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -386,6 +405,44 @@ export default function Chat() {
                                     )}
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Seen By Modal */}
+            {showSeenModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-dark-surface rounded-xl max-w-sm w-full p-6 shadow-2xl border border-white/10">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-white">Seen By</h3>
+                            <button onClick={() => setShowSeenModal(false)} className="text-gray-400 hover:text-white">
+                                <span className="sr-only">Close</span>
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        <div className="space-y-3 max-h-80 overflow-y-auto">
+                            {seenByUsers.length > 0 ? (
+                                seenByUsers.map((user, idx) => (
+                                    <div key={idx} className="flex items-center p-2 hover:bg-white/5 rounded-lg transition-colors">
+                                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden mr-3 border border-white/10">
+                                            {user.photo_url ? (
+                                                <img src={user.photo_url} alt={user.username} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <User className="h-4 w-4 text-gray-400" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-200">{user.username}</p>
+                                            <p className="text-[10px] text-gray-500">
+                                                {new Date(user.read_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500 text-center py-4">No one has seen this yet.</p>
+                            )}
                         </div>
                     </div>
                 </div>
