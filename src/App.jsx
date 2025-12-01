@@ -22,10 +22,13 @@ const ContactUs = lazy(() => import('./pages/Policies').then(module => ({ defaul
 const About = lazy(() => import('./pages/About'));
 const Creators = lazy(() => import('./pages/Creators'));
 
+import ScrollToTop from './components/ScrollToTop';
+
 function App() {
   return (
     <ToastProvider>
       <Router>
+        <ScrollToTop />
         <Layout>
           <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen bg-[#0b0f19]">
