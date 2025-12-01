@@ -896,8 +896,13 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
             'INSERT INTO messages (project_id, sender_id, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
             [projectId, req.user.id, content, image_url]
         );
-        const senderRes = await db.query('SELECT username, photo_url FROM users WHERE id = $1', [req.user.id]);
-        const message = { ...result.rows[0], sender_name: senderRes.rows[0].username, sender_photo: senderRes.rows[0].photo_url };
+        const senderRes = await db.query('SELECT username, photo_url, public_id FROM users WHERE id = $1', [req.user.id]);
+        const message = {
+            ...result.rows[0],
+            sender_name: senderRes.rows[0].username,
+            sender_photo: senderRes.rows[0].photo_url,
+            sender_public_id: senderRes.rows[0].public_id
+        };
         res.json(message);
     } catch (err) {
         console.error(err);
