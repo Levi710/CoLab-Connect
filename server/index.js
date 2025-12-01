@@ -383,11 +383,12 @@ app.get('/api/users/:id/profile', authenticateToken, async (req, res) => {
 app.get('/api/projects', async (req, res) => {
     try {
         const result = await db.query(`
-            SELECT p.*, 
+            SELECT p.*, u.username as owner_name, u.photo_url as owner_photo,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images
             FROM projects p 
+            JOIN users u ON p.user_id = u.id
             ORDER BY created_at DESC
         `);
         res.json(result.rows);

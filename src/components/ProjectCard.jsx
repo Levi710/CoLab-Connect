@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock, TrendingUp, Send, Trash2, Image as ImageIcon } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock, TrendingUp, Send, Trash2, Image as ImageIcon, Briefcase, Tag } from 'lucide-react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -9,6 +9,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const { currentUser } = useAuth();
     const { addToast } = useToast();
     const [showApplyModal, setShowApplyModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [note, setNote] = useState('');
 
     // Social State
@@ -244,8 +245,12 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center space-x-3">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5">
-                                {project.owner_name ? project.owner_name.charAt(0).toUpperCase() : 'U'}
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden">
+                                {project.owner_photo ? (
+                                    <img src={project.owner_photo} alt={project.owner_name} className="h-full w-full object-cover" />
+                                ) : (
+                                    <span>{project.owner_name ? project.owner_name.charAt(0).toUpperCase() : 'U'}</span>
+                                )}
                             </div>
                             <div>
                                 <h3 className="text-lg font-bold text-gray-100 group-hover:text-primary transition-colors line-clamp-1">{project.title}</h3>
@@ -317,6 +322,12 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 I'm Interested
                             </button>
                         )}
+                        <button
+                            onClick={() => setShowDetailsModal(true)}
+                            className="text-xs font-medium text-gray-400 hover:text-white transition-colors ml-4"
+                        >
+                            View Details
+                        </button>
                     </div>
                 </div>
 
@@ -370,40 +381,121 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
             </div>
 
             {/* Apply Modal */}
-            {
-                showApplyModal && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-[#13161f] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-white/10 transform transition-all">
-                            <h3 className="text-xl font-bold text-white mb-2">Apply to {project.title}</h3>
-                            <p className="text-gray-400 text-sm mb-6">
-                                Let the project owner know why you'd be a great fit.
-                            </p>
+            {showApplyModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#13161f] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-white/10 transform transition-all">
+                        <h3 className="text-xl font-bold text-white mb-2">Apply to {project.title}</h3>
+                        <p className="text-gray-400 text-sm mb-6">
+                            Let the project owner know why you'd be a great fit.
+                        </p>
 
-                            <textarea
-                                className="w-full bg-dark border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 mb-4 resize-none h-32"
-                                placeholder="I have experience with..."
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                            />
+                        <textarea
+                            className="w-full bg-dark border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 mb-4 resize-none h-32"
+                            placeholder="I have experience with..."
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                        />
 
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    onClick={() => setShowApplyModal(false)}
-                                    className="px-4 py-2 text-gray-400 hover:text-white font-medium transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleApply}
-                                    className="bg-primary text-white px-6 py-2 rounded-full font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
-                                >
-                                    Send Application
-                                </button>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowApplyModal(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleApply}
+                                className="bg-primary text-white px-6 py-2 rounded-full font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
+                            >
+                                Send Application
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Project Details Modal */}
+            {showDetailsModal && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setShowDetailsModal(false)}>
+                    <div className="bg-[#13161f] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10 relative" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setShowDetailsModal(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/20 p-2 rounded-full backdrop-blur-sm transition-colors z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        {/* Project Images Carousel */}
+                        {project.images && project.images.length > 0 && (
+                            <div className="h-64 w-full overflow-x-auto flex snap-x snap-mandatory custom-scrollbar bg-black/50">
+                                {project.images.map((img, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={img}
+                                        alt={`${project.title} preview ${idx + 1}`}
+                                        className="h-full w-full object-contain flex-shrink-0 snap-center"
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="p-6 sm:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Link to={`/profile/${project.user_id}`} className="flex-shrink-0">
+                                    {project.owner_photo ? (
+                                        <img src={project.owner_photo} alt={project.owner_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/20" />
+                                    ) : (
+                                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold text-lg border border-white/10">
+                                            {project.owner_name ? project.owner_name.charAt(0).toUpperCase() : 'U'}
+                                        </div>
+                                    )}
+                                </Link>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white leading-tight">{project.title}</h2>
+                                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                                        <span className="font-medium text-primary">@{project.owner_name || 'Unknown'}</span>
+                                        <span>•</span>
+                                        <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="prose prose-invert max-w-none mb-8">
+                                <p className="text-gray-300 text-base leading-relaxed whitespace-pre-wrap">{project.description}</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <h4 className="text-xs font-bold text-primary mb-2 uppercase tracking-wide flex items-center gap-2">
+                                        <Briefcase className="w-4 h-4" /> Looking For
+                                    </h4>
+                                    <p className="text-sm text-gray-200">{project.looking_for || 'Collaborators'}</p>
+                                </div>
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <h4 className="text-xs font-bold text-primary mb-2 uppercase tracking-wide flex items-center gap-2">
+                                        <Tag className="w-4 h-4" /> Category
+                                    </h4>
+                                    <p className="text-sm text-gray-200">{project.category}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end pt-4 border-t border-white/10">
+                                {!isOwner && (
+                                    <button
+                                        onClick={() => {
+                                            setShowDetailsModal(false);
+                                            handleInterestClick();
+                                        }}
+                                        className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 flex items-center gap-2"
+                                    >
+                                        I'm Interested <Send className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
         </>
     );
 }
