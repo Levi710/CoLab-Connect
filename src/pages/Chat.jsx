@@ -24,7 +24,7 @@ export default function Chat() {
     const [editingMessage, setEditingMessage] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [botSettings, setBotSettings] = useState(null);
-    const [botSettings, setBotSettings] = useState(null);
+
     const [messageToDelete, setMessageToDelete] = useState(null);
     const [isSending, setIsSending] = useState(false);
 
