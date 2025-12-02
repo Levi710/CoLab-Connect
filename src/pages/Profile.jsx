@@ -441,12 +441,21 @@ export default function Profile() {
                                 {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
                             {/* Edit Profile & Manage Access Buttons */}
+                            {console.log('Debug Visibility:', {
+                                isOwnProfile,
+                                id,
+                                projectId,
+                                currentUserId: currentUser?.id,
+                                projectOwnerId,
+                                isBotAuthorized,
+                                isOwnerMatch: currentUser?.id == projectOwnerId // Loose equality check for debug
+                            })}
                             {(isOwnProfile || (id === 'system' && projectId)) && (
                                 <div className="flex gap-2">
                                     {id === 'system' ? (
                                         <>
                                             {/* Locked Button: Owner but NOT Authorized (Free) */}
-                                            {currentUser?.id === projectOwnerId && !isBotAuthorized && (
+                                            {currentUser?.id == projectOwnerId && !isBotAuthorized && (
                                                 <div className="relative group">
                                                     <button disabled className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-white/10 cursor-not-allowed blur-[2px]">
                                                         Edit Profile
@@ -472,7 +481,7 @@ export default function Profile() {
                                             )}
 
                                             {/* Manage Access Button: Premium Owner Only */}
-                                            {currentUser?.id === projectOwnerId && isBotAuthorized && (
+                                            {currentUser?.id == projectOwnerId && isBotAuthorized && (
                                                 <button
                                                     onClick={() => setShowAccessModal(true)}
                                                     className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-white bg-dark-surface hover:bg-white/5 focus:outline-none transition-colors gap-2"
