@@ -16,7 +16,12 @@ export const api = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData),
             });
-            if (!res.ok) throw new Error('Registration failed');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const error = new Error(errorData.error || 'Registration failed');
+                error.response = { data: errorData };
+                throw error;
+            }
             return res.json();
         },
         login: async (credentials) => {
@@ -25,7 +30,12 @@ export const api = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials),
             });
-            if (!res.ok) throw new Error('Login failed');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const error = new Error(errorData.error || 'Login failed');
+                error.response = { data: errorData };
+                throw error;
+            }
             return res.json();
         },
         me: async () => {
