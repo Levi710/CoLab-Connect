@@ -44,6 +44,11 @@ export const api = {
             if (!res.ok) throw new Error('Failed to update profile');
             return res.json();
         },
+        checkUsername: async (username) => {
+            const res = await fetch(`${API_URL}/auth/check-username/${username}`);
+            if (!res.ok) throw new Error('Failed to check username');
+            return res.json();
+        },
     },
     notifications: {
         getAll: async () => {

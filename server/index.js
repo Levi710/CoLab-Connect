@@ -208,6 +208,17 @@ const authenticateToken = (req, res, next) => {
 };
 
 // --- Auth Routes ---
+app.get('/api/auth/check-username/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+        const user = await db.query('SELECT id FROM users WHERE username = $1', [username]);
+        res.json({ available: user.rows.length === 0 });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to check username' });
+    }
+});
+
 app.post('/api/auth/register', async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -224,6 +235,9 @@ app.post('/api/auth/register', async (req, res) => {
     try {
         const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userExists.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
+
+        const usernameExists = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (usernameExists.rows.length > 0) return res.status(400).json({ error: 'Username is already taken' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const publicId = crypto.randomUUID(); // Generate UUID

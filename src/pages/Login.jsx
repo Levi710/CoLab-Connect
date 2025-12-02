@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { LogIn, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { api } from '../api';
+import { LogIn, UserPlus, AlertCircle, Eye, EyeOff, Check, X, Loader2 } from 'lucide-react';
 
 export default function Login() {
     const location = useLocation();
@@ -12,9 +13,33 @@ export default function Login() {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [usernameAvailable, setUsernameAvailable] = useState(null);
+    const [checkingUsername, setCheckingUsername] = useState(false);
     const { login, register } = useAuth();
     const navigate = useNavigate();
     const { addToast } = useToast();
+
+    useEffect(() => {
+        if (isLogin || !username) {
+            setUsernameAvailable(null);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setCheckingUsername(true);
+            try {
+                const res = await api.auth.checkUsername(username);
+                setUsernameAvailable(res.available);
+            } catch (err) {
+                console.error(err);
+                setUsernameAvailable(null);
+            } finally {
+                setCheckingUsername(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [username, isLogin]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -45,7 +70,15 @@ export default function Login() {
             }
             navigate('/');
         } catch (err) {
-            const errorMessage = err.response?.data?.error || 'Failed to authenticate. Please check your credentials.';
+        } catch (err) {
+            let errorMessage = err.response?.data?.error || 'Failed to authenticate. Please check your credentials.';
+
+            if (errorMessage === 'User already exists') {
+                errorMessage = 'This email already exists.';
+            } else if (errorMessage === 'Username is already taken') {
+                errorMessage = 'This username is already taken.';
+            }
+
             setError(errorMessage);
             addToast(errorMessage, 'error');
         }
@@ -85,18 +118,23 @@ export default function Login() {
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm -space-y-px">
                         {!isLogin && (
-                            <div>
+                            <div className="relative">
                                 <label htmlFor="username" className="sr-only">Username</label>
                                 <input
                                     id="username"
                                     name="username"
                                     type="text"
                                     required
-                                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-500 text-white bg-dark rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                                    className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-500 text-white bg-dark rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm ${usernameAvailable === false ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} ${usernameAvailable === true ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`}
                                     placeholder="Username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                 />
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-20">
+                                    {checkingUsername && <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />}
+                                    {!checkingUsername && usernameAvailable === true && <Check className="h-5 w-5 text-green-500" />}
+                                    {!checkingUsername && usernameAvailable === false && <X className="h-5 w-5 text-red-500" />}
+                                </div>
                             </div>
                         )}
                         <div>
