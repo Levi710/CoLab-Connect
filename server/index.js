@@ -297,6 +297,7 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
+            (SELECT COUNT(*) FROM likes l WHERE l.project_id = p.id) as likes,
             CASE WHEN $1::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) ELSE FALSE END as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
@@ -317,6 +318,7 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
+            (SELECT COUNT(*) FROM likes l WHERE l.project_id = p.id) as likes,
             (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
@@ -760,6 +762,7 @@ app.get('/api/users/:id/profile', optionalAuthenticateToken, async (req, res) =>
         const projectsRes = await db.query(`
             SELECT p.*,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            (SELECT COUNT(*) FROM likes l WHERE l.project_id = p.id) as likes,
             CASE WHEN $2::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $2) ELSE FALSE END as is_liked
             FROM projects p 
             WHERE p.user_id = $1 
