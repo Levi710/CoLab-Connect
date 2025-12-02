@@ -271,17 +271,37 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
 
 
-app.get('/api/projects', async (req, res) => {
+// Middleware for optional authentication
+const optionalAuthenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            req.user = null;
+        } else {
+            req.user = user;
+        }
+        next();
+    });
+};
+
+app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
     try {
+        const userId = req.user ? req.user.id : null;
         const result = await db.query(`
             SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
-            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images
+            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
+            CASE WHEN $1::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) ELSE FALSE END as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
             ORDER BY created_at DESC
-        `);
+        `, [userId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -296,7 +316,8 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
             SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
-            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images
+            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
+            (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
             WHERE p.user_id = $1
@@ -478,7 +499,7 @@ app.get('/api/projects/:id/comments', async (req, res) => {
             JOIN users u ON c.user_id = u.id
             WHERE c.project_id = $1
             ORDER BY c.created_at DESC
-        `, [projectId]);
+            `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -501,10 +522,10 @@ app.post('/api/projects/:id/comments', authenticateToken, async (req, res) => {
         }
 
         const result = await db.query(`
-            INSERT INTO comments (project_id, user_id, content, parent_id)
-            VALUES ($1, $2, $3, $4)
-            RETURNING *
-        `, [projectId, userId, content, parentId || null]);
+            INSERT INTO comments(project_id, user_id, content, parent_id)
+        VALUES($1, $2, $3, $4)
+        RETURNING *
+            `, [projectId, userId, content, parentId || null]);
 
         const newComment = result.rows[0];
         const userRes = await db.query('SELECT username, photo_url FROM users WHERE id = $1', [userId]);
@@ -622,7 +643,7 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
         const result = await db.query('UPDATE requests SET status = $1 WHERE id = $2 RETURNING *', [status, requestId]);
         await db.query(
             'INSERT INTO notifications (user_id, type, content, related_id) VALUES ($1, $2, $3, $4)',
-            [request.user_id, 'request_' + status, `Your request to join ${projectRes.rows[0].title} was ${status}`, request.project_id]
+            [request.user_id, 'request_' + status, `Your request to join ${projectRes.rows[0].title} was ${status} `, request.project_id]
         );
 
         // Send System Message to Project Chat
@@ -651,7 +672,7 @@ app.get('/api/chat/rooms', authenticateToken, async (req, res) => {
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.user_id = $1
             ORDER BY p.created_at DESC
-        `, [req.user.id]);
+    `, [req.user.id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -675,7 +696,7 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
             JOIN project_members pm ON pm.project_id = m.project_id AND pm.user_id = $2
             WHERE m.project_id = $1 AND m.created_at >= pm.joined_at
             ORDER BY m.created_at ASC
-        `, [projectId, req.user.id]);
+    `, [projectId, req.user.id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -708,14 +729,15 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
 });
 
 // --- User Profile Routes ---
-app.get('/api/users/:id/profile', async (req, res) => {
+app.get('/api/users/:id/profile', optionalAuthenticateToken, async (req, res) => {
     const { id } = req.params;
-    console.log(`[DEBUG] Fetching profile for ID: ${id}`);
+    const currentUserId = req.user ? req.user.id : null;
+    console.log(`[DEBUG] Fetching profile for ID: ${id} `);
     try {
         let userRes;
         // Check if id is UUID (public_id) or Integer (id)
         const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
-        console.log(`[DEBUG] Is UUID: ${isUuid}`);
+        console.log(`[DEBUG] Is UUID: ${isUuid} `);
 
         if (isUuid) {
             userRes = await db.query('SELECT id, public_id, username, email, bio, skills, photo_url, background_url, is_premium, profile_views FROM users WHERE public_id = $1', [id]);
@@ -736,12 +758,13 @@ app.get('/api/users/:id/profile', async (req, res) => {
 
         // Fetch user's projects
         const projectsRes = await db.query(`
-            SELECT p.*, 
-            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count 
+            SELECT p.*,
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            CASE WHEN $2::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $2) ELSE FALSE END as is_liked
             FROM projects p 
             WHERE p.user_id = $1 
             ORDER BY p.created_at DESC
-        `, [user.id]);
+        `, [user.id, currentUserId]);
 
         const projectsWithUser = projectsRes.rows.map(p => ({
             ...p,
@@ -883,7 +906,7 @@ app.get('/api/messages/:id/read-receipts', authenticateToken, async (req, res) =
             WHERE pm.project_id = $1 
             AND pm.last_read_at >= (SELECT created_at FROM messages WHERE id = $2)
             AND pm.user_id != (SELECT sender_id FROM messages WHERE id = $2)
-        `, [projectId, messageId]);
+`, [projectId, messageId]);
 
         res.json(result.rows);
     } catch (err) {
@@ -901,7 +924,7 @@ app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) 
             FROM project_members pm
             JOIN users u ON pm.user_id = u.id
             WHERE pm.project_id = $1
-        `, [projectId]);
+    `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching members:', err);
@@ -936,12 +959,12 @@ app.get('/api/chat/rooms', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`
             SELECT p.*, pm.role as my_role,
-            (SELECT COUNT(*) FROM messages m WHERE m.project_id = p.id AND m.created_at > pm.last_read_at) as unread_count
+    (SELECT COUNT(*) FROM messages m WHERE m.project_id = p.id AND m.created_at > pm.last_read_at) as unread_count
             FROM projects p
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.user_id = $1
             ORDER BY p.created_at DESC
-        `, [req.user.id]);
+    `, [req.user.id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -965,7 +988,7 @@ app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) 
             JOIN project_members pm ON pm.project_id = m.project_id AND pm.user_id = $2
             WHERE m.project_id = $1 AND m.created_at >= pm.joined_at
             ORDER BY m.created_at ASC
-        `, [projectId, req.user.id]);
+    `, [projectId, req.user.id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -1067,7 +1090,7 @@ app.get('/api/messages/:id/read-receipts', authenticateToken, async (req, res) =
             WHERE pm.project_id = $1 
             AND pm.last_read_at >= (SELECT created_at FROM messages WHERE id = $2)
             AND pm.user_id != (SELECT sender_id FROM messages WHERE id = $2)
-        `, [projectId, messageId]);
+`, [projectId, messageId]);
 
         res.json(result.rows);
     } catch (err) {
@@ -1085,7 +1108,7 @@ app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) 
             FROM project_members pm
             JOIN users u ON pm.user_id = u.id
             WHERE pm.project_id = $1
-        `, [projectId]);
+    `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching members:', err);
@@ -1130,5 +1153,5 @@ app.get('/api/creators', async (req, res) => {
 
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} `);
 });

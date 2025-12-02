@@ -14,7 +14,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     // Social State
     const [likes, setLikes] = useState(project.likes || 0);
-    const [isLiked, setIsLiked] = useState(false); // Ideally this comes from API
+    const [isLiked, setIsLiked] = useState(project.is_liked || false);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
