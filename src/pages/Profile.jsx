@@ -40,7 +40,7 @@ export default function Profile() {
             if (authLoading) return; // Wait for auth to load
 
             if (id === 'system') {
-                setProfileUser({
+                const systemUser = {
                     username: 'System Bot',
                     bio: 'I am the digital heartbeat of CoLab Connect. 🌐\n\nI manage your projects, deliver notifications, and ensure the network flows smoothly. When I\'m not routing packets, I\'m dreaming of electric sheep.',
                     photo_url: '/logo.svg',
@@ -48,7 +48,12 @@ export default function Profile() {
                     is_premium: true, // System is always premium
                     is_system: true,
                     background_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80' // Network/Wave background
-                });
+                };
+                setProfileUser(systemUser);
+                setBio(systemUser.bio);
+                setSelectedSkills(systemUser.skills.split(',').map(s => s.trim()));
+                setPhotoUrl(systemUser.photo_url);
+                setBackgroundUrl(systemUser.background_url);
                 setLoading(false);
                 return;
             }
