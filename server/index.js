@@ -53,7 +53,8 @@ async function initDb() {
             { name: 'projects_impressions', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0' },
             { name: 'users_password_hash_rename', query: 'ALTER TABLE users RENAME COLUMN password TO password_hash' },
             { name: 'users_public_id', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS public_id VARCHAR(50) UNIQUE' },
-            { name: 'users_profile_views', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0' }
+            { name: 'users_profile_views', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0' },
+            { name: 'notifications_from_user_id', query: 'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS from_user_id INTEGER REFERENCES users(id)' }
         ];
 
         for (const migration of migrations) {
@@ -381,10 +382,29 @@ app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
         const check = await db.query('SELECT * FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
         if (check.rows.length > 0) {
             await db.query('DELETE FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+
+            // Remove notification if it exists (Debounce/Undo strategy)
+            await db.query('DELETE FROM notifications WHERE type = \'project_like\' AND related_id = $1 AND from_user_id = $2', [projectId, userId]);
+
             const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
             res.json({ liked: false, likes: parseInt(countRes.rows[0].count) });
         } else {
             await db.query('INSERT INTO likes (project_id, user_id) VALUES ($1, $2)', [projectId, userId]);
+
+            // Send Notification to Project Owner
+            const projectRes = await db.query('SELECT user_id, title FROM projects WHERE id = $1', [projectId]);
+            const ownerId = projectRes.rows[0].user_id;
+
+            if (ownerId !== userId) { // Don't notify if liking own project
+                const userRes = await db.query('SELECT username FROM users WHERE id = $1', [userId]);
+                const likerName = userRes.rows[0].username;
+
+                await db.query(
+                    'INSERT INTO notifications (user_id, type, content, related_id, from_user_id) VALUES ($1, $2, $3, $4, $5)',
+                    [ownerId, 'project_like', `${likerName} liked your project "${projectRes.rows[0].title}"`, projectId, userId]
+                );
+            }
+
             const countRes = await db.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [projectId]);
             res.json({ liked: true, likes: parseInt(countRes.rows[0].count) });
         }
@@ -516,6 +536,18 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
             'INSERT INTO requests (project_id, user_id, role, note, status) VALUES ($1, $2, $3, $4, \'pending\') RETURNING *',
             [projectId, req.user.id, role, note]
         );
+
+        // Send Notification to Project Owner
+        const ownerId = projectRes.rows[0].user_id;
+        const userRes = await db.query('SELECT username FROM users WHERE id = $1', [req.user.id]);
+        const requesterName = userRes.rows[0].username;
+        const projectTitle = await db.query('SELECT title FROM projects WHERE id = $1', [projectId]);
+
+        await db.query(
+            'INSERT INTO notifications (user_id, type, content, related_id, from_user_id) VALUES ($1, $2, $3, $4, $5)',
+            [ownerId, 'new_request', `${requesterName} wants to join "${projectTitle.rows[0].title}"`, result.rows[0].id, req.user.id]
+        );
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error('Error sending request:', err);
