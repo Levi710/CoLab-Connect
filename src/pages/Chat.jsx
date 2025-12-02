@@ -24,6 +24,7 @@ export default function Chat() {
     const [editingMessage, setEditingMessage] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [botSettings, setBotSettings] = useState(null);
+    const [messageToDelete, setMessageToDelete] = useState(null);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -161,16 +162,22 @@ export default function Chat() {
         setEditContent(msg.content);
     };
 
-    const handleDelete = async (msgId) => {
-        if (!confirm('Are you sure you want to delete this message?')) return;
+    const handleDelete = (msgId) => {
+        setMessageToDelete(msgId);
+    };
+
+    const confirmDeleteMessage = async () => {
+        if (!messageToDelete) return;
         try {
-            await api.messages.delete(msgId);
-            setMessages(prev => prev.filter(m => m.id !== msgId));
+            await api.messages.delete(messageToDelete);
+            setMessages(prev => prev.filter(m => m.id !== messageToDelete));
+            setMessageToDelete(null);
         } catch (error) {
             console.error('Failed to delete message:', error);
-            addToast(error.message || 'Failed to delete message', 'error');
+            addToast('Failed to delete message', 'error');
         }
     };
+
 
     const handleShowSeen = async (msgId) => {
         try {
@@ -280,6 +287,7 @@ export default function Chat() {
 
                                         // Bot Customization Logic
                                         const senderName = isSystem ? (botSettings?.bot_name || 'System Bot') : msg.sender_name;
+                                        // FIX: Ensure system always defaults to logo if no custom avatar, ONLY users get ui-avatars
                                         const senderPhoto = isSystem
                                             ? (botSettings?.bot_avatar_url || '/logo.svg')
                                             : (msg.sender_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName || 'User')}&background=random`);
@@ -487,6 +495,29 @@ export default function Chat() {
                     </div>
                 )
             }
-        </div >
+            {/* Delete Confirmation Modal */}
+            {messageToDelete && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-dark-surface rounded-lg shadow-xl w-full max-w-sm border border-white/10 p-6">
+                        <h3 className="text-lg font-bold text-white mb-2">Delete Message</h3>
+                        <p className="text-gray-400 mb-6">Are you sure you want to delete this message? This action cannot be undone.</p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setMessageToDelete(null)}
+                                className="px-4 py-2 rounded text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteMessage}
+                                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
