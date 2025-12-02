@@ -19,6 +19,22 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        if (!isLogin) {
+            // Password Complexity Validation
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSymbol) {
+                const msg = 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol.';
+                setError(msg);
+                addToast(msg, 'error');
+                return;
+            }
+        }
+
         try {
             if (isLogin) {
                 await login(email, password);

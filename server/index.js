@@ -210,6 +210,17 @@ const authenticateToken = (req, res, next) => {
 // --- Auth Routes ---
 app.post('/api/auth/register', async (req, res) => {
     const { username, email, password } = req.body;
+
+    // Password Complexity Validation
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSymbol) {
+        return res.status(400).json({ error: 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol.' });
+    }
+
     try {
         const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userExists.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
