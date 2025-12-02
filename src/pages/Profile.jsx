@@ -84,7 +84,8 @@ export default function Profile() {
                             if (currentUser) {
                                 const isOwner = currentUser.id === project.user_id;
                                 const isDelegated = settings.access_list?.includes(currentUser.id);
-                                setIsBotAuthorized(isOwner || isDelegated);
+                                // Authorized if: (Owner AND Premium) OR Delegated
+                                setIsBotAuthorized((isOwner && currentUser.is_premium) || isDelegated);
                             }
                         }
                     } catch (err) {
@@ -442,35 +443,52 @@ export default function Profile() {
                             {/* Edit Profile & Manage Access Buttons */}
                             {(isOwnProfile || (id === 'system' && projectId)) && (
                                 <div className="flex gap-2">
-                                    {id === 'system' && !isBotAuthorized ? (
-                                        <div className="relative group">
-                                            <button disabled className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-white/10 cursor-not-allowed blur-[2px]">
-                                                Edit Profile
-                                            </button>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <Lock className="h-5 w-5 text-yellow-500" />
-                                            </div>
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black text-white text-xs p-2 rounded hidden group-hover:block text-center z-50">
-                                                Premium Feature: Upgrade to customize the System Bot
-                                            </div>
-                                        </div>
+                                    {id === 'system' ? (
+                                        <>
+                                            {/* Locked Button: Owner but NOT Authorized (Free) */}
+                                            {currentUser?.id === projectOwnerId && !isBotAuthorized && (
+                                                <div className="relative group">
+                                                    <button disabled className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-white/10 cursor-not-allowed blur-[2px]">
+                                                        Edit Profile
+                                                    </button>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <Lock className="h-5 w-5 text-yellow-500" />
+                                                    </div>
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black text-white text-xs p-2 rounded hidden group-hover:block text-center z-50">
+                                                        Premium Feature: Upgrade to customize the System Bot
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Unlocked Button: Authorized (Premium Owner OR Delegated) */}
+                                            {isBotAuthorized && (
+                                                <button
+                                                    onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
+                                                </button>
+                                            )}
+
+                                            {/* Manage Access Button: Premium Owner Only */}
+                                            {currentUser?.id === projectOwnerId && isBotAuthorized && (
+                                                <button
+                                                    onClick={() => setShowAccessModal(true)}
+                                                    className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-white bg-dark-surface hover:bg-white/5 focus:outline-none transition-colors gap-2"
+                                                >
+                                                    <UsersIcon className="h-4 w-4" /> Manage Access
+                                                </button>
+                                            )}
+                                        </>
                                     ) : (
+                                        // Normal User Profile
                                         <button
                                             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
                                             disabled={loading}
                                         >
                                             {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
-                                        </button>
-                                    )}
-
-                                    {/* Manage Access Button (Owner Only) */}
-                                    {id === 'system' && projectId && currentUser?.id === projectOwnerId && (
-                                        <button
-                                            onClick={() => setShowAccessModal(true)}
-                                            className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-white bg-dark-surface hover:bg-white/5 focus:outline-none transition-colors gap-2"
-                                        >
-                                            <UsersIcon className="h-4 w-4" /> Manage Access
                                         </button>
                                     )}
                                 </div>
