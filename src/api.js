@@ -339,29 +339,5 @@ export const api = {
             return res.json();
         }
     },
-    notifications: {
-        getAll: async () => {
-            const res = await fetch(`${API_URL}/notifications`, {
-                headers: getHeaders(),
-            });
-            if (!res.ok) throw new Error('Failed to fetch notifications');
-            return res.json();
-        },
-        markAsRead: async (id) => {
-            const res = await fetch(`${API_URL}/notifications/${id}/read`, {
-                method: 'PUT',
-                headers: getHeaders(),
-            });
-            if (!res.ok) throw new Error('Failed to mark notification as read');
-            return res.json();
-        },
-        delete: async (id) => {
-            const res = await fetch(`${API_URL}/notifications/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders(),
-            });
-            if (!res.ok) throw new Error('Failed to delete notification');
-            return res.json();
-        }
-    }
+
 };

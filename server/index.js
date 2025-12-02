@@ -1383,6 +1383,56 @@ app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
 });
 
 
+// Delete account
+app.delete('/api/users/me', authenticateToken, async (req, res) => {
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete notifications
+        await client.query('DELETE FROM notifications WHERE user_id = $1', [req.user.id]);
+        await client.query('DELETE FROM notifications WHERE from_user_id = $1', [req.user.id]);
+
+        // 2. Delete messages sent by user
+        await client.query('DELETE FROM messages WHERE sender_id = $1', [req.user.id]);
+
+        // 3. Delete comments and likes
+        await client.query('DELETE FROM comments WHERE user_id = $1', [req.user.id]);
+        await client.query('DELETE FROM likes WHERE user_id = $1', [req.user.id]);
+        await client.query('DELETE FROM comment_likes WHERE user_id = $1', [req.user.id]);
+
+        // 4. Delete requests
+        await client.query('DELETE FROM requests WHERE user_id = $1', [req.user.id]);
+
+        // 5. Delete project memberships
+        await client.query('DELETE FROM project_members WHERE user_id = $1', [req.user.id]);
+
+        // 6. Delete owned projects (cascade will handle messages/requests/members for these projects if configured, but let's be safe)
+        // First delete content related to owned projects to avoid FK constraints if not ON DELETE CASCADE
+        const ownedProjects = await client.query('SELECT id FROM projects WHERE user_id = $1', [req.user.id]);
+        for (const project of ownedProjects.rows) {
+            await client.query('DELETE FROM messages WHERE project_id = $1', [project.id]);
+            await client.query('DELETE FROM requests WHERE project_id = $1', [project.id]);
+            await client.query('DELETE FROM project_members WHERE project_id = $1', [project.id]);
+            await client.query('DELETE FROM comments WHERE project_id = $1', [project.id]);
+            await client.query('DELETE FROM likes WHERE project_id = $1', [project.id]);
+            await client.query('DELETE FROM projects WHERE id = $1', [project.id]);
+        }
+
+        // 7. Delete user
+        await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+
+        await client.query('COMMIT');
+        res.json({ message: 'Account deleted successfully' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete account' });
+    } finally {
+        client.release();
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} `);
 });
