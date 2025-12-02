@@ -292,11 +292,12 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
     console.log(`[DEBUG] Fetching projects for user ID: ${req.user.id}`);
     try {
         const result = await db.query(`
-            SELECT p.*, u.public_id as owner_public_id,
+            SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images
             FROM projects p 
+            JOIN users u ON p.user_id = u.id
             WHERE p.user_id = $1
             ORDER BY created_at DESC
         `, [req.user.id]);
@@ -710,7 +711,14 @@ app.get('/api/users/:id/profile', async (req, res) => {
             ORDER BY p.created_at DESC
         `, [user.id]);
 
-        res.json({ ...user, projects: projectsRes.rows });
+        const projectsWithUser = projectsRes.rows.map(p => ({
+            ...p,
+            owner_name: user.username,
+            owner_photo: user.photo_url,
+            owner_public_id: user.public_id
+        }));
+
+        res.json({ ...user, projects: projectsWithUser });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch profile' });
