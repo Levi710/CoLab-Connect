@@ -42,11 +42,12 @@ export default function Profile() {
             if (id === 'system') {
                 setProfileUser({
                     username: 'System Bot',
-                    bio: 'I am the all-seeing, all-knowing System Bot. I manage projects, deliver notifications, and keep the chaos in check. 🤖✨',
+                    bio: 'I am the digital heartbeat of CoLab Connect. 🌐\n\nI manage your projects, deliver notifications, and ensure the network flows smoothly. When I\'m not routing packets, I\'m dreaming of electric sheep.',
                     photo_url: '/logo.svg',
-                    skills: 'Automation, Management, Security, Beep Boop',
+                    skills: 'Project Management, Notification Delivery, Network Optimization, Beep Boop, 24/7 Uptime',
+                    is_premium: true, // System is always premium
                     is_system: true,
-                    background_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80' // Techy background
+                    background_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80' // Network/Wave background
                 });
                 setLoading(false);
                 return;
@@ -340,8 +341,8 @@ export default function Profile() {
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-primary/10 text-primary h-fit border border-primary/20">
-                                {profileUser.is_premium ? 'Premium Plan' : 'Free Plan'}
+                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border ${profileUser.is_system ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                                {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
                             {isOwnProfile && (
                                 <button
