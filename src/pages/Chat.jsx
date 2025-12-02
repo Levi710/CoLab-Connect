@@ -270,7 +270,7 @@ export default function Chat() {
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
                                                     <Link
-                                                        to={`/profile/${msg.sender_public_id || msg.sender_id}`}
+                                                        to={msg.sender_id ? `/profile/${msg.sender_public_id || msg.sender_id}` : '/profile/system'}
                                                         className="mr-2 flex-shrink-0 self-start mt-5 relative z-50 cursor-pointer block"
                                                         style={{ pointerEvents: 'auto' }}
                                                     >

@@ -39,6 +39,19 @@ export default function Profile() {
         const fetchProfile = async () => {
             if (authLoading) return; // Wait for auth to load
 
+            if (id === 'system') {
+                setProfileUser({
+                    username: 'System Bot',
+                    bio: 'I am the all-seeing, all-knowing System Bot. I manage projects, deliver notifications, and keep the chaos in check. 🤖✨',
+                    photo_url: '/logo.svg',
+                    skills: 'Automation, Management, Security, Beep Boop',
+                    is_system: true,
+                    background_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80' // Techy background
+                });
+                setLoading(false);
+                return;
+            }
+
             setError(null);
             if (isOwnProfile) {
                 if (currentUser) {
@@ -466,32 +479,63 @@ export default function Profile() {
 
             {/* User Projects Section */}
             <div className="mt-8">
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    {isOwnProfile ? 'My Projects' : `${profileUser.username}'s Projects`}
-                </h3>
-                {userProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {userProjects.map(project => (
-                            <ProjectCard
-                                key={project.id}
-                                project={project}
-                                isOwner={isOwnProfile}
-                                onEdit={handleEditProject}
-                                onDelete={isOwnProfile ? async (id) => {
-                                    if (window.confirm('Are you sure you want to delete this project?')) {
-                                        const { api } = await import('../api');
-                                        await api.projects.delete(id);
-                                        setUserProjects(userProjects.filter(p => p.id !== id));
-                                    }
-                                } : undefined}
-                            />
-                        ))}
+                {profileUser.is_system ? (
+                    <div className="bg-dark-surface rounded-lg border border-white/10 p-6">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Briefcase className="w-5 h-5 text-primary" />
+                            System Status
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 bg-dark rounded border border-white/5">
+                                <span className="text-gray-300">Server Uptime</span>
+                                <span className="text-green-400 font-mono">99.99%</span>
+                            </div>
+                            <div className="flex items-center justify-between p-4 bg-dark rounded border border-white/5">
+                                <span className="text-gray-300">Coffee Level</span>
+                                <span className="text-amber-400 font-mono">CRITICAL (Need Refill) ☕</span>
+                            </div>
+                            <div className="flex items-center justify-between p-4 bg-dark rounded border border-white/5">
+                                <span className="text-gray-300">Bugs Squashed</span>
+                                <span className="text-primary font-mono">∞</span>
+                            </div>
+                            <div className="flex items-center justify-between p-4 bg-dark rounded border border-white/5">
+                                <span className="text-gray-300">World Domination Progress</span>
+                                <div className="w-32 bg-gray-700 rounded-full h-2.5">
+                                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '1%' }}></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 ) : (
-                    <div className="text-center py-10 bg-dark-surface rounded-lg border border-white/5">
-                        <p className="text-gray-500">No projects found.</p>
-                    </div>
+                    <>
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Briefcase className="w-5 h-5 text-primary" />
+                            {isOwnProfile ? 'My Projects' : `${profileUser.username}'s Projects`}
+                        </h3>
+                        {userProjects.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {userProjects.map(project => (
+                                    <ProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        isOwner={isOwnProfile}
+                                        onEdit={handleEditProject}
+                                        onDelete={isOwnProfile ? async (id) => {
+                                            if (window.confirm('Are you sure you want to delete this project?')) {
+                                                const { api } = await import('../api');
+                                                await api.projects.delete(id);
+                                                setUserProjects(userProjects.filter(p => p.id !== id));
+                                            }
+                                        } : undefined}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 bg-dark-surface rounded-lg border border-white/5">
+                                <p className="text-gray-500">No projects found.</p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
