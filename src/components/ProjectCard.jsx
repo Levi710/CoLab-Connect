@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock, TrendingUp, Send, Trash2, Image as ImageIcon, Briefcase, Tag } from 'lucide-react';
 import { api } from '../api';
@@ -26,27 +26,52 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         setLikes(project.likes_count || project.likes || 0);
     }, [project.is_liked, project.likes, project.likes_count]);
 
-    const handleLike = async (e) => {
+    // Refs for debouncing like requests
+    const serverIsLiked = useRef(project.is_liked || false);
+    const debounceTimer = useRef(null);
+
+    // Sync refs when props change
+    useEffect(() => {
+        serverIsLiked.current = project.is_liked || false;
+    }, [project.is_liked]);
+
+    const handleLike = (e) => {
         e.preventDefault();
         if (!currentUser) return addToast('Please login to like projects', 'info');
 
-        // Optimistic update
-        const prevLikes = likes;
-        const prevIsLiked = isLiked;
-        setLikes(prev => prevIsLiked ? prev - 1 : prev + 1);
-        setIsLiked(!prevIsLiked);
+        // 1. Optimistic UI Update
+        const nextIsLiked = !isLiked;
+        setIsLiked(nextIsLiked);
+        setLikes(prev => nextIsLiked ? prev + 1 : prev - 1);
 
-        try {
-            const res = await api.projects.toggleLike(project.id);
-            setLikes(res.likes);
-            setIsLiked(res.liked);
-        } catch (err) {
-            // Revert
-            setLikes(prevLikes);
-            setIsLiked(prevIsLiked);
-            console.error(err);
-            addToast('Failed to like project', 'error');
-        }
+        // 2. Debounce API Call
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(async () => {
+            // Only call API if the final state differs from what the server knows
+            if (nextIsLiked !== serverIsLiked.current) {
+                try {
+                    const res = await api.projects.toggleLike(project.id);
+
+                    // Update server truth
+                    serverIsLiked.current = res.liked;
+
+                    // Sync state with server response to ensure accuracy
+                    // Ensure we don't set NaN if response is malformed
+                    if (typeof res.likes === 'number') {
+                        setLikes(res.likes);
+                    }
+                    setIsLiked(res.liked);
+                } catch (err) {
+                    console.error("Like sync failed", err);
+                    // Revert UI on error to match server truth
+                    setIsLiked(serverIsLiked.current);
+                    // We can't easily revert count perfectly without fetching, but we can approximate
+                    // or just fetch the project again. For now, let's just notify.
+                    addToast('Failed to update like', 'error');
+                }
+            }
+        }, 500); // 500ms debounce to handle rapid clicks
     };
 
     const toggleComments = async (e) => {

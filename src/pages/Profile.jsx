@@ -22,6 +22,8 @@ export default function Profile() {
     const [userProjects, setUserProjects] = useState([]);
     const [viewingImage, setViewingImage] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+    const [userToRemove, setUserToRemove] = useState(null);
 
     // Bot Customization State
     const location = useLocation();
@@ -792,7 +794,10 @@ export default function Profile() {
                                         <div key={uid} className="flex justify-between items-center bg-white/5 p-2 rounded">
                                             <span className="text-sm text-gray-300">User ID: {uid}</span>
                                             <button
-                                                onClick={() => handleRemoveAccess(uid)}
+                                                onClick={() => {
+                                                    setUserToRemove(uid);
+                                                    setShowRemoveConfirm(true);
+                                                }}
                                                 className="text-red-400 hover:text-red-300 p-1"
                                                 title="Revoke Access"
                                             >
@@ -802,6 +807,41 @@ export default function Profile() {
                                     ))
                                 )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Remove Access Confirmation Modal */}
+            {showRemoveConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-dark-surface rounded-lg shadow-xl w-full max-w-sm border border-white/10 p-6">
+                        <h3 className="text-lg font-bold text-white mb-2">Remove Access?</h3>
+                        <p className="text-gray-400 mb-6">
+                            Are you sure you want to remove this user? They will no longer be able to manage this bot.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRemoveConfirm(false);
+                                    setUserToRemove(null);
+                                }}
+                                className="px-4 py-2 text-gray-400 hover:text-white font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (userToRemove) {
+                                        handleRemoveAccess(userToRemove);
+                                        setShowRemoveConfirm(false);
+                                        setUserToRemove(null);
+                                    }
+                                }}
+                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-bold transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Remove
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -78,6 +78,12 @@ export default function CreateProject() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!currentUser) {
+            addToast('Please login to create a project', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
             if (editingProject) {

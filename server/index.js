@@ -1583,6 +1583,57 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
     }
 });
 
+// --- Automated Featured Project Logic ---
+const updateFeaturedProject = async () => {
+    try {
+        console.log('Running automated featured project update...');
+        // Calculate scores: (Likes * 1) + (Comments * 2)
+        // We need to join with likes and comments tables
+        // Note: This query assumes standard SQL. Postgres might need specific syntax for the counts.
+        // A simpler approach for now: Fetch all projects, then for each fetch likes/comments count, calculate score, sort, and update.
+        // Or better, use a single complex query.
+
+        const query = `
+            WITH ProjectScores AS (
+                SELECT 
+                    p.id,
+                    p.title,
+                    (SELECT COUNT(*) FROM likes WHERE project_id = p.id) as likes_count,
+                    (SELECT COUNT(*) FROM comments WHERE project_id = p.id) as comments_count
+                FROM projects p
+            )
+            SELECT 
+                id,
+                title,
+                (likes_count * 1 + comments_count * 2) as score
+            FROM ProjectScores
+            ORDER BY score DESC
+            LIMIT 1;
+        `;
+
+        const result = await db.query(query);
+
+        if (result.rows.length > 0) {
+            const winner = result.rows[0];
+            console.log(`New Featured Project: ${winner.title} (Score: ${winner.score})`);
+
+            // Reset all
+            await db.query('UPDATE projects SET is_featured = FALSE');
+
+            // Set winner
+            await db.query('UPDATE projects SET is_featured = TRUE, featured_at = CURRENT_TIMESTAMP WHERE id = $1', [winner.id]);
+        }
+    } catch (err) {
+        console.error('Failed to update featured project:', err);
+    }
+};
+
+// Run immediately on start
+updateFeaturedProject();
+
+// Run every 1 hour (3600000 ms)
+setInterval(updateFeaturedProject, 3600000);
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} `);
 });

@@ -24,7 +24,9 @@ export default function Chat() {
     const [editingMessage, setEditingMessage] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [botSettings, setBotSettings] = useState(null);
+    const [botSettings, setBotSettings] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
+    const [isSending, setIsSending] = useState(false);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -105,15 +107,18 @@ export default function Chat() {
 
     const handleSend = async (e) => {
         e.preventDefault();
-        if (!newMessage.trim() || !selectedRoom) return;
+        if (!newMessage.trim() || !selectedRoom || isSending) return;
 
         try {
+            setIsSending(true);
             await api.messages.send({ projectId: selectedRoom.id, content: newMessage });
             setNewMessage('');
             // Optimistic update handled by poll or re-fetch
         } catch (error) {
             console.error('Failed to send message:', error);
             addToast('Failed to send message', 'error');
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -403,7 +408,7 @@ export default function Chat() {
                                     />
                                     <button
                                         type="submit"
-                                        disabled={!newMessage.trim()}
+                                        disabled={!newMessage.trim() || isSending}
                                         className="bg-primary text-white rounded-full p-2 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-primary/20"
                                     >
                                         <Send className="h-5 w-5" />

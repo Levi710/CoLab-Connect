@@ -159,7 +159,7 @@ export default function Navbar() {
                             <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
                                 About
                             </Link>
-                            <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
+                            <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
                                 Create Project
                             </Link>
                         </div>
@@ -184,11 +184,14 @@ export default function Navbar() {
                                         </div>
                                     </div>
                                     <div className="mt-3 space-y-1">
-                                        <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
+                                        <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
                                             Your Profile
                                         </Link>
                                         <button
-                                            onClick={handleLogout}
+                                            onClick={() => {
+                                                handleLogout();
+                                                setIsOpen(false);
+                                            }}
                                             className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
                                         >
                                             Sign out
@@ -197,7 +200,7 @@ export default function Navbar() {
                                 </>
                             ) : (
                                 <div className="mt-3 space-y-1">
-                                    <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5">
+                                    <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
                                         Login
                                     </Link>
                                 </div>

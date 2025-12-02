@@ -15,6 +15,7 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [usernameAvailable, setUsernameAvailable] = useState(null);
     const [checkingUsername, setCheckingUsername] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { login, register } = useAuth();
     const navigate = useNavigate();
     const { addToast } = useToast();
@@ -61,6 +62,7 @@ export default function Login() {
         }
 
         try {
+            setIsSubmitting(true);
             if (isLogin) {
                 await login(email, password);
                 addToast('Welcome back!', 'success');
@@ -80,6 +82,8 @@ export default function Login() {
 
             setError(errorMessage);
             addToast(errorMessage, 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -177,13 +181,13 @@ export default function Login() {
 
                     <div>
                         <button
-                            type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-lg shadow-primary/20"
+                            disabled={isSubmitting}
+                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${isSubmitting ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-lg shadow-primary/20`}
                         >
                             <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                                {isLogin ? <LogIn className="h-5 w-5 text-white/70 group-hover:text-white" aria-hidden="true" /> : <UserPlus className="h-5 w-5 text-white/70 group-hover:text-white" aria-hidden="true" />}
+                                {isSubmitting ? <Loader2 className="h-5 w-5 text-white/70 animate-spin" /> : (isLogin ? <LogIn className="h-5 w-5 text-white/70 group-hover:text-white" aria-hidden="true" /> : <UserPlus className="h-5 w-5 text-white/70 group-hover:text-white" aria-hidden="true" />)}
                             </span>
-                            {isLogin ? 'Sign in' : 'Sign up'}
+                            {isSubmitting ? 'Processing...' : (isLogin ? 'Sign in' : 'Sign up')}
                         </button>
                     </div>
                 </form>
