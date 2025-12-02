@@ -251,7 +251,7 @@ export default function Chat() {
                 {selectedRoom ? (
                     <>
                         {/* Header */}
-                        <div className="bg-dark-surface border-b border-white/5 px-6 py-3 flex justify-between items-center shadow-sm">
+                        <div className="bg-dark-surface/90 backdrop-blur-md border-b border-gold/10 px-6 py-3 flex justify-between items-center shadow-lg shadow-black/20">
                             <div>
                                 <div className="flex items-center">
                                     <button onClick={() => setSelectedRoom(null)} className="md:hidden mr-2 text-gray-400">
@@ -307,13 +307,13 @@ export default function Chat() {
                                                             src={senderPhoto}
                                                             alt={senderName}
                                                             title={isSystem ? 'System Bot' : (msg.sender_public_id || msg.sender_id)}
-                                                            className="w-8 h-8 rounded-full object-cover border border-white/10"
+                                                            className="w-8 h-8 rounded-full object-cover border border-gold/20"
                                                         />
                                                     </Link>
                                                 )}
                                                 <div className="max-w-[70%]">
-                                                    {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{senderName}</p>}
-                                                    <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>
+                                                    {!isMe && <p className="text-xs text-silver ml-1 mb-1">{senderName}</p>}
+                                                    <div className={`rounded-2xl px-4 py-2 shadow-md ${isMe ? 'bg-gold-gradient text-dark font-medium rounded-tr-none shadow-gold/10' : 'bg-dark-surface/80 border border-silver/20 text-silver rounded-tl-none'}`}>
                                                         {msg.image_url && (
                                                             <img src={msg.image_url} alt="Shared" className="max-w-full rounded mb-2" />
                                                         )}

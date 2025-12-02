@@ -53,12 +53,12 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="bg-dark/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-[100]">
+        <nav className="bg-dark/90 backdrop-blur-md border-b border-gold/20 sticky top-0 z-[100] shadow-lg shadow-black/50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex">
-                        <Link to="/" className="flex-shrink-0 flex items-center">
-                            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">CoLab Connect</span>
+                        <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+                            <span className="text-2xl font-serif font-bold bg-gold-gradient bg-clip-text text-transparent tracking-wide drop-shadow-sm">CoLab Connect</span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <Link to="/" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
@@ -106,13 +106,13 @@ export default function Navbar() {
                         {currentUser ? (
                             <button
                                 onClick={handleLogout}
-                                className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover flex items-center shadow-lg shadow-primary/20 transition-all"
+                                className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 flex items-center shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
                             >
                                 <LogOut className="h-4 w-4 mr-2" />
                                 Logout
                             </button>
                         ) : (
-                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all"
+                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
                             >
                                 Login
                             </Link>

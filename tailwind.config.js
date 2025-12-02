@@ -8,26 +8,36 @@ export default {
     extend: {
       colors: {
         dark: {
-          DEFAULT: '#0b0f19',
-          surface: '#13161f', // Darker surface to avoid "white box" look
-          lighter: '#1e293b',
+          DEFAULT: '#0a0a0a', // Rich Black
+          surface: '#121212', // Charcoal
+          lighter: '#1e1e1e',
         },
         primary: {
-          DEFAULT: '#4285F4', // Google Blue
-          hover: '#3367D6',
+          DEFAULT: '#BF953F', // Gold
+          hover: '#AA771C',
         },
         secondary: {
-          DEFAULT: '#A142F4', // Google Purple
+          DEFAULT: '#C0C0C0', // Silver
         },
-        accent: {
-          DEFAULT: '#24C1E0', // Google Teal
+        gold: {
+          light: '#FCF6BA',
+          DEFAULT: '#BF953F',
+          dark: '#AA771C',
+        },
+        silver: {
+          light: '#EEF2F3',
+          DEFAULT: '#C0C0C0',
+          dark: '#A0A0A0',
         }
       },
       backgroundImage: {
         'grid-pattern': "linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px)",
+        'gold-gradient': "linear-gradient(135deg, #BF953F 0%, #FCF6BA 50%, #BF953F 100%)",
+        'silver-gradient': "linear-gradient(135deg, #C0C0C0 0%, #EEF2F3 50%, #C0C0C0 100%)",
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        serif: ['"Playfair Display"', 'serif'],
       }
     },
   },

@@ -120,11 +120,11 @@ export default function Home() {
             <section className="relative pt-20 pb-32 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                     <div className="inline-block mb-4">
-                        <span className="py-1 px-3 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase">
+                        <span className="py-1 px-3 rounded-full bg-gold/10 border border-gold/20 text-gold text-xs font-semibold tracking-wide uppercase shadow-sm shadow-gold/5">
                             Featured Platform
                         </span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent mb-6 drop-shadow-sm">
                         Find Your Next Project
                     </h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-light">
@@ -157,7 +157,7 @@ export default function Home() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
                 {/* Search Bar */}
                 <div className="max-w-3xl mx-auto mb-16 px-4 sm:px-0">
-                    <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface border border-white/10 rounded-2xl sm:rounded-full p-2 flex flex-col sm:flex-row shadow-xl shadow-black/50 backdrop-blur-xl">
+                    <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface/80 border border-gold/20 rounded-2xl sm:rounded-full p-2 flex flex-col sm:flex-row shadow-2xl shadow-black/50 backdrop-blur-xl">
                         <div className="flex-shrink-0 pl-2 sm:pl-4 pr-2 flex items-center border-b sm:border-b-0 sm:border-r border-white/5 mb-2 sm:mb-0 pb-2 sm:pb-0">
                             <select
                                 value={filterCategory}
@@ -191,8 +191,8 @@ export default function Home() {
                 {/* Featured Projects */}
                 <div className="mb-16">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <span className="w-1 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></span>
+                        <h2 className="text-3xl font-serif font-bold text-white flex items-center gap-2">
+                            <span className="w-1 h-8 bg-gold-gradient rounded-full"></span>
                             Featured Projects
                         </h2>
                     </div>

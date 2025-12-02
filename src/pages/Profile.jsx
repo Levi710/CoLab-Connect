@@ -357,7 +357,9 @@ export default function Profile() {
                 </div>
             )}
 
-            <div className="bg-dark-surface shadow-xl rounded-lg border border-white/10 mb-8">
+            <div className="bg-dark-surface/80 backdrop-blur-md shadow-2xl shadow-black/50 rounded-lg border border-gold/20 mb-8 relative overflow-hidden">
+                {/* Decorative sheen */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-gold/5 via-transparent to-transparent pointer-events-none" />
                 <div
                     className="h-32 bg-cover bg-center relative group rounded-t-lg"
                     style={{
@@ -395,7 +397,7 @@ export default function Profile() {
                     <div className="-mt-16 mb-4 relative inline-block group">
                         {photoUrl ? (
                             <img
-                                className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-md inline-block object-cover bg-dark"
+                                className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-lg shadow-gold/20 inline-block object-cover bg-dark"
                                 src={photoUrl}
                                 alt={profileUser.username}
                             />
@@ -433,15 +435,15 @@ export default function Profile() {
 
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div>
-                            <h3 className="text-2xl font-bold leading-6 text-white">
+                            <h3 className="text-3xl font-serif font-bold leading-6 bg-gold-gradient bg-clip-text text-transparent drop-shadow-sm">
                                 {profileUser.username}
                             </h3>
-                            <p className="mt-1 max-w-2xl text-sm text-gray-400">
+                            <p className="mt-1 max-w-2xl text-sm text-silver font-light tracking-wide">
                                 {profileUser.email}
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border ${profileUser.is_system ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border shadow-sm ${profileUser.is_system ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-gold/10 text-gold border-gold/30 shadow-gold/10'}`}>
                                 {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
                             {/* Edit Profile & Manage Access Buttons */}
@@ -477,7 +479,7 @@ export default function Profile() {
                                             {isBotAuthorized && (
                                                 <button
                                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
+                                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md shadow-lg shadow-gold/20 text-dark bg-gold-gradient hover:brightness-110 focus:outline-none transition-all transform hover:scale-105"
                                                     disabled={loading}
                                                 >
                                                     {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
