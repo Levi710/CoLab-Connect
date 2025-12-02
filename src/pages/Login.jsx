@@ -70,7 +70,6 @@ export default function Login() {
             }
             navigate('/');
         } catch (err) {
-        } catch (err) {
             let errorMessage = err.response?.data?.error || 'Failed to authenticate. Please check your credentials.';
 
             if (errorMessage === 'User already exists') {
