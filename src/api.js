@@ -115,6 +115,39 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch comments');
             return res.json();
         },
+        getBotSettings: async (projectId) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/bot`);
+            if (!res.ok) throw new Error('Failed to fetch bot settings');
+            return res.json();
+        },
+        updateBotSettings: async (projectId, data) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/bot`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const error = new Error(errorData.error || 'Failed to update bot settings');
+                error.response = { data: errorData };
+                throw error;
+            }
+            return res.json();
+        },
+        updateBotAccess: async (projectId, accessList) => {
+            const res = await fetch(`${API_URL}/projects/${projectId}/bot/access`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify({ access_list: accessList }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const error = new Error(errorData.error || 'Failed to update bot access');
+                error.response = { data: errorData };
+                throw error;
+            }
+            return res.json();
+        },
 
         delete: async (id) => {
             const res = await fetch(`${API_URL}/projects/${id}`, {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, Briefcase, Award, X, Eye, Plus, Search } from 'lucide-react';
+import { User, Briefcase, Award, X, Eye, Plus, Search, Lock, Users as UsersIcon } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import ProjectCard from '../components/ProjectCard';
 import skillsData from '../data/skills.json';
@@ -23,6 +23,16 @@ export default function Profile() {
     const [viewingImage, setViewingImage] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+    // Bot Customization State
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const projectId = searchParams.get('projectId');
+    const [isBotAuthorized, setIsBotAuthorized] = useState(false);
+    const [botAccessList, setBotAccessList] = useState([]);
+    const [showAccessModal, setShowAccessModal] = useState(false);
+    const [newAccessId, setNewAccessId] = useState('');
+    const [projectOwnerId, setProjectOwnerId] = useState(null);
+
     // Skills Selector State
     const [skillSearch, setSkillSearch] = useState('');
     const [showSkillDropdown, setShowSkillDropdown] = useState(false);
@@ -40,7 +50,7 @@ export default function Profile() {
             if (authLoading) return; // Wait for auth to load
 
             if (id === 'system') {
-                const systemUser = {
+                let systemUser = {
                     username: 'System Bot',
                     bio: 'I am the digital heartbeat of CoLab Connect. 🌐\n\nI manage your projects, deliver notifications, and ensure the network flows smoothly. When I\'m not routing packets, I\'m dreaming of electric sheep.',
                     photo_url: '/logo.svg',
@@ -49,6 +59,39 @@ export default function Profile() {
                     is_system: true,
                     background_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80' // Network/Wave background
                 };
+
+                if (projectId) {
+                    try {
+                        const { api } = await import('../api');
+                        // Fetch project to check owner
+                        const project = await api.projects.view(projectId);
+                        setProjectOwnerId(project.user_id);
+
+                        const settings = await api.projects.getBotSettings(projectId);
+
+                        if (settings) {
+                            systemUser = {
+                                ...systemUser,
+                                username: settings.bot_name || systemUser.username,
+                                photo_url: settings.bot_avatar_url || systemUser.photo_url,
+                                bio: settings.bot_bio || systemUser.bio,
+                                skills: settings.bot_skills || systemUser.skills,
+                                background_url: settings.bot_background_url || systemUser.background_url,
+                            };
+                            setBotAccessList(settings.access_list || []);
+
+                            // Check Authorization
+                            if (currentUser) {
+                                const isOwner = currentUser.id === project.user_id;
+                                const isDelegated = settings.access_list?.includes(currentUser.id);
+                                setIsBotAuthorized(isOwner || isDelegated);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch bot settings", err);
+                    }
+                }
+
                 setProfileUser(systemUser);
                 setBio(systemUser.bio);
                 setSelectedSkills(systemUser.skills.split(',').map(s => s.trim()));
@@ -202,26 +245,73 @@ export default function Profile() {
     };
 
     const handleSave = async () => {
+        if (!isOwnProfile && id !== 'system') return;
+
         setLoading(true);
         try {
             const { api } = await import('../api');
             const skillsString = selectedSkills.join(', ');
 
-            await api.auth.updateProfile({
-                bio,
-                skills: skillsString,
-                photo_url: photoUrl,
-                background_url: backgroundUrl
-            });
+            if (id === 'system' && projectId) {
+                // Update Bot Settings
+                await api.projects.updateBotSettings(projectId, {
+                    bot_name: profileUser.username,
+                    bot_avatar_url: photoUrl,
+                    bot_bio: bio,
+                    bot_skills: skillsString,
+                    bot_background_url: backgroundUrl
+                });
+                addToast('System Bot updated successfully!', 'success');
+            } else {
+                await api.auth.updateProfile({
+                    bio,
+                    skills: skillsString,
+                    photo_url: photoUrl,
+                    background_url: backgroundUrl
+                });
+                addToast('Profile updated successfully!', 'success');
+            }
 
-            addToast('Profile updated successfully!', 'success');
+            setIsEditing(false);
             window.location.reload();
         } catch (error) {
             console.error('Failed to update profile:', error);
             addToast('Failed to update profile. Please try again.', 'error');
         } finally {
             setLoading(false);
-            setIsEditing(false);
+        }
+    };
+
+    const handleAddAccess = async () => {
+        if (!newAccessId) return;
+        try {
+            const { api } = await import('../api');
+            const userId = parseInt(newAccessId);
+            if (isNaN(userId)) {
+                addToast('Invalid User ID', 'error');
+                return;
+            }
+            const newList = [...botAccessList, userId];
+            await api.projects.updateBotAccess(projectId, newList);
+            setBotAccessList(newList);
+            setNewAccessId('');
+            addToast('User access granted', 'success');
+        } catch (e) {
+            console.error(e);
+            addToast('Failed to grant access', 'error');
+        }
+    };
+
+    const handleRemoveAccess = async (userIdToRemove) => {
+        try {
+            const { api } = await import('../api');
+            const newList = botAccessList.filter(uid => uid !== userIdToRemove);
+            await api.projects.updateBotAccess(projectId, newList);
+            setBotAccessList(newList);
+            addToast('User access revoked', 'success');
+        } catch (e) {
+            console.error(e);
+            addToast('Failed to revoke access', 'error');
         }
     };
 
@@ -349,14 +439,41 @@ export default function Profile() {
                             <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border ${profileUser.is_system ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
                                 {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
-                            {isOwnProfile && (
-                                <button
-                                    onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
-                                </button>
+                            {/* Edit Profile & Manage Access Buttons */}
+                            {(isOwnProfile || (id === 'system' && projectId)) && (
+                                <div className="flex gap-2">
+                                    {id === 'system' && !isBotAuthorized ? (
+                                        <div className="relative group">
+                                            <button disabled className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-white/10 cursor-not-allowed blur-[2px]">
+                                                Edit Profile
+                                            </button>
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <Lock className="h-5 w-5 text-yellow-500" />
+                                            </div>
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black text-white text-xs p-2 rounded hidden group-hover:block text-center z-50">
+                                                Premium Feature: Upgrade to customize the System Bot
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none transition-colors"
+                                            disabled={loading}
+                                        >
+                                            {loading ? 'Saving...' : (isEditing ? 'Save Profile' : 'Edit Profile')}
+                                        </button>
+                                    )}
+
+                                    {/* Manage Access Button (Owner Only) */}
+                                    {id === 'system' && projectId && currentUser?.id === projectOwnerId && (
+                                        <button
+                                            onClick={() => setShowAccessModal(true)}
+                                            className="inline-flex items-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md shadow-sm text-white bg-dark-surface hover:bg-white/5 focus:outline-none transition-colors gap-2"
+                                        >
+                                            <UsersIcon className="h-4 w-4" /> Manage Access
+                                        </button>
+                                    )}
+                                </div>
                             )}
                             {isOwnProfile && !isEditing && (
                                 <button
@@ -600,6 +717,57 @@ export default function Profile() {
                                 >
                                     Cancel
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Manage Access Modal */}
+            {showAccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-dark-surface rounded-lg shadow-xl w-full max-w-md border border-white/10">
+                        <div className="flex justify-between items-center p-4 border-b border-white/10">
+                            <h3 className="text-lg font-bold text-white">Manage Bot Access</h3>
+                            <button onClick={() => setShowAccessModal(false)} className="text-gray-400 hover:text-white">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            <p className="text-sm text-gray-400">Allow other users to customize this bot by adding their User ID.</p>
+
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter User ID"
+                                    value={newAccessId}
+                                    onChange={(e) => setNewAccessId(e.target.value)}
+                                    className="flex-1 bg-dark border border-white/10 rounded px-3 py-2 text-white focus:outline-none focus:border-primary"
+                                />
+                                <button
+                                    onClick={handleAddAccess}
+                                    className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded transition-colors"
+                                >
+                                    Add
+                                </button>
+                            </div>
+
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {botAccessList.length === 0 ? (
+                                    <p className="text-sm text-gray-500 text-center py-2">No delegated users.</p>
+                                ) : (
+                                    botAccessList.map(uid => (
+                                        <div key={uid} className="flex justify-between items-center bg-white/5 p-2 rounded">
+                                            <span className="text-sm text-gray-300">User ID: {uid}</span>
+                                            <button
+                                                onClick={() => handleRemoveAccess(uid)}
+                                                className="text-red-400 hover:text-red-300 p-1"
+                                                title="Revoke Access"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>

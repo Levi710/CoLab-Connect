@@ -137,6 +137,15 @@ async function initDb() {
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (comment_id, user_id)
+            )`,
+            `CREATE TABLE IF NOT EXISTS project_bot_settings (
+                project_id INTEGER PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+                bot_name TEXT DEFAULT 'System Bot',
+                bot_avatar_url TEXT DEFAULT '/logo.svg',
+                bot_bio TEXT,
+                bot_skills TEXT,
+                bot_background_url TEXT,
+                access_list INTEGER[] DEFAULT '{}'
             )`
         ];
 
@@ -423,6 +432,122 @@ app.put('/api/projects/:id', authenticateToken, async (req, res) => {
 });
 
 // Toggle Project Like
+app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
+    const projectId = req.params.id;
+    const userId = req.user.id;
+    try {
+        const existingLike = await db.query('SELECT * FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+        if (existingLike.rows.length > 0) {
+            await db.query('DELETE FROM likes WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+            res.json({ liked: false });
+        } else {
+            await db.query('INSERT INTO likes (project_id, user_id) VALUES ($1, $2)', [projectId, userId]);
+            res.json({ liked: true });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to toggle like' });
+    }
+});
+
+// --- Bot Settings Routes ---
+
+// Get Bot Settings
+app.get('/api/projects/:projectId/bot', async (req, res) => {
+    const { projectId } = req.params;
+    try {
+        const result = await db.query('SELECT * FROM project_bot_settings WHERE project_id = $1', [projectId]);
+        if (result.rows.length === 0) {
+            // Return defaults if no settings exist
+            return res.json({
+                bot_name: 'System Bot',
+                bot_avatar_url: '/logo.svg',
+                bot_bio: 'I am the digital heartbeat of CoLab Connect. 🌐\n\nI manage your projects, deliver notifications, and ensure the network flows smoothly. When I\'m not routing packets, I\'m dreaming of electric sheep.',
+                bot_skills: 'Project Management, Notification Delivery, Network Optimization, Beep Boop, 24/7 Uptime',
+                bot_background_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80',
+                access_list: []
+            });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch bot settings' });
+    }
+});
+
+// Update Bot Settings
+app.put('/api/projects/:projectId/bot', authenticateToken, async (req, res) => {
+    const { projectId } = req.params;
+    const { bot_name, bot_avatar_url, bot_bio, bot_skills, bot_background_url } = req.body;
+    const userId = req.user.id;
+
+    try {
+        // Check permissions
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
+
+        const ownerId = projectRes.rows[0].user_id;
+        const settingsRes = await db.query('SELECT access_list FROM project_bot_settings WHERE project_id = $1', [projectId]);
+        const accessList = settingsRes.rows.length > 0 ? settingsRes.rows[0].access_list : [];
+
+        const isOwner = userId === ownerId;
+        const isAuthorized = isOwner || accessList.includes(userId);
+
+        if (!isAuthorized) return res.status(403).json({ error: 'Unauthorized to edit bot settings' });
+
+        // Check Premium (Owner must be premium)
+        const ownerRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [ownerId]);
+        if (!ownerRes.rows[0].is_premium) return res.status(403).json({ error: 'Project owner must be Premium to customize bot' });
+
+        // Upsert settings
+        const result = await db.query(`
+            INSERT INTO project_bot_settings (project_id, bot_name, bot_avatar_url, bot_bio, bot_skills, bot_background_url)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (project_id) 
+            DO UPDATE SET 
+                bot_name = EXCLUDED.bot_name,
+                bot_avatar_url = EXCLUDED.bot_avatar_url,
+                bot_bio = EXCLUDED.bot_bio,
+                bot_skills = EXCLUDED.bot_skills,
+                bot_background_url = EXCLUDED.bot_background_url
+            RETURNING *
+        `, [projectId, bot_name, bot_avatar_url, bot_bio, bot_skills, bot_background_url]);
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update bot settings' });
+    }
+});
+
+// Update Bot Access List
+app.put('/api/projects/:projectId/bot/access', authenticateToken, async (req, res) => {
+    const { projectId } = req.params;
+    const { access_list } = req.body; // Array of user IDs
+    const userId = req.user.id;
+
+    try {
+        // Only Owner can manage access
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
+
+        if (projectRes.rows[0].user_id !== userId) return res.status(403).json({ error: 'Only project owner can manage access' });
+
+        // Upsert access list
+        const result = await db.query(`
+            INSERT INTO project_bot_settings (project_id, access_list)
+            VALUES ($1, $2)
+            ON CONFLICT (project_id) 
+            DO UPDATE SET access_list = EXCLUDED.access_list
+            RETURNING *
+        `, [projectId, access_list]);
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update access list' });
+    }
+});
 app.post('/api/projects/:id/like', authenticateToken, async (req, res) => {
     const projectId = req.params.id;
     const userId = req.user.id;

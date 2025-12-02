@@ -23,6 +23,7 @@ export default function Chat() {
     const [seenByUsers, setSeenByUsers] = useState([]);
     const [editingMessage, setEditingMessage] = useState(null);
     const [editContent, setEditContent] = useState('');
+    const [botSettings, setBotSettings] = useState(null);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -43,7 +44,7 @@ export default function Chat() {
         if (selectedRoom) {
             const loadData = async () => {
                 setLoading(true);
-                await Promise.all([fetchMessages(), fetchMembers()]);
+                await Promise.all([fetchMessages(), fetchMembers(), fetchBotSettings()]);
                 setLoading(false);
             };
             loadData();
@@ -88,6 +89,16 @@ export default function Chat() {
             setMembers(data);
         } catch (error) {
             console.error('Failed to fetch members:', error);
+        }
+    };
+
+    const fetchBotSettings = async () => {
+        try {
+            const settings = await api.projects.getBotSettings(selectedRoom.id);
+            setBotSettings(settings);
+        } catch (error) {
+            console.error('Failed to fetch bot settings:', error);
+            setBotSettings(null);
         }
     };
 
@@ -265,25 +276,31 @@ export default function Chat() {
                                 <div>
                                     {messages.map((msg) => {
                                         const isMe = msg.sender_id === currentUser?.id;
-                                        // console.log('Message:', msg.id, msg.sender_public_id);
+                                        const isSystem = msg.sender_id === 'system' || msg.sender?.is_system;
+
+                                        // Bot Customization Logic
+                                        const senderName = isSystem ? (botSettings?.bot_name || 'System Bot') : msg.sender_name;
+                                        const senderPhoto = isSystem ? (botSettings?.bot_avatar_url || '/logo.svg') : (msg.sender_photo || '/logo.svg');
+                                        const profileLink = isSystem ? `/profile/system?projectId=${selectedRoom.id}` : (msg.sender_id ? `/profile/${msg.sender_public_id || msg.sender_id}` : '/profile/system');
+
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                                                 {!isMe && (
                                                     <Link
-                                                        to={msg.sender_id ? `/profile/${msg.sender_public_id || msg.sender_id}` : '/profile/system'}
+                                                        to={profileLink}
                                                         className="mr-2 flex-shrink-0 self-start mt-5 relative z-50 cursor-pointer block"
                                                         style={{ pointerEvents: 'auto' }}
                                                     >
                                                         <img
-                                                            src={msg.sender_photo || '/logo.svg'}
-                                                            alt={msg.sender_name}
-                                                            title={msg.sender_public_id || msg.sender_id}
+                                                            src={senderPhoto}
+                                                            alt={senderName}
+                                                            title={isSystem ? 'System Bot' : (msg.sender_public_id || msg.sender_id)}
                                                             className="w-8 h-8 rounded-full object-cover border border-white/10"
                                                         />
                                                     </Link>
                                                 )}
                                                 <div className="max-w-[70%]">
-                                                    {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{msg.sender_name}</p>}
+                                                    {!isMe && <p className="text-xs text-gray-500 ml-1 mb-1">{senderName}</p>}
                                                     <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-dark-surface border border-white/10 text-gray-300 rounded-tl-none'}`}>
                                                         {msg.image_url && (
                                                             <img src={msg.image_url} alt="Shared" className="max-w-full rounded mb-2" />
