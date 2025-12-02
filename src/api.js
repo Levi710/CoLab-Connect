@@ -72,7 +72,9 @@ export const api = {
     },
     projects: {
         getAll: async () => {
-            const res = await fetch(`${API_URL}/projects`);
+            const res = await fetch(`${API_URL}/projects`, {
+                headers: getHeaders(),
+            });
             if (!res.ok) throw new Error('Failed to fetch projects');
             return res.json();
         },
