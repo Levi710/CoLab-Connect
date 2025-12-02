@@ -227,7 +227,10 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     return (
         <>
-            <div className={`bg-[#13161f] rounded-xl overflow-hidden group relative hover:bg-white/5 transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''}`}>
+            <div
+                className={`bg-[#13161f] rounded-xl overflow-hidden group relative hover:bg-white/5 transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''} cursor-pointer`}
+                onClick={() => setShowDetailsModal(true)}
+            >
                 {isSponsored && (
                     <div className="absolute top-0 right-0 bg-gradient-to-l from-primary/20 to-transparent px-3 py-1 rounded-bl-xl z-10">
                         <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
@@ -253,7 +256,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center space-x-3 min-w-0">
-                            <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                            <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                 {project.owner_photo ? (
                                     <img src={project.owner_photo} alt={project.owner_name} className="h-full w-full object-cover" />
                                 ) : (
@@ -261,11 +264,13 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 )}
                             </Link>
                             <div className="min-w-0 flex-1">
-                                <h3 className="text-lg font-bold text-gray-100 group-hover:text-primary transition-colors line-clamp-1 break-words">{project.title}</h3>
+                                <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="block" onClick={(e) => e.stopPropagation()}>
+                                    <h3 className="text-lg font-bold text-gray-100 group-hover:text-primary transition-colors line-clamp-1 break-words">{project.title}</h3>
+                                </Link>
                                 <p className="text-xs text-gray-500">{new Date(project.created_at).toLocaleDateString()}</p>
                             </div>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                             {isOwner && (
                                 <>
                                     <button onClick={() => onEdit && onEdit(project)} className="text-gray-500 hover:text-white transition-colors text-xs">
@@ -300,7 +305,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                         </span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex space-x-4 text-gray-500">
                             <button
                                 onClick={handleLike}
@@ -318,24 +323,32 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             </button>
                         </div>
 
-                        {isOwner ? (
-                            <span className="text-xs font-medium text-gray-500 bg-white/5 px-3 py-1.5 rounded-full">
-                                Your Project
-                            </span>
-                        ) : (
+                        <div className="flex items-center gap-4">
+                            {isOwner ? (
+                                <span className="text-xs font-medium text-gray-500 bg-white/5 px-3 py-1.5 rounded-full">
+                                    Your Project
+                                </span>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        if (!currentUser) {
+                                            addToast('Please login to express interest', 'info');
+                                            return;
+                                        }
+                                        handleInterestClick();
+                                    }}
+                                    className="text-sm font-medium text-primary hover:text-white transition-colors flex items-center gap-1 group/btn"
+                                >
+                                    I'm Interested
+                                </button>
+                            )}
                             <button
-                                onClick={handleInterestClick}
-                                className="text-sm font-medium text-primary hover:text-white transition-colors flex items-center gap-1 group/btn"
+                                onClick={() => setShowDetailsModal(true)}
+                                className="text-xs font-medium text-gray-400 hover:text-white transition-colors"
                             >
-                                I'm Interested
+                                View Details
                             </button>
-                        )}
-                        <button
-                            onClick={() => setShowDetailsModal(true)}
-                            className="text-xs font-medium text-gray-400 hover:text-white transition-colors ml-4"
-                        >
-                            View Details
-                        </button>
+                        </div>
                     </div>
                 </div>
 

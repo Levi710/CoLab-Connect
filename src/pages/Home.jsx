@@ -155,6 +155,21 @@ export default function Home() {
 
             {/* Main Content Area */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
+                {/* Featured Projects (Moved above Search) */}
+                <div className="mb-16">
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-3xl font-serif font-bold text-white flex items-center gap-2">
+                            <span className="w-1 h-8 bg-gold-gradient rounded-full"></span>
+                            Featured Projects
+                        </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredProjects.filter(p => p.is_featured).map(project => (
+                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
+                        ))}
+                    </div>
+                </div>
+
                 {/* Search Bar */}
                 <div className="max-w-3xl mx-auto mb-16 px-4 sm:px-0">
                     <form onSubmit={(e) => e.preventDefault()} className="bg-dark-surface/80 border border-gold/20 rounded-2xl sm:rounded-full p-2 flex flex-col sm:flex-row shadow-2xl shadow-black/50 backdrop-blur-xl">
@@ -188,20 +203,7 @@ export default function Home() {
                     </form>
                 </div>
 
-                {/* Featured Projects */}
-                <div className="mb-16">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-serif font-bold text-white flex items-center gap-2">
-                            <span className="w-1 h-8 bg-gold-gradient rounded-full"></span>
-                            Featured Projects
-                        </h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredProjects.filter(p => p.is_featured).map(project => (
-                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
-                        ))}
-                    </div>
-                </div>
+
 
                 {/* Project of the Month */}
                 {projectOfTheMonth && (

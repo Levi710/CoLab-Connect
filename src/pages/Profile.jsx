@@ -435,7 +435,7 @@ export default function Profile() {
 
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div>
-                            <h3 className="text-3xl font-serif font-bold leading-6 bg-gold-gradient bg-clip-text text-transparent drop-shadow-sm">
+                            <h3 className="text-3xl font-serif font-bold leading-relaxed pb-1 bg-gold-gradient bg-clip-text text-transparent drop-shadow-sm">
                                 {profileUser.username}
                             </h3>
                             <p className="mt-1 max-w-2xl text-sm text-silver font-light tracking-wide">

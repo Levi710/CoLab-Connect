@@ -134,13 +134,13 @@ export default function Navbar() {
                 isOpen && (
                     <div className="sm:hidden bg-dark border-b border-white/10">
                         <div className="pt-2 pb-3 space-y-1">
-                            <Link to="/" className={getMobileLinkClass('/')}>
+                            <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
                                 Discovery
                             </Link>
-                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')}>
+                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
                                 Dashboard
                             </Link>
-                            <Link to="/inbox" className={getMobileLinkClass('/inbox')}>
+                            <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
                                 Inbox
                                 {inboxCount > 0 && (
                                     <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -148,7 +148,7 @@ export default function Navbar() {
                                     </span>
                                 )}
                             </Link>
-                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')}>
+                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
                                 Messages
                                 {unreadCount > 0 && (
                                     <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -156,7 +156,7 @@ export default function Navbar() {
                                     </span>
                                 )}
                             </Link>
-                            <Link to="/about" className={getMobileLinkClass('/about')}>
+                            <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
                                 About
                             </Link>
                             <Link to="/create-project" className={getMobileLinkClass('/create-project')}>
