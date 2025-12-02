@@ -283,7 +283,8 @@ export default function Chat() {
                                 <div>
                                     {messages.map((msg) => {
                                         const isMe = msg.sender_id === currentUser?.id;
-                                        const isSystem = msg.sender_id === 'system' || msg.sender?.is_system;
+                                        // FIX: System messages have null sender_id or 'system'
+                                        const isSystem = msg.sender_id === 'system' || msg.sender_id === null || msg.sender?.is_system;
 
                                         // Bot Customization Logic
                                         const senderName = isSystem ? (botSettings?.bot_name || 'System Bot') : msg.sender_name;
