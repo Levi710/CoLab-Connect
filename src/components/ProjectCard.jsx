@@ -13,7 +13,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const [note, setNote] = useState('');
 
     // Social State
-    const [likes, setLikes] = useState(project.likes || 0);
+    const [likes, setLikes] = useState(project.likes_count || project.likes || 0);
     const [isLiked, setIsLiked] = useState(project.is_liked || false);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState([]);
@@ -23,8 +23,8 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     useEffect(() => {
         setIsLiked(project.is_liked || false);
-        setLikes(project.likes || 0);
-    }, [project.is_liked, project.likes]);
+        setLikes(project.likes_count || project.likes || 0);
+    }, [project.is_liked, project.likes, project.likes_count]);
 
     const handleLike = async (e) => {
         e.preventDefault();
