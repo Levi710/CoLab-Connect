@@ -1153,6 +1153,234 @@ app.get('/api/creators', async (req, res) => {
     }
 });
 
+// --- Chat / Room Routes ---
+app.get('/api/chat/rooms', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT p.*, pm.role as my_role,
+    (SELECT COUNT(*) FROM messages m WHERE m.project_id = p.id AND m.created_at > pm.last_read_at) as unread_count
+            FROM projects p
+            JOIN project_members pm ON p.id = pm.project_id
+            WHERE pm.user_id = $1
+            ORDER BY p.created_at DESC
+    `, [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch chat rooms' });
+    }
+});
+
+app.get('/api/messages/project/:projectId', authenticateToken, async (req, res) => {
+    const projectId = req.params.projectId;
+    try {
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) return res.status(403).json({ error: 'Not a member of this project' });
+
+        // Update last_read_at
+        await db.query('UPDATE project_members SET last_read_at = CURRENT_TIMESTAMP WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+
+        const result = await db.query(`
+            SELECT m.*, u.username as sender_name, u.photo_url as sender_photo, u.public_id as sender_public_id
+            FROM messages m
+            LEFT JOIN users u ON m.sender_id = u.id
+            JOIN project_members pm ON pm.project_id = m.project_id AND pm.user_id = $2
+            WHERE m.project_id = $1 AND m.created_at >= pm.joined_at
+            ORDER BY m.created_at ASC
+    `, [projectId, req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+app.post('/api/messages', authenticateToken, async (req, res) => {
+    const { projectId, content, image_url } = req.body;
+    try {
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) return res.status(403).json({ error: 'Not a member of this project' });
+
+        if (image_url) {
+            const userRes = await db.query('SELECT is_premium FROM users WHERE id = $1', [req.user.id]);
+            if (!userRes.rows[0].is_premium) return res.status(403).json({ error: 'Image sending is a Premium feature' });
+        }
+
+        const result = await db.query(
+            'INSERT INTO messages (project_id, sender_id, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
+            [projectId, req.user.id, content, image_url]
+        );
+        const senderRes = await db.query('SELECT username, photo_url, public_id FROM users WHERE id = $1', [req.user.id]);
+        const message = {
+            ...result.rows[0],
+            sender_name: senderRes.rows[0].username,
+            sender_photo: senderRes.rows[0].photo_url,
+            sender_public_id: senderRes.rows[0].public_id
+        };
+        res.json(message);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+app.put('/api/messages/:id', authenticateToken, async (req, res) => {
+    const { content } = req.body;
+    const messageId = req.params.id;
+    try {
+        const msgRes = await db.query('SELECT * FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        const message = msgRes.rows[0];
+        if (message.sender_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        const createdAt = new Date(message.created_at);
+        const now = new Date();
+        const diffMinutes = (now - createdAt) / 1000 / 60;
+        if (diffMinutes > 10) return res.status(403).json({ error: 'Edit time limit exceeded (10 mins)' });
+
+        const result = await db.query('UPDATE messages SET content = $1, is_edited = TRUE WHERE id = $2 RETURNING *', [content, messageId]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update message' });
+    }
+});
+
+app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
+    const messageId = req.params.id;
+    try {
+        const msgRes = await db.query('SELECT * FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        const message = msgRes.rows[0];
+
+        if (message.sender_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        const createdAt = new Date(message.created_at);
+        const now = new Date();
+        const diffMinutes = (now - createdAt) / 1000 / 60;
+        if (diffMinutes > 10) return res.status(403).json({ error: 'Delete time limit exceeded (10 mins)' });
+
+        await db.query('DELETE FROM messages WHERE id = $1', [messageId]);
+        res.json({ message: 'Message deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete message' });
+    }
+});
+
+
+
+// --- Read Receipts Route ---
+app.get('/api/messages/:id/read-receipts', authenticateToken, async (req, res) => {
+    const messageId = req.params.id;
+    try {
+        // Check if user is member of the project
+        const msgRes = await db.query('SELECT project_id FROM messages WHERE id = $1', [messageId]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+
+        const projectId = msgRes.rows[0].project_id;
+        const memberCheck = await db.query('SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
+        if (memberCheck.rows.length === 0) return res.status(403).json({ error: 'Unauthorized' });
+
+        const result = await db.query(`
+            SELECT u.id, u.username, u.photo_url, pm.last_read_at as read_at
+            FROM project_members pm
+            JOIN users u ON pm.user_id = u.id
+            WHERE pm.project_id = $1 
+            AND pm.last_read_at >= (SELECT created_at FROM messages WHERE id = $2)
+            AND pm.user_id != (SELECT sender_id FROM messages WHERE id = $2)
+`, [projectId, messageId]);
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch read receipts' });
+    }
+});
+
+// --- Member Routes ---
+app.get('/api/projects/:projectId/members', authenticateToken, async (req, res) => {
+    const projectId = req.params.projectId;
+    try {
+        const result = await db.query(`
+            SELECT pm.*, u.username, u.photo_url, u.email
+            FROM project_members pm
+            JOIN users u ON pm.user_id = u.id
+            WHERE pm.project_id = $1
+    `, [projectId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching members:', err);
+        res.status(500).json({ error: 'Failed to fetch members' });
+    }
+});
+
+app.delete('/api/projects/:projectId/members/:userId', authenticateToken, async (req, res) => {
+    const { projectId, userId } = req.params;
+    try {
+        const projectRes = await db.query('SELECT user_id, title FROM projects WHERE id = $1', [projectId]);
+        if (projectRes.rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Only project owner can remove members' });
+        if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'Cannot remove yourself' });
+
+        await db.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [projectId, userId]);
+
+        // Send Notification to removed member
+        await db.query(
+            'INSERT INTO notifications (user_id, type, content, related_id) VALUES ($1, $2, $3, $4)',
+            [userId, 'project_kicked', `You have been removed from the project "${projectRes.rows[0].title}"`, projectId]
+        );
+
+        res.json({ message: 'Member removed' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to remove member' });
+    }
+});
+
+
+// Creators API
+app.get('/api/creators', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM creators ORDER BY display_order ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch creators' });
+    }
+});
+
+// --- Notification Routes ---
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
+    const notificationId = req.params.id;
+    try {
+        await db.query('UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2', [notificationId, req.user.id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+});
+
+app.delete('/api/notifications/:id', authenticateToken, async (req, res) => {
+    const notificationId = req.params.id;
+    try {
+        await db.query('DELETE FROM notifications WHERE id = $1 AND user_id = $2', [notificationId, req.user.id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete notification' });
+    }
+});
 
 
 app.listen(PORT, () => {
