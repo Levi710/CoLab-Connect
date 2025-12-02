@@ -123,6 +123,9 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     const handleApply = async (e) => {
         e.preventDefault();
+        if (!note.trim()) {
+            return addToast('Please add a message to your application.', 'info');
+        }
         try {
             await api.requests.create({
                 projectId: project.id,
