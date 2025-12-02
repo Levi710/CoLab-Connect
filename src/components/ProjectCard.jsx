@@ -21,6 +21,11 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null); // { id, username }
 
+    useEffect(() => {
+        setIsLiked(project.is_liked || false);
+        setLikes(project.likes || 0);
+    }, [project.is_liked, project.likes]);
+
     const handleLike = async (e) => {
         e.preventDefault();
         if (!currentUser) return addToast('Please login to like projects', 'info');
