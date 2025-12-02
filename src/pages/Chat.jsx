@@ -280,7 +280,10 @@ export default function Chat() {
 
                                         // Bot Customization Logic
                                         const senderName = isSystem ? (botSettings?.bot_name || 'System Bot') : msg.sender_name;
-                                        const senderPhoto = isSystem ? (botSettings?.bot_avatar_url || '/logo.svg') : (msg.sender_photo || '/logo.svg');
+                                        const senderPhoto = isSystem
+                                            ? (botSettings?.bot_avatar_url || '/logo.svg')
+                                            : (msg.sender_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName || 'User')}&background=random`);
+
                                         const profileLink = isSystem ? `/profile/system?projectId=${selectedRoom.id}` : (msg.sender_id ? `/profile/${msg.sender_public_id || msg.sender_id}` : '/profile/system');
 
                                         return (
