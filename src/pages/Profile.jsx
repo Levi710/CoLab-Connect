@@ -63,29 +63,33 @@ export default function Profile() {
                 if (projectId) {
                     try {
                         const { api } = await import('../api');
-                        // Fetch project to check owner
-                        const project = await api.projects.view(projectId);
-                        setProjectOwnerId(project.user_id);
+                        // Fetch all projects to find the current one and check owner
+                        const projects = await api.projects.getAll();
+                        const project = projects.find(p => p.id == projectId); // Loose equality for ID
 
-                        const settings = await api.projects.getBotSettings(projectId);
+                        if (project) {
+                            setProjectOwnerId(project.user_id);
 
-                        if (settings) {
-                            systemUser = {
-                                ...systemUser,
-                                username: settings.bot_name || systemUser.username,
-                                photo_url: settings.bot_avatar_url || systemUser.photo_url,
-                                bio: settings.bot_bio || systemUser.bio,
-                                skills: settings.bot_skills || systemUser.skills,
-                                background_url: settings.bot_background_url || systemUser.background_url,
-                            };
-                            setBotAccessList(settings.access_list || []);
+                            const settings = await api.projects.getBotSettings(projectId);
 
-                            // Check Authorization
-                            if (currentUser) {
-                                const isOwner = currentUser.id === project.user_id;
-                                const isDelegated = settings.access_list?.includes(currentUser.id);
-                                // Authorized if: (Owner AND Premium) OR Delegated
-                                setIsBotAuthorized((isOwner && currentUser.is_premium) || isDelegated);
+                            if (settings) {
+                                systemUser = {
+                                    ...systemUser,
+                                    username: settings.bot_name || systemUser.username,
+                                    photo_url: settings.bot_avatar_url || systemUser.photo_url,
+                                    bio: settings.bot_bio || systemUser.bio,
+                                    skills: settings.bot_skills || systemUser.skills,
+                                    background_url: settings.bot_background_url || systemUser.background_url,
+                                };
+                                setBotAccessList(settings.access_list || []);
+
+                                // Check Authorization
+                                if (currentUser) {
+                                    const isOwner = currentUser.id === project.user_id;
+                                    const isDelegated = settings.access_list?.includes(currentUser.id);
+                                    // Authorized if: (Owner AND Premium) OR Delegated
+                                    setIsBotAuthorized((isOwner && currentUser.is_premium) || isDelegated);
+                                }
                             }
                         }
                     } catch (err) {
