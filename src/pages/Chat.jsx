@@ -83,6 +83,11 @@ export default function Chat() {
         try {
             const data = await api.messages.getProjectMessages(selectedRoom.id);
             setMessages(data);
+
+            // Optimistically update unread count for the current room to 0
+            setRooms(prevRooms => prevRooms.map(r =>
+                r.id === selectedRoom.id ? { ...r, unread_count: 0 } : r
+            ));
         } catch (error) {
             console.error('Failed to fetch messages:', error);
         }

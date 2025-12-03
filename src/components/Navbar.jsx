@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User, PlusCircle, LogOut } from 'lucide-react';
+import { Menu, X, User, PlusCircle, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -126,7 +126,13 @@ export default function Navbar() {
                             </Link>
                         )}
                     </div>
-                    <div className="-mr-2 flex items-center sm:hidden">
+                    <div className="-mr-2 flex items-center sm:hidden gap-2">
+                        {currentUser && (unreadCount > 0 || inboxCount > 0) && (
+                            <Link to={unreadCount > 0 ? "/chat/all" : "/inbox"} className="relative p-2 text-gray-400 hover:text-white">
+                                <Bell className="h-6 w-6" />
+                                <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-dark"></span>
+                            </Link>
+                        )}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"

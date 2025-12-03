@@ -1552,6 +1552,8 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
         await client.query('DELETE FROM comment_likes WHERE user_id = $1', [req.user.id]);
 
         // 4. Delete requests
+        // First delete messages associated with these requests (e.g. from project owners)
+        await client.query('DELETE FROM messages WHERE request_id IN (SELECT id FROM requests WHERE user_id = $1)', [req.user.id]);
         await client.query('DELETE FROM requests WHERE user_id = $1', [req.user.id]);
 
         // 5. Delete project memberships

@@ -10,6 +10,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const { addToast } = useToast();
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [note, setNote] = useState('');
 
     // Social State
@@ -139,12 +140,17 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         }
     };
 
-    const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
+    const handleDeleteClick = (e) => {
+        e.stopPropagation();
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
         try {
             await api.projects.delete(project.id);
             if (onDelete) onDelete(project.id);
             addToast('Project deleted', 'success');
+            setShowDeleteModal(false);
         } catch (err) {
             console.error('Failed to delete project:', err);
             addToast('Failed to delete project', 'error');
@@ -324,7 +330,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                     <button onClick={() => onEdit && onEdit(project)} className="text-gray-500 hover:text-white transition-colors text-xs">
                                         Edit
                                     </button>
-                                    <button onClick={handleDelete} className="text-gray-500 hover:text-red-500 transition-colors">
+                                    <button onClick={handleDeleteClick} className="text-gray-500 hover:text-red-500 transition-colors">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </>
@@ -561,6 +567,32 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                     </button>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowDeleteModal(false)}>
+                    <div className="bg-[#13161f] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-white/10 transform transition-all" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-white mb-2">Delete Project?</h3>
+                        <p className="text-gray-400 text-sm mb-6">
+                            Are you sure you want to delete "{project.title}"? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Delete Project
+                            </button>
                         </div>
                     </div>
                 </div>

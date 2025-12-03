@@ -84,6 +84,11 @@ export default function CreateProject() {
             return;
         }
 
+        if (!formData.lookingFor.trim()) {
+            addToast('Please specify who you are looking for', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
             if (editingProject) {
@@ -113,14 +118,18 @@ export default function CreateProject() {
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
                     {/* Title */}
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
-                            Project Title
-                        </label>
+                        <div className="flex justify-between items-center mb-1">
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-300">
+                                Project Title
+                            </label>
+                            <span className="text-xs text-gray-500">{formData.title.length}/50</span>
+                        </div>
                         <input
                             type="text"
                             id="title"
                             name="title"
                             required
+                            maxLength={50}
                             className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="e.g., EcoTrack - Carbon Footprint AI"
                             value={formData.title}
@@ -130,14 +139,18 @@ export default function CreateProject() {
 
                     {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
-                            Description
-                        </label>
+                        <div className="flex justify-between items-center mb-1">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+                                Description
+                            </label>
+                            <span className="text-xs text-gray-500">{formData.description.length}/1000</span>
+                        </div>
                         <textarea
                             id="description"
                             name="description"
                             rows="4"
                             required
+                            maxLength={1000}
                             className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder="Describe your project, its goals, and why it matters..."
                             value={formData.description}
@@ -190,7 +203,7 @@ export default function CreateProject() {
                     {/* Looking For */}
                     <div>
                         <label htmlFor="lookingFor" className="block text-sm font-medium text-gray-300 mb-1">
-                            Who are you looking for?
+                            Who are you looking for? <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
