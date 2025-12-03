@@ -76,6 +76,11 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     const toggleComments = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        if (!currentUser) {
+            addToast('Please login to view comments', 'info');
+            return;
+        }
         if (!showComments) {
             setLoadingComments(true);
             try {
@@ -250,11 +255,29 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
 
 
+    const handleCardClick = (e) => {
+        if (!currentUser) {
+            e.preventDefault();
+            e.stopPropagation();
+            addToast('Please login to view project details', 'info');
+            return;
+        }
+        setShowDetailsModal(true);
+    };
+
+    const handleLinkClick = (e) => {
+        if (!currentUser) {
+            e.preventDefault();
+            e.stopPropagation();
+            addToast('Please login to view profile', 'info');
+        }
+    };
+
     return (
         <>
             <div
                 className={`bg-[#13161f] rounded-xl overflow-hidden group relative hover:bg-white/5 transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''} cursor-pointer`}
-                onClick={() => setShowDetailsModal(true)}
+                onClick={handleCardClick}
             >
                 {isSponsored && (
                     <div className="absolute top-0 right-0 bg-gradient-to-l from-primary/20 to-transparent px-3 py-1 rounded-bl-xl z-10">
@@ -281,7 +304,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center space-x-3 min-w-0">
-                            <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0" onClick={(e) => { e.stopPropagation(); handleLinkClick(e); }}>
                                 {project.owner_photo ? (
                                     <img src={project.owner_photo} alt={project.owner_name} className="h-full w-full object-cover" />
                                 ) : (
@@ -289,7 +312,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 )}
                             </Link>
                             <div className="min-w-0 flex-1">
-                                <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="block" onClick={(e) => e.stopPropagation()}>
+                                <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="block" onClick={(e) => { e.stopPropagation(); handleLinkClick(e); }}>
                                     <h3 className="text-lg font-bold text-gray-100 group-hover:text-primary transition-colors line-clamp-1 break-words">{project.title}</h3>
                                 </Link>
                                 <p className="text-xs text-gray-500">{new Date(project.created_at).toLocaleDateString()}</p>

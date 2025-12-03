@@ -18,6 +18,8 @@ export default function Chat() {
     const [loading, setLoading] = useState(true);
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [members, setMembers] = useState([]);
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+    const [memberToRemove, setMemberToRemove] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
     const [showSeenModal, setShowSeenModal] = useState(false);
     const [seenByUsers, setSeenByUsers] = useState([]);
@@ -194,12 +196,19 @@ export default function Chat() {
         }
     };
 
-    const handleRemoveMember = async (userId) => {
-        if (!confirm('Are you sure you want to remove this member?')) return;
+    const handleRemoveMemberClick = (member) => {
+        setMemberToRemove(member);
+        setShowRemoveConfirm(true);
+    };
+
+    const confirmRemoveMember = async () => {
+        if (!memberToRemove) return;
         try {
-            await api.chat.removeMember(selectedRoom.id, userId);
-            setMembers(prev => prev.filter(m => m.user_id !== userId));
+            await api.chat.removeMember(selectedRoom.id, memberToRemove.user_id);
+            setMembers(prev => prev.filter(m => m.user_id !== memberToRemove.user_id));
             addToast('Member removed', 'success');
+            setShowRemoveConfirm(false);
+            setMemberToRemove(null);
         } catch (error) {
             console.error('Failed to remove member:', error);
             addToast('Failed to remove member', 'error');
@@ -453,7 +462,7 @@ export default function Chat() {
                                         </div>
                                         {isOwner && member.user_id !== currentUser.id && (
                                             <button
-                                                onClick={() => handleRemoveMember(member.user_id)}
+                                                onClick={() => handleRemoveMemberClick(member)}
                                                 className="text-red-500 hover:text-red-400 text-xs px-2 py-1 rounded border border-red-500/20 hover:bg-red-500/10 transition-colors"
                                             >
                                                 Remove
@@ -519,6 +528,35 @@ export default function Chat() {
                                 className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
                             >
                                 Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Remove Member Confirmation Modal */}
+            {showRemoveConfirm && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-dark-surface rounded-lg shadow-xl w-full max-w-sm border border-white/10 p-6">
+                        <h3 className="text-lg font-bold text-white mb-2">Remove Member</h3>
+                        <p className="text-gray-400 mb-6">
+                            Are you sure you want to remove <span className="text-white font-medium">{memberToRemove?.username}</span>?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRemoveConfirm(false);
+                                    setMemberToRemove(null);
+                                }}
+                                className="px-4 py-2 rounded text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmRemoveMember}
+                                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Remove
                             </button>
                         </div>
                     </div>
