@@ -64,45 +64,53 @@ export default function Navbar() {
                             <Link to="/" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 Discovery
                             </Link>
-                            <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
-                                Dashboard
-                            </Link>
-                            <Link to="/inbox" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/inbox' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
-                                Inbox
-                                {inboxCount > 0 && (
-                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {inboxCount}
-                                    </span>
-                                )}
-                            </Link>
-                            <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
-                                Messages
-                                {unreadCount > 0 && (
-                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </Link>
+                            {currentUser && (
+                                <>
+                                    <Link to="/dashboard" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/dashboard' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                        Dashboard
+                                    </Link>
+                                    <Link to="/inbox" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/inbox' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                        Inbox
+                                        {inboxCount > 0 && (
+                                            <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {inboxCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                    <Link to="/chat/all" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname.startsWith('/chat') ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
+                                        Messages
+                                        {unreadCount > 0 && (
+                                            <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </>
+                            )}
                             <Link to="/about" className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-colors rounded-md my-2 ${pathname === '/about' ? 'border-primary text-white' : 'border-transparent text-gray-300 hover:text-white hover:bg-white/5'}`}>
                                 About
                             </Link>
                         </div>
                     </div>
                     <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                        <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                            <PlusCircle className="h-6 w-6" />
-                        </Link>
-                        <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                            {currentUser && currentUser.photo_url ? (
-                                <img
-                                    className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
-                                    src={currentUser.photo_url}
-                                    alt={currentUser.username}
-                                />
-                            ) : (
-                                <User className="h-6 w-6" />
-                            )}
-                        </Link>
+                        {currentUser && (
+                            <>
+                                <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    <PlusCircle className="h-6 w-6" />
+                                </Link>
+                                <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    {currentUser.photo_url ? (
+                                        <img
+                                            className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
+                                            src={currentUser.photo_url}
+                                            alt={currentUser.username}
+                                        />
+                                    ) : (
+                                        <User className="h-6 w-6" />
+                                    )}
+                                </Link>
+                            </>
+                        )}
                         {currentUser ? (
                             <button
                                 onClick={handleLogout}
@@ -137,31 +145,37 @@ export default function Navbar() {
                             <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
                                 Discovery
                             </Link>
-                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
-                                Dashboard
-                            </Link>
-                            <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
-                                Inbox
-                                {inboxCount > 0 && (
-                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {inboxCount}
-                                    </span>
-                                )}
-                            </Link>
-                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
-                                Messages
-                                {unreadCount > 0 && (
-                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </Link>
+                            {currentUser && (
+                                <>
+                                    <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
+                                        Dashboard
+                                    </Link>
+                                    <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
+                                        Inbox
+                                        {inboxCount > 0 && (
+                                            <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {inboxCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                    <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
+                                        Messages
+                                        {unreadCount > 0 && (
+                                            <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </>
+                            )}
                             <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
                                 About
                             </Link>
-                            <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
-                                Create Project
-                            </Link>
+                            {currentUser && (
+                                <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
+                                    Create Project
+                                </Link>
+                            )}
                         </div>
                         <div className="pt-4 pb-4 border-t border-white/10">
                             {currentUser ? (
