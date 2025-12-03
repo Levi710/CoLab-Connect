@@ -168,7 +168,7 @@ export default function Profile() {
     }, []);
 
     if (authLoading || loading) return (
-        <div className="min-h-screen bg-[#0b0f19]">
+        <div className="min-h-screen bg-black">
             <SkeletonLoader type="profile" />
         </div>
     );

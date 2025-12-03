@@ -6,7 +6,7 @@ import { StarsBackground } from './ui/stars-background';
 
 export default function Layout({ children }) {
     return (
-        <div className="min-h-screen flex flex-col bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30 relative overflow-hidden">
+        <div className="min-h-screen flex flex-col bg-black bg-grid text-gray-100 font-sans selection:bg-primary/30 relative overflow-hidden">
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <ShootingStars />

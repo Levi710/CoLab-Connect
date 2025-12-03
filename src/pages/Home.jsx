@@ -105,7 +105,7 @@ export default function Home() {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30 pt-20 pb-32">
+        <div className="min-h-screen text-gray-100 font-sans selection:bg-primary/30 pt-20 pb-32">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <SkeletonLoader count={6} />
@@ -115,7 +115,7 @@ export default function Home() {
     );
 
     return (
-        <div className="min-h-screen bg-[#0b0f19] bg-grid text-gray-100 font-sans selection:bg-primary/30">
+        <div className="min-h-screen text-gray-100 font-sans selection:bg-primary/30">
             {/* Hero Section */}
             <section className="relative pt-20 pb-32 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">

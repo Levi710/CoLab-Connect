@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         dark: {
-          DEFAULT: '#0a0a0a', // Rich Black
+          DEFAULT: '#000000', // Pure Black
           surface: '#121212', // Charcoal
           lighter: '#1e1e1e',
         },
