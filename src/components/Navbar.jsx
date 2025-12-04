@@ -94,57 +94,54 @@ export default function Navbar() {
                             </Link>
                         </div>
                     </div>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                    <ThemeSwitcher />
-                    {currentUser && (
-                        <>
-                            <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                <PlusCircle className="h-6 w-6" />
+                    <div className="hidden sm:ml-6 sm:flex sm:items-center gap-4">
+                        <ThemeSwitcher />
+                        {currentUser ? (
+                            <div className="flex items-center">
+                                <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    <PlusCircle className="h-6 w-6" />
+                                </Link>
+                                <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    {currentUser.photo_url ? (
+                                        <img
+                                            className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
+                                            src={currentUser.photo_url}
+                                            alt={currentUser.username}
+                                        />
+                                    ) : (
+                                        <User className="h-6 w-6" />
+                                    )}
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 flex items-center shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
+                                >
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    Logout
+                                </button>
+                            </div>
+                        ) : (
+                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
+                            >
+                                Login
                             </Link>
-                            <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                {currentUser.photo_url ? (
-                                    <img
-                                        className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
-                                        src={currentUser.photo_url}
-                                        alt={currentUser.username}
-                                    />
-                                ) : (
-                                    <User className="h-6 w-6" />
-                                )}
+                        )}
+                    </div>
+                    <div className="-mr-2 flex items-center sm:hidden gap-2">
+                        {currentUser && (unreadCount > 0 || inboxCount > 0) && (
+                            <Link to={unreadCount > 0 ? "/chat/all" : "/inbox"} className="relative p-2 text-gray-400 hover:text-white">
+                                <Bell className="h-6 w-6" />
+                                <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-dark"></span>
                             </Link>
-                        </>
-                    )}
-                    {currentUser ? (
+                        )}
                         <button
-                            onClick={handleLogout}
-                            className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 flex items-center shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                         >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Logout
+                            <span className="sr-only">Open main menu</span>
+                            {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
                         </button>
-                    ) : (
-                        <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
-                        >
-                            Login
-                        </Link>
-                    )}
-                </div>
-                <div className="-mr-2 flex items-center sm:hidden gap-2">
-                    <ThemeSwitcher />
-                    {currentUser && (unreadCount > 0 || inboxCount > 0) && (
-                        <Link to={unreadCount > 0 ? "/chat/all" : "/inbox"} className="relative p-2 text-gray-400 hover:text-white">
-                            <Bell className="h-6 w-6" />
-                            <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-dark"></span>
-                        </Link>
-                    )}
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-                    >
-                        <span className="sr-only">Open main menu</span>
-                        {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
-                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -212,6 +209,10 @@ export default function Navbar() {
                                         <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
                                             Your Profile
                                         </Link>
+                                        <div className="px-4 py-2 flex items-center justify-between">
+                                            <span className="text-base font-medium text-gray-400">Theme</span>
+                                            <ThemeSwitcher />
+                                        </div>
                                         <button
                                             onClick={() => {
                                                 handleLogout();
@@ -225,6 +226,10 @@ export default function Navbar() {
                                 </>
                             ) : (
                                 <div className="mt-3 space-y-1">
+                                    <div className="px-4 py-2 flex items-center justify-between">
+                                        <span className="text-base font-medium text-gray-400">Theme</span>
+                                        <ThemeSwitcher />
+                                    </div>
                                     <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
                                         Login
                                     </Link>
