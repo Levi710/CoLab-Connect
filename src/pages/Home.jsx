@@ -124,7 +124,7 @@ export default function Home() {
                             Featured Platform
                         </span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent mb-6 drop-shadow-sm">
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent mb-6 drop-shadow-sm pb-2 leading-tight">
                         Find Your Next Project
                     </h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-light">

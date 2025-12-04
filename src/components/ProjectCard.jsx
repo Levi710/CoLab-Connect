@@ -115,12 +115,19 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         }
     };
 
-    const handleDeleteComment = async (commentId) => {
-        if (!window.confirm('Delete this comment?')) return;
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+
+    const handleDeleteComment = (e, commentId) => {
+        e.stopPropagation();
+        setDeleteModal({ isOpen: true, id: commentId });
+    };
+
+    const confirmDeleteComment = async (commentId) => {
         try {
             await api.projects.deleteComment(commentId);
             setComments(comments.filter(c => c.id !== commentId));
             addToast('Comment deleted', 'success');
+            setDeleteModal({ isOpen: false, id: null });
         } catch (err) {
             console.error('Failed to delete comment:', err);
             addToast('Failed to delete comment', 'error');
@@ -219,7 +226,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             {/* Reply Button for Owner */}
                             {isOwner && !isReply && (
                                 <button
-                                    onClick={() => setReplyTo({ id: comment.id, username: comment.username })}
+                                    onClick={(e) => { e.stopPropagation(); setReplyTo({ id: comment.id, username: comment.username }); }}
                                     className="text-[10px] text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Reply"
                                 >
@@ -230,7 +237,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             {/* Delete Button */}
                             {(isOwner || (currentUser && currentUser.id === comment.user_id && (new Date() - new Date(comment.created_at) < 10 * 60 * 1000))) && (
                                 <button
-                                    onClick={() => handleDeleteComment(comment.id)}
+                                    onClick={(e) => handleDeleteComment(e, comment.id)}
                                     className="text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Delete Comment"
                                 >
@@ -240,7 +247,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
                             {/* Like Button */}
                             <button
-                                onClick={() => handleCommentLike(comment.id)}
+                                onClick={(e) => { e.stopPropagation(); handleCommentLike(comment.id); }}
                                 className="flex items-center gap-1 text-gray-500 hover:text-pink-500 transition-colors"
                             >
                                 <Heart className={`w-3 h-3 ${comment.likes_count > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
@@ -592,6 +599,32 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 className="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
                             >
                                 Delete Project
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Comment Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDeleteModal({ isOpen: false, id: null })}>
+                    <div className="bg-[#13161f] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-white/10 transform transition-all" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-white mb-2">Delete Comment?</h3>
+                        <p className="text-gray-400 text-sm mb-6">
+                            Are you sure you want to delete this comment? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: false, id: null })}
+                                className="px-4 py-2 text-gray-400 hover:text-white font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => confirmDeleteComment(deleteModal.id)}
+                                className="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Delete Comment
                             </button>
                         </div>
                     </div>

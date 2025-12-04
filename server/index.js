@@ -614,6 +614,29 @@ app.post('/api/comments/:id/like', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+    try {
+        const commentRes = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+        if (commentRes.rows.length === 0) return res.status(404).json({ error: 'Comment not found' });
+        const comment = commentRes.rows[0];
+
+        const projectRes = await db.query('SELECT user_id FROM projects WHERE id = $1', [comment.project_id]);
+        const projectOwnerId = projectRes.rows[0].user_id;
+
+        if (comment.user_id !== userId && projectOwnerId !== userId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        await db.query('DELETE FROM comments WHERE id = $1', [commentId]);
+        res.json({ message: 'Comment deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete comment' });
+    }
+});
+
 app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
     const projectId = req.params.id;
     try {
@@ -982,7 +1005,12 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
         // 4. Delete Requests made by user
         await client.query('DELETE FROM requests WHERE user_id = $1', [userId]);
 
-        // 5. Handle Owned Projects
+        // 5. Delete Likes and Comments
+        await client.query('DELETE FROM likes WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM comment_likes WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM comments WHERE user_id = $1', [userId]);
+
+        // 6. Handle Owned Projects
         const projectsRes = await client.query('SELECT id FROM projects WHERE user_id = $1', [userId]);
         const projectIds = projectsRes.rows.map(p => p.id);
 
@@ -993,11 +1021,19 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
             await client.query('DELETE FROM project_members WHERE project_id = ANY($1)', [projectIds]);
             // Delete requests for these projects
             await client.query('DELETE FROM requests WHERE project_id = ANY($1)', [projectIds]);
+            // Delete images
+            await client.query('DELETE FROM project_images WHERE project_id = ANY($1)', [projectIds]);
+            // Delete bot settings
+            await client.query('DELETE FROM project_bot_settings WHERE project_id = ANY($1)', [projectIds]);
+            // Delete likes on these projects
+            await client.query('DELETE FROM likes WHERE project_id = ANY($1)', [projectIds]);
+            // Delete comments on these projects
+            await client.query('DELETE FROM comments WHERE project_id = ANY($1)', [projectIds]);
             // Delete the projects
             await client.query('DELETE FROM projects WHERE user_id = $1', [userId]);
         }
 
-        // 6. Delete User
+        // 7. Delete User
         await client.query('DELETE FROM users WHERE id = $1', [userId]);
 
         await client.query('COMMIT');
