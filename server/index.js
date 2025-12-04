@@ -59,7 +59,9 @@ async function initDb() {
             { name: 'users_password_hash_rename', query: 'ALTER TABLE users RENAME COLUMN password TO password_hash' },
             { name: 'users_public_id', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS public_id VARCHAR(50) UNIQUE' },
             { name: 'users_profile_views', query: 'ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0' },
-            { name: 'notifications_from_user_id', query: 'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS from_user_id INTEGER REFERENCES users(id)' }
+            { name: 'notifications_from_user_id', query: 'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS from_user_id INTEGER REFERENCES users(id)' },
+            { name: 'projects_is_featured', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE' },
+            { name: 'projects_featured_at', query: 'ALTER TABLE projects ADD COLUMN IF NOT EXISTS featured_at TIMESTAMP' }
         ];
 
         for (const migration of migrations) {
