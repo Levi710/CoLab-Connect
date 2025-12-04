@@ -154,6 +154,8 @@ export default function Profile() {
         };
 
         fetchProfile();
+        const interval = setInterval(fetchProfile, 10000); // Poll every 10 seconds
+        return () => clearInterval(interval);
     }, [currentUser, id, isOwnProfile, authLoading]);
 
     // Close dropdown when clicking outside

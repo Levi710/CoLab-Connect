@@ -40,6 +40,8 @@ export default function Dashboard() {
             }
         };
         fetchData();
+        const interval = setInterval(fetchData, 10000); // Poll every 10 seconds
+        return () => clearInterval(interval);
     }, []);
 
     const fetchAiAnalysis = async () => {

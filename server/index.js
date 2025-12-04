@@ -736,7 +736,7 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
 app.get('/api/requests/my-projects', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`
-            SELECT r.*, p.title as project_title, u.username as user_name
+            SELECT r.*, p.title as project_title, u.username as user_name, u.photo_url as user_photo
             FROM requests r
             JOIN projects p ON r.project_id = p.id
             JOIN users u ON r.user_id = u.id
@@ -747,6 +747,22 @@ app.get('/api/requests/my-projects', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch requests' });
+    }
+});
+
+app.get('/api/requests/sent', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT r.*, p.title as project_title, p.id as project_id
+            FROM requests r
+            JOIN projects p ON r.project_id = p.id
+            WHERE r.user_id = $1
+            ORDER BY r.created_at DESC
+        `, [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch sent requests' });
     }
 });
 
@@ -763,6 +779,10 @@ app.delete('/api/requests/:id', authenticateToken, async (req, res) => {
         }
 
         await db.query('DELETE FROM requests WHERE id = $1', [requestId]);
+
+        // Remove associated notification
+        await db.query('DELETE FROM notifications WHERE related_id = $1 AND type = \'new_request\'', [requestId]);
+
         res.json({ message: 'Request deleted' });
     } catch (err) {
         console.error(err);

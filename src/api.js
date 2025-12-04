@@ -242,6 +242,13 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch requests');
             return res.json();
         },
+        getMySentRequests: async () => {
+            const res = await fetch(`${API_URL}/requests/sent`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch sent requests');
+            return res.json();
+        },
         updateStatus: async (requestId, status) => {
             const res = await fetch(`${API_URL}/requests/${requestId}/status`, {
                 method: 'PUT',
