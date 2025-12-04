@@ -238,6 +238,8 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
 
     const handleCardClick = (e) => {
+        if (showComments) return; // Disable click when comments are open
+
         if (!currentUser) {
             e.preventDefault();
             e.stopPropagation();
@@ -258,7 +260,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     return (
         <>
             <div
-                className={`bg-[#13161f] rounded-xl overflow-hidden group relative hover:bg-white/5 transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''} cursor-pointer`}
+                className={`bg-[#13161f] rounded-xl overflow-hidden group relative transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''} ${showComments ? '' : 'hover:bg-white/5 cursor-pointer'}`}
                 onClick={handleCardClick}
             >
                 {isSponsored && (
@@ -372,12 +374,14 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                     I'm Interested
                                 </button>
                             )}
-                            <button
-                                onClick={() => setShowDetailsModal(true)}
-                                className="text-xs font-medium text-gray-400 hover:text-white transition-colors"
-                            >
-                                View Details
-                            </button>
+                            {!showComments && (
+                                <button
+                                    onClick={() => setShowDetailsModal(true)}
+                                    className="text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                                >
+                                    View Details
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
