@@ -32,11 +32,21 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         e.stopPropagation();
         if (!currentUser) return addToast('Please login to like projects', 'info');
 
+        // Optimistic update
+        const previousIsLiked = isLiked;
+        const previousLikes = likes;
+        const newIsLiked = !isLiked;
+        const newLikes = newIsLiked ? likes + 1 : likes - 1;
+
+        setIsLiked(newIsLiked);
+        setLikes(newLikes);
+
         try {
-            const res = await api.projects.toggleLike(project.id);
-            setLikes(res.likes);
-            setIsLiked(res.liked);
+            await api.projects.toggleLike(project.id);
         } catch (err) {
+            // Rollback state if API call fails
+            setIsLiked(previousIsLiked);
+            setLikes(previousLikes);
             console.error("Like failed", err);
             addToast('Failed to update like', 'error');
         }
