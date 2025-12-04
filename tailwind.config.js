@@ -13,8 +13,8 @@ export default {
           lighter: '#1e1e1e',
         },
         primary: {
-          DEFAULT: '#BF953F', // Gold
-          hover: '#AA771C',
+          DEFAULT: 'var(--color-primary)', // Dynamic Primary
+          hover: 'var(--color-primary-hover)',
         },
         secondary: {
           DEFAULT: '#C0C0C0', // Silver
@@ -32,7 +32,7 @@ export default {
       },
       backgroundImage: {
         'grid-pattern': "linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px)",
-        'gold-gradient': "linear-gradient(135deg, #BF953F 0%, #FCF6BA 50%, #BF953F 100%)",
+        'gold-gradient': "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-primary) 100%)",
         'silver-gradient': "linear-gradient(135deg, #C0C0C0 0%, #EEF2F3 50%, #C0C0C0 100%)",
       },
       fontFamily: {

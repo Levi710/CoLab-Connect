@@ -20,4 +20,29 @@
     body {
         @apply overflow-x-hidden bg-black;
     }
+
+    :root {
+        /* Default Theme (Gold) */
+        --color-primary: #BF953F;
+        --color-primary-hover: #AA771C;
+        --color-primary-light: #FCF6BA;
+    }
+
+    [data-theme='green'] {
+        --color-primary: #88B04B;
+        --color-primary-hover: #6A8F3D;
+        --color-primary-light: #D0E6A5;
+    }
+
+    [data-theme='blue'] {
+        --color-primary: #6495ED;
+        --color-primary-hover: #4169E1;
+        --color-primary-light: #B0C4DE;
+    }
+
+    [data-theme='purple'] {
+        --color-primary: #9370DB;
+        --color-primary-hover: #663399;
+        --color-primary-light: #E6E6FA;
+    }
 }

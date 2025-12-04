@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, PlusCircle, LogOut, Bell } from 'lucide-react';
+import { Menu, X, User, PlusCircle, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ThemeSwitcher from './ThemeSwitcher';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -92,143 +94,146 @@ export default function Navbar() {
                             </Link>
                         </div>
                     </div>
-                    <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                        {currentUser && (
-                            <>
-                                <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                    <PlusCircle className="h-6 w-6" />
-                                </Link>
-                                <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                </div>
+                <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                    <ThemeSwitcher />
+                    {currentUser && (
+                        <>
+                            <Link to="/create-project" className="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <PlusCircle className="h-6 w-6" />
+                            </Link>
+                            <Link to={`/profile/${currentUser?.public_id || currentUser?.id}`} className="ml-3 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                {currentUser.photo_url ? (
+                                    <img
+                                        className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
+                                        src={currentUser.photo_url}
+                                        alt={currentUser.username}
+                                    />
+                                ) : (
+                                    <User className="h-6 w-6" />
+                                )}
+                            </Link>
+                        </>
+                    )}
+                    {currentUser ? (
+                        <button
+                            onClick={handleLogout}
+                            className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 flex items-center shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
+                        >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                        </button>
+                    ) : (
+                        <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
+                        >
+                            Login
+                        </Link>
+                    )}
+                </div>
+                <div className="-mr-2 flex items-center sm:hidden gap-2">
+                    <ThemeSwitcher />
+                    {currentUser && (unreadCount > 0 || inboxCount > 0) && (
+                        <Link to={unreadCount > 0 ? "/chat/all" : "/inbox"} className="relative p-2 text-gray-400 hover:text-white">
+                            <Bell className="h-6 w-6" />
+                            <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-dark"></span>
+                        </Link>
+                    )}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                    >
+                        <span className="sr-only">Open main menu</span>
+                        {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+            {
+        isOpen && (
+            <div className="sm:hidden bg-dark border-b border-white/10">
+                <div className="pt-2 pb-3 space-y-1">
+                    <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
+                        Discovery
+                    </Link>
+                    {currentUser && (
+                        <>
+                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
+                                Dashboard
+                            </Link>
+                            <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
+                                Inbox
+                                {inboxCount > 0 && (
+                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {inboxCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
+                                Messages
+                                {unreadCount > 0 && (
+                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </Link>
+                        </>
+                    )}
+                    <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
+                        About
+                    </Link>
+                    {currentUser && (
+                        <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
+                            Create Project
+                        </Link>
+                    )}
+                </div>
+                <div className="pt-4 pb-4 border-t border-white/10">
+                    {currentUser ? (
+                        <>
+                            <div className="flex items-center px-4">
+                                <div className="flex-shrink-0">
                                     {currentUser.photo_url ? (
                                         <img
-                                            className="h-8 w-8 rounded-full object-cover border-2 border-transparent hover:border-primary transition-colors"
+                                            className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
                                             src={currentUser.photo_url}
                                             alt={currentUser.username}
                                         />
                                     ) : (
-                                        <User className="h-6 w-6" />
+                                        <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
                                     )}
+                                </div>
+                                <div className="ml-3">
+                                    <div className="text-base font-medium text-white">{currentUser.username}</div>
+                                    <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
+                                </div>
+                            </div>
+                            <div className="mt-3 space-y-1">
+                                <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
+                                    Your Profile
                                 </Link>
-                            </>
-                        )}
-                        {currentUser ? (
-                            <button
-                                onClick={handleLogout}
-                                className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 flex items-center shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
-                            >
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Logout
-                            </button>
-                        ) : (
-                            <Link to="/login" className="ml-4 px-4 py-2 border border-transparent text-sm font-bold rounded-md text-dark bg-gold-gradient hover:brightness-110 shadow-lg shadow-gold/20 transition-all transform hover:scale-105"
-                            >
+                                <button
+                                    onClick={() => {
+                                        handleLogout();
+                                        setIsOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
+                                >
+                                    Sign out
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="mt-3 space-y-1">
+                            <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
                                 Login
                             </Link>
-                        )}
-                    </div>
-                    <div className="-mr-2 flex items-center sm:hidden gap-2">
-                        {currentUser && (unreadCount > 0 || inboxCount > 0) && (
-                            <Link to={unreadCount > 0 ? "/chat/all" : "/inbox"} className="relative p-2 text-gray-400 hover:text-white">
-                                <Bell className="h-6 w-6" />
-                                <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-dark"></span>
-                            </Link>
-                        )}
-                        <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-                        >
-                            <span className="sr-only">Open main menu</span>
-                            {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
-                        </button>
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {
-                isOpen && (
-                    <div className="sm:hidden bg-dark border-b border-white/10">
-                        <div className="pt-2 pb-3 space-y-1">
-                            <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
-                                Discovery
-                            </Link>
-                            {currentUser && (
-                                <>
-                                    <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
-                                        Dashboard
-                                    </Link>
-                                    <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
-                                        Inbox
-                                        {inboxCount > 0 && (
-                                            <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                                {inboxCount}
-                                            </span>
-                                        )}
-                                    </Link>
-                                    <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
-                                        Messages
-                                        {unreadCount > 0 && (
-                                            <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                                {unreadCount}
-                                            </span>
-                                        )}
-                                    </Link>
-                                </>
-                            )}
-                            <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
-                                About
-                            </Link>
-                            {currentUser && (
-                                <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
-                                    Create Project
-                                </Link>
-                            )}
-                        </div>
-                        <div className="pt-4 pb-4 border-t border-white/10">
-                            {currentUser ? (
-                                <>
-                                    <div className="flex items-center px-4">
-                                        <div className="flex-shrink-0">
-                                            {currentUser.photo_url ? (
-                                                <img
-                                                    className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
-                                                    src={currentUser.photo_url}
-                                                    alt={currentUser.username}
-                                                />
-                                            ) : (
-                                                <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
-                                            )}
-                                        </div>
-                                        <div className="ml-3">
-                                            <div className="text-base font-medium text-white">{currentUser.username}</div>
-                                            <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3 space-y-1">
-                                        <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
-                                            Your Profile
-                                        </Link>
-                                        <button
-                                            onClick={() => {
-                                                handleLogout();
-                                                setIsOpen(false);
-                                            }}
-                                            className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
-                                        >
-                                            Sign out
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="mt-3 space-y-1">
-                                    <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
-                                        Login
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )
-            }
+        )
+    }
         </nav >
     );
 }
