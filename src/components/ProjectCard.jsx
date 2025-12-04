@@ -15,15 +15,17 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     // Social State
     const [likes, setLikes] = useState(project.likes_count || project.likes || 0);
+    const [isLiked, setIsLiked] = useState(project.is_liked || false);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null); // { id, username }
 
-
-
-
+    useEffect(() => {
+        setIsLiked(project.is_liked || false);
+        setLikes(project.likes_count || project.likes || 0);
+    }, [project.is_liked, project.likes, project.likes_count]);
 
     const handleLike = async (e) => {
         e.preventDefault();
@@ -33,6 +35,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
         try {
             const res = await api.projects.toggleLike(project.id);
             setLikes(res.likes);
+            setIsLiked(res.liked);
         } catch (err) {
             console.error("Like failed", err);
             addToast('Failed to update like', 'error');
@@ -336,9 +339,9 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                         <div className="flex space-x-4 text-gray-500">
                             <button
                                 onClick={handleLike}
-                                className={`flex items-center space-x-1 hover:text-pink-500 transition-colors group/like ${likes > 0 ? 'text-pink-500' : ''}`}
+                                className={`flex items-center space-x-1 hover:text-pink-500 transition-colors group/like ${isLiked ? 'text-pink-500' : ''}`}
                             >
-                                <Heart className={`h-4 w-4 ${likes > 0 ? 'fill-current' : 'group-hover/like:fill-current'}`} />
+                                <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : 'group-hover/like:fill-current'}`} />
                                 <span className="text-xs">{likes || 0}</span>
                             </button>
                             <button
