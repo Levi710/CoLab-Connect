@@ -1611,6 +1611,8 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
     }
 });
 
+
+
 // --- Automated Featured Project Logic ---
 const updateFeaturedProject = async () => {
     try {
@@ -1661,6 +1663,9 @@ updateFeaturedProject();
 
 // Run every 1 hour (3600000 ms)
 setInterval(updateFeaturedProject, 3600000);
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} `);
