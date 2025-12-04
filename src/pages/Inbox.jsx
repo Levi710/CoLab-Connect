@@ -23,6 +23,7 @@ export default function Inbox() {
                 api.requests.getMySentRequests(),
                 api.notifications.getAll()
             ]);
+            console.log('Inbox Data:', { requestsData, sentRequestsData, notificationsData });
             setRequests(requestsData);
             setSentRequests(sentRequestsData);
             setNotifications(notificationsData);

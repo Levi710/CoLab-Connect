@@ -710,10 +710,13 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
         const existing = await db.query('SELECT * FROM requests WHERE project_id = $1 AND user_id = $2', [projectId, req.user.id]);
         if (existing.rows.length > 0) return res.status(400).json({ error: 'You have already requested to join this project' });
 
+        console.log(`Creating request for user ${req.user.id} to project ${projectId}`);
+
         const result = await db.query(
             'INSERT INTO requests (project_id, user_id, role, note, status) VALUES ($1, $2, $3, $4, \'pending\') RETURNING *',
             [projectId, req.user.id, role, note]
         );
+        console.log(`Request created: ${JSON.stringify(result.rows[0])}`);
 
         // Send Notification to Project Owner
         const ownerId = projectRes.rows[0].user_id;
@@ -759,6 +762,7 @@ app.get('/api/requests/sent', authenticateToken, async (req, res) => {
             WHERE r.user_id = $1
             ORDER BY r.created_at DESC
         `, [req.user.id]);
+        console.log(`Fetching sent requests for user ${req.user.id}. Found: ${result.rows.length}`);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
