@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Lazy Load Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -42,7 +44,9 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/creators" element={<Creators />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Login />} />
+                <Route path="/register" element={<Login isRegister={true} />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/dashboard" element={<Dashboard />} />

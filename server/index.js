@@ -1,14 +1,19 @@
-const express = require('express');
-const cors = require('cors');
-const db = require('./db');
-const fs = require('fs');
-const path = require('path');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const Razorpay = require('razorpay');
+import express from 'express';
+import cors from 'cors';
+import db from './db.js';
+import fs from 'fs';
+import path from 'path';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import Razorpay from 'razorpay';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+
 const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
 
@@ -71,7 +76,7 @@ async function initDb() {
             const { rows: usersWithoutPublicId } = await db.query("SELECT id FROM users WHERE public_id IS NULL");
             if (usersWithoutPublicId.length > 0) {
                 console.log(`Backfilling public_id for ${usersWithoutPublicId.length} users...`);
-                const crypto = require('crypto');
+                // const crypto = require('crypto'); // Removed, using top-level import
                 for (const user of usersWithoutPublicId) {
                     const uuid = crypto.randomUUID();
                     await db.query("UPDATE users SET public_id = $1 WHERE id = $2", [uuid, user.id]);
@@ -535,12 +540,12 @@ app.put('/api/projects/:projectId/bot/access', authenticateToken, async (req, re
 
         // Upsert access list
         const result = await db.query(`
-            INSERT INTO project_bot_settings (project_id, access_list)
-            VALUES ($1, $2)
-            ON CONFLICT (project_id) 
+            INSERT INTO project_bot_settings(project_id, access_list)
+        VALUES($1, $2)
+            ON CONFLICT(project_id) 
             DO UPDATE SET access_list = EXCLUDED.access_list
-            RETURNING *
-        `, [projectId, access_list]);
+        RETURNING *
+            `, [projectId, access_list]);
 
         res.json(result.rows[0]);
     } catch (err) {
@@ -651,7 +656,7 @@ app.get('/api/projects/:id/comments', async (req, res) => {
             JOIN users u ON c.user_id = u.id
             WHERE c.project_id = $1
             ORDER BY c.created_at DESC
-            `, [projectId]);
+    `, [projectId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -675,9 +680,9 @@ app.post('/api/projects/:id/comments', authenticateToken, async (req, res) => {
 
         const result = await db.query(`
             INSERT INTO comments(project_id, user_id, content, parent_id)
-        VALUES($1, $2, $3, $4)
-        RETURNING *
-            `, [projectId, userId, content, parentId || null]);
+            VALUES($1, $2, $3, $4)
+            RETURNING *
+        `, [projectId, userId, content, parentId || null]);
 
         const newComment = result.rows[0];
         const userRes = await db.query('SELECT username, photo_url FROM users WHERE id = $1', [userId]);
@@ -911,13 +916,13 @@ app.get('/api/users/:id/profile', optionalAuthenticateToken, async (req, res) =>
         // Fetch user's projects
         const projectsRes = await db.query(`
             SELECT p.*,
-            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
-            (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
-            CASE WHEN $2::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $2) ELSE FALSE END as is_liked
+    (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
+            CASE WHEN $2::int IS NOT NULL THEN(SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $2) ELSE FALSE END as is_liked
             FROM projects p 
             WHERE p.user_id = $1 
             ORDER BY p.created_at DESC
-        `, [user.id, currentUserId]);
+    `, [user.id, currentUserId]);
 
         const projectsWithUser = projectsRes.rows.map(p => ({
             ...p,
@@ -1543,8 +1548,9 @@ app.delete('/api/users/me', authenticateToken, async (req, res) => {
         await client.query('DELETE FROM notifications WHERE user_id = $1', [req.user.id]);
         await client.query('DELETE FROM notifications WHERE from_user_id = $1', [req.user.id]);
 
-        // 2. Delete messages sent by user
+        // 2. Delete messages sent by user and received by user
         await client.query('DELETE FROM messages WHERE sender_id = $1', [req.user.id]);
+        await client.query('DELETE FROM messages WHERE receiver_id = $1', [req.user.id]);
 
         // 3. Delete comments and likes
         await client.query('DELETE FROM comments WHERE user_id = $1', [req.user.id]);
@@ -1596,22 +1602,22 @@ const updateFeaturedProject = async () => {
         // Or better, use a single complex query.
 
         const query = `
-            WITH ProjectScores AS (
-                SELECT 
+            WITH ProjectScores AS(
+        SELECT 
                     p.id,
-                    p.title,
-                    (SELECT COUNT(*) FROM likes WHERE project_id = p.id) as likes_count,
-                    (SELECT COUNT(*) FROM comments WHERE project_id = p.id) as comments_count
+        p.title,
+        (SELECT COUNT(*) FROM likes WHERE project_id = p.id) as likes_count,
+    (SELECT COUNT(*) FROM comments WHERE project_id = p.id) as comments_count
                 FROM projects p
             )
-            SELECT 
-                id,
-                title,
-                (likes_count * 1 + comments_count * 2) as score
+SELECT
+id,
+    title,
+    (likes_count * 1 + comments_count * 2) as score
             FROM ProjectScores
             ORDER BY score DESC
             LIMIT 1;
-        `;
+`;
 
         const result = await db.query(query);
 

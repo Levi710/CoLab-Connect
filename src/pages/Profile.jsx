@@ -678,13 +678,9 @@ export default function Profile() {
                                         project={project}
                                         isOwner={isOwnProfile}
                                         onEdit={handleEditProject}
-                                        onDelete={isOwnProfile ? async (id) => {
-                                            if (window.confirm('Are you sure you want to delete this project?')) {
-                                                const { api } = await import('../api');
-                                                await api.projects.delete(id);
-                                                setUserProjects(userProjects.filter(p => p.id !== id));
-                                            }
-                                        } : undefined}
+                                        onDelete={(id) => {
+                                            setUserProjects(prev => prev.filter(p => p.id !== id));
+                                        }}
                                     />
                                 ))}
                             </div>

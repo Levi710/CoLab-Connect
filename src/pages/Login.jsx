@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api';
@@ -178,6 +178,16 @@ export default function Login() {
                             </div>
                         </div>
                     </div>
+
+                    {isLogin && (
+                        <div className="flex items-center justify-end">
+                            <div className="text-sm">
+                                <Link to="/forgot-password" className="font-medium text-primary hover:text-primary-hover">
+                                    Forgot your password?
+                                </Link>
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <button
