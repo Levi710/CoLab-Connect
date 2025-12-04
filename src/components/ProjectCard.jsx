@@ -439,7 +439,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 )}
                                 {/* Hide top-level comment input for owner */}
                                 {(!isOwner || replyTo) && (
-                                    <form onSubmit={handleAddComment} className="flex gap-2">
+                                    <form onSubmit={handleAddComment} className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                         <input
                                             type="text"
                                             value={newComment}
