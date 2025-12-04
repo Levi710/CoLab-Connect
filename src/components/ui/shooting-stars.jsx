@@ -40,7 +40,7 @@ export const ShootingStars = ({
                 id: Date.now(),
                 x,
                 y,
-                y,
+
                 angle,
                 scale: 1,
                 speed: Math.random() * (maxSpeed - minSpeed) + minSpeed,

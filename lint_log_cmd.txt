@@ -1,0 +1,67 @@
+
+> project1@0.0.0 lint
+> eslint .
+
+
+C:\Users\ayush\OneDrive\Desktop\project1\debug_db.js
+  1:12  error  'require' is not defined  no-undef
+
+C:\Users\ayush\OneDrive\Desktop\project1\server\db.js
+  1:18  error  'require' is not defined  no-undef
+  2:1   error  'require' is not defined  no-undef
+  5:23  error  'process' is not defined  no-undef
+  6:10  error  'process' is not defined  no-undef
+  9:1   error  'module' is not defined   no-undef
+
+C:\Users\ayush\OneDrive\Desktop\project1\server\index.js
+    1:17  error  'require' is not defined                                                                       no-undef
+    2:14  error  'require' is not defined                                                                       no-undef
+    3:12  error  'require' is not defined                                                                       no-undef
+    4:12  error  'require' is not defined                                                                       no-undef
+    5:14  error  'require' is not defined                                                                       no-undef
+    6:16  error  'require' is not defined                                                                       no-undef
+    7:13  error  'require' is not defined                                                                       no-undef
+    8:16  error  'require' is not defined                                                                       no-undef
+    9:18  error  'require' is not defined                                                                       no-undef
+   12:14  error  'process' is not defined                                                                       no-undef
+   13:20  error  'process' is not defined                                                                       no-undef
+   16:7   error  'razorpay' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+   17:13  error  'process' is not defined                                                                       no-undef
+   18:17  error  'process' is not defined                                                                       no-undef
+   37:53  error  '__dirname' is not defined                                                                     no-undef
+   74:32  error  'require' is not defined                                                                       no-undef
+  288:17  error  'password_hash' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\components\Navbar.jsx
+  150:9  error  Parsing error: Expected corresponding JSX closing tag for <nav>
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\components\ui\shooting-stars.jsx
+  43:17  error  Duplicate key 'y'  no-dupe-keys
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\components\ui\stars-background.jsx
+  65:52  warning  The ref value 'canvasRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'canvasRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\context\ThemeContext.jsx
+  5:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\context\ToastContext.jsx
+  6:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\pages\Chat.jsx
+  46:8  warning  React Hook useEffect has a missing dependency: 'fetchRooms'. Either include it or remove the dependency array                                               react-hooks/exhaustive-deps
+  59:8  warning  React Hook useEffect has missing dependencies: 'fetchBotSettings', 'fetchMembers', and 'fetchMessages'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\pages\Creators.jsx
+  15:8  warning  React Hook useEffect has a missing dependency: 'fetchCreators'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\pages\Dashboard.jsx
+  10:11  error  'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\ayush\OneDrive\Desktop\project1\src\pages\Profile.jsx
+  157:8  warning  React Hook useEffect has a missing dependency: 'projectId'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ayush\OneDrive\Desktop\project1\verify_full_flow.js
+  75:15  error  'members' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+✖ 34 problems (29 errors, 5 warnings)
+

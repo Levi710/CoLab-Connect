@@ -7,7 +7,6 @@ import ProjectCard from '../components/ProjectCard';
 import { useToast } from '../context/ToastContext';
 
 export default function Dashboard() {
-    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { addToast } = useToast();
     const [activeTab, setActiveTab] = useState('projects');

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, PlusCircle, LogOut, Bell } from 'lucide-react';
-import { Menu, X, User, PlusCircle, LogOut, Bell } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import ThemeSwitcher from './ThemeSwitcher';
 
@@ -147,93 +147,93 @@ export default function Navbar() {
                     </button>
                 </div>
             </div>
-        </div>
+
 
             {
-        isOpen && (
-            <div className="sm:hidden bg-dark border-b border-white/10">
-                <div className="pt-2 pb-3 space-y-1">
-                    <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
-                        Discovery
-                    </Link>
-                    {currentUser && (
-                        <>
-                            <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
-                                Dashboard
+                isOpen && (
+                    <div className="sm:hidden bg-dark border-b border-white/10">
+                        <div className="pt-2 pb-3 space-y-1">
+                            <Link to="/" className={getMobileLinkClass('/')} onClick={() => setIsOpen(false)}>
+                                Discovery
                             </Link>
-                            <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
-                                Inbox
-                                {inboxCount > 0 && (
-                                    <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {inboxCount}
-                                    </span>
-                                )}
+                            {currentUser && (
+                                <>
+                                    <Link to="/dashboard" className={getMobileLinkClass('/dashboard')} onClick={() => setIsOpen(false)}>
+                                        Dashboard
+                                    </Link>
+                                    <Link to="/inbox" className={getMobileLinkClass('/inbox')} onClick={() => setIsOpen(false)}>
+                                        Inbox
+                                        {inboxCount > 0 && (
+                                            <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {inboxCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                    <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
+                                        Messages
+                                        {unreadCount > 0 && (
+                                            <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </>
+                            )}
+                            <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
+                                About
                             </Link>
-                            <Link to="/chat/all" className={getMobileLinkClass('/chat/all')} onClick={() => setIsOpen(false)}>
-                                Messages
-                                {unreadCount > 0 && (
-                                    <span className="ml-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </Link>
-                        </>
-                    )}
-                    <Link to="/about" className={getMobileLinkClass('/about')} onClick={() => setIsOpen(false)}>
-                        About
-                    </Link>
-                    {currentUser && (
-                        <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
-                            Create Project
-                        </Link>
-                    )}
-                </div>
-                <div className="pt-4 pb-4 border-t border-white/10">
-                    {currentUser ? (
-                        <>
-                            <div className="flex items-center px-4">
-                                <div className="flex-shrink-0">
-                                    {currentUser.photo_url ? (
-                                        <img
-                                            className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
-                                            src={currentUser.photo_url}
-                                            alt={currentUser.username}
-                                        />
-                                    ) : (
-                                        <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
-                                    )}
-                                </div>
-                                <div className="ml-3">
-                                    <div className="text-base font-medium text-white">{currentUser.username}</div>
-                                    <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
-                                </div>
-                            </div>
-                            <div className="mt-3 space-y-1">
-                                <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
-                                    Your Profile
+                            {currentUser && (
+                                <Link to="/create-project" className={getMobileLinkClass('/create-project')} onClick={() => setIsOpen(false)}>
+                                    Create Project
                                 </Link>
-                                <button
-                                    onClick={() => {
-                                        handleLogout();
-                                        setIsOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
-                                >
-                                    Sign out
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="mt-3 space-y-1">
-                            <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
-                                Login
-                            </Link>
+                            )}
                         </div>
-                    )}
-                </div>
-            </div>
-        )
-    }
+                        <div className="pt-4 pb-4 border-t border-white/10">
+                            {currentUser ? (
+                                <>
+                                    <div className="flex items-center px-4">
+                                        <div className="flex-shrink-0">
+                                            {currentUser.photo_url ? (
+                                                <img
+                                                    className="h-10 w-10 rounded-full object-cover border-2 border-white/10"
+                                                    src={currentUser.photo_url}
+                                                    alt={currentUser.username}
+                                                />
+                                            ) : (
+                                                <User className="h-10 w-10 rounded-full bg-white/10 p-2 text-gray-300" />
+                                            )}
+                                        </div>
+                                        <div className="ml-3">
+                                            <div className="text-base font-medium text-white">{currentUser.username}</div>
+                                            <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 space-y-1">
+                                        <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
+                                            Your Profile
+                                        </Link>
+                                        <button
+                                            onClick={() => {
+                                                handleLogout();
+                                                setIsOpen(false);
+                                            }}
+                                            className="block w-full text-left px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
+                                        >
+                                            Sign out
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="mt-3 space-y-1">
+                                    <Link to="/login" className="block px-4 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setIsOpen(false)}>
+                                        Login
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
         </nav >
     );
 }
