@@ -22,10 +22,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null); // { id, username }
 
-    useEffect(() => {
-        setIsLiked(project.is_liked || false);
-        setLikes(project.likes_count || project.likes || 0);
-    }, [project.is_liked, project.likes, project.likes_count]);
+
 
 
 
@@ -344,7 +341,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 className={`flex items-center space-x-1 hover:text-pink-500 transition-colors group/like ${isLiked ? 'text-pink-500' : ''}`}
                             >
                                 <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : 'group-hover/like:fill-current'}`} />
-                                <span className="text-xs">{likes}</span>
+                                <span className="text-xs">{likes || 0}</span>
                             </button>
                             <button
                                 onClick={toggleComments}
