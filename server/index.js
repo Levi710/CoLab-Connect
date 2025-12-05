@@ -1709,47 +1709,7 @@ setInterval(updateFeaturedProject, 3600000);
 
 
 
-// --- Roles API ---
-app.post('/api/roles', async (req, res) => {
-    let { name, category } = req.body;
-    if (!name || !name.trim()) return res.status(400).json({ error: 'Role name is required' });
 
-    name = name.trim();
-
-    try {
-        const rolesPath = path.join(__dirname, '../src/data/projectRoles.json');
-        const rolesData = JSON.parse(fs.readFileSync(rolesPath, 'utf8'));
-
-        // Check if role already exists
-        let exists = false;
-        Object.values(rolesData.skills).forEach(skills => {
-            if (skills.some(skill => skill.name.toLowerCase() === name.toLowerCase())) {
-                exists = true;
-            }
-        });
-
-        if (exists) {
-            return res.json({ message: 'Role already exists', role: { name, category } });
-        }
-
-        // Add new role
-        const targetCategory = category || 'other';
-        if (!rolesData.skills[targetCategory]) {
-            rolesData.skills[targetCategory] = [];
-        }
-
-        const newRole = { name, level: 'General' };
-        rolesData.skills[targetCategory].push(newRole);
-
-        // Write back to file
-        fs.writeFileSync(rolesPath, JSON.stringify(rolesData, null, 4));
-
-        res.json({ success: true, role: newRole });
-    } catch (err) {
-        console.error('Failed to add role:', err);
-        res.status(500).json({ error: 'Failed to add role' });
-    }
-});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} `);

@@ -1,26 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { Search, X, Check, ChevronDown, ChevronUp, AlertCircle, Plus } from 'lucide-react';
 import projectRoles from '../data/projectRoles.json';
-import { api } from '../api';
 import { useToast } from '../context/ToastContext';
 
 export default function RoleSelector({ selectedRoles = [], onChange, maxSelections = 10 }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [expandedCategory, setExpandedCategory] = useState('frontendDevelopment');
-    const [localRoles, setLocalRoles] = useState(projectRoles.skills);
+    const [expandedCategory, setExpandedCategory] = useState('Technology & Data');
     const { addToast } = useToast();
-    const [isCreating, setIsCreating] = useState(false);
 
     // Flatten roles for search
     const allRoles = useMemo(() => {
         const roles = [];
-        Object.entries(localRoles).forEach(([category, skills]) => {
-            skills.forEach(skill => {
-                roles.push({ ...skill, category });
+        projectRoles.jobRoles.forEach(categoryGroup => {
+            categoryGroup.roles.forEach(role => {
+                roles.push({ name: role, category: categoryGroup.category });
             });
         });
         return roles;
-    }, [localRoles]);
+    }, []);
 
     const filteredRoles = useMemo(() => {
         if (!searchTerm.trim()) return null;
@@ -38,39 +35,25 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
         }
     };
 
-    const handleCreateRole = async (category = 'other') => {
+    const handleAddCustomRole = () => {
         const trimmedTerm = searchTerm.trim();
         if (!trimmedTerm) return;
-        setIsCreating(true);
-        try {
-            const res = await api.roles.add({ name: trimmedTerm, category });
-            if (res.success || res.message === 'Role already exists') {
-                // Update local state
-                setLocalRoles(prev => {
-                    const newState = { ...prev };
-                    if (!newState[category]) newState[category] = [];
-                    // Check if exists locally to avoid dupes in UI before reload
-                    if (!newState[category].some(r => r.name.toLowerCase() === trimmedTerm.toLowerCase())) {
-                        newState[category].push({ name: trimmedTerm, level: 'General' });
-                    }
-                    return newState;
-                });
 
-                // Select the new role
-                handleToggleRole(trimmedTerm);
-                setSearchTerm('');
-                addToast(`Role "${trimmedTerm}" added to ${formatCategoryName(category)}`, 'success');
-            }
-        } catch (error) {
-            console.error('Failed to create role:', error);
-            addToast('Failed to create role', 'error');
-        } finally {
-            setIsCreating(false);
+        // Check if already selected
+        if (selectedRoles.includes(trimmedTerm)) {
+            setSearchTerm('');
+            return;
         }
-    };
 
-    const formatCategoryName = (key) => {
-        return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        if (selectedRoles.length >= maxSelections) {
+            addToast(`Maximum ${maxSelections} roles allowed`, 'error');
+            return;
+        }
+
+        // Add to selection directly
+        onChange([...selectedRoles, trimmedTerm]);
+        setSearchTerm('');
+        addToast(`Added custom role: "${trimmedTerm}"`, 'success');
     };
 
     return (
@@ -86,6 +69,14 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                     placeholder="Search roles (e.g. React, Python)..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (filteredRoles?.length === 0 && searchTerm.trim()) {
+                                handleAddCustomRole();
+                            }
+                        }
+                    }}
                 />
             </div>
 
@@ -133,8 +124,8 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                         onClick={() => handleToggleRole(role.name)}
                                         disabled={!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections}
                                         className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(role.name)
-                                            ? 'bg-primary/20 text-primary border border-primary/30'
-                                            : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
                                             } ${!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <span>{role.name}</span>
@@ -145,61 +136,49 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                         ) : (
                             <div className="text-center py-4 bg-white/5 rounded-lg border border-white/5 border-dashed">
                                 <p className="text-gray-400 text-sm mb-2">No roles found matching "{searchTerm}"</p>
-                                <div className="flex flex-col gap-2 items-center">
-                                    <span className="text-xs text-gray-500">Add "{searchTerm}" to a category:</span>
-                                    <div className="flex flex-wrap justify-center gap-2">
-                                        {['frontendDevelopment', 'backendDevelopment', 'mobileDevelopment', 'design', 'other'].map(cat => (
-                                            <button
-                                                key={cat}
-                                                type="button"
-                                                onClick={() => handleCreateRole(cat)}
-                                                disabled={isCreating}
-                                                className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs rounded-full border border-primary/20 transition-colors flex items-center gap-1"
-                                            >
-                                                <Plus className="h-3 w-3" />
-                                                {formatCategoryName(cat)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAddCustomRole}
+                                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm rounded-full border border-primary/20 transition-colors flex items-center gap-2 mx-auto"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Add "{searchTerm}"
+                                </button>
                             </div>
                         )}
                     </div>
                 ) : (
                     // Categories
-                    Object.entries(localRoles).map(([category, skills]) => (
-                        <div key={category} className="border border-white/5 rounded-lg overflow-hidden bg-black/20">
+                    projectRoles.jobRoles.map((categoryGroup) => (
+                        <div key={categoryGroup.category} className="border border-white/5 rounded-lg overflow-hidden bg-black/20">
                             <button
                                 type="button"
-                                onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
+                                onClick={() => setExpandedCategory(expandedCategory === categoryGroup.category ? null : categoryGroup.category)}
                                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/5 transition-colors"
                             >
-                                <span className="font-medium text-gray-200">{formatCategoryName(category)}</span>
-                                {expandedCategory === category ? (
+                                <span className="font-medium text-gray-200">{categoryGroup.category}</span>
+                                {expandedCategory === categoryGroup.category ? (
                                     <ChevronUp className="h-4 w-4 text-gray-500" />
                                 ) : (
                                     <ChevronDown className="h-4 w-4 text-gray-500" />
                                 )}
                             </button>
 
-                            {expandedCategory === category && (
+                            {expandedCategory === categoryGroup.category && (
                                 <div className="p-3 bg-black/40 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {skills.map((skill, idx) => (
+                                    {categoryGroup.roles.map((role, idx) => (
                                         <button
-                                            key={`${skill.name}-${idx}`}
+                                            key={`${role}-${idx}`}
                                             type="button"
-                                            onClick={() => handleToggleRole(skill.name)}
-                                            disabled={!selectedRoles.includes(skill.name) && selectedRoles.length >= maxSelections}
-                                            className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(skill.name)
-                                                ? 'bg-primary/20 text-primary border border-primary/30'
-                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
-                                                } ${!selectedRoles.includes(skill.name) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onClick={() => handleToggleRole(role)}
+                                            disabled={!selectedRoles.includes(role) && selectedRoles.length >= maxSelections}
+                                            className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(role)
+                                                    ? 'bg-primary/20 text-primary border border-primary/30'
+                                                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                                } ${!selectedRoles.includes(role) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            <div className="flex flex-col items-start">
-                                                <span>{skill.name}</span>
-                                                <span className="text-[10px] text-gray-500">{skill.level}</span>
-                                            </div>
-                                            {selectedRoles.includes(skill.name) && <Check className="h-4 w-4" />}
+                                            <span>{role}</span>
+                                            {selectedRoles.includes(role) && <Check className="h-4 w-4" />}
                                         </button>
                                     ))}
                                 </div>

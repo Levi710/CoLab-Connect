@@ -1,140 +1,239 @@
 {
-    "skills": {
-        "frontendDevelopment": [
-            {
-                "name": "React.js",
-                "level": "Expert"
-            },
-            {
-                "name": "JavaScript (ES6+)",
-                "level": "Expert"
-            },
-            {
-                "name": "HTML5",
-                "level": "Advanced"
-            },
-            {
-                "name": "CSS3",
-                "level": "Advanced"
-            },
-            {
-                "name": "Redux",
-                "level": "Advanced"
-            },
-            {
-                "name": "Context API",
-                "level": "Advanced"
-            },
-            {
-                "name": "React Router",
-                "level": "Advanced"
-            },
-            {
-                "name": "Hooks",
-                "level": "Expert"
-            },
-            {
-                "name": "Webpack",
-                "level": "Intermediate"
-            },
-            {
-                "name": "Babel",
-                "level": "Intermediate"
-            },
-            {
-                "name": "Responsive Design",
-                "level": "Advanced"
-            },
-            {
-                "name": "Accessibility (A11y)",
-                "level": "Intermediate"
-            }
-        ],
-        "stateManagement": [
-            {
-                "name": "Redux",
-                "level": "Advanced"
-            },
-            {
-                "name": "Zustand",
-                "level": "Intermediate"
-            },
-            {
-                "name": "Jotai",
-                "level": "Intermediate"
-            }
-        ],
-        "testing": [
-            {
-                "name": "Jest",
-                "level": "Advanced"
-            },
-            {
-                "name": "React Testing Library",
-                "level": "Advanced"
-            },
-            {
-                "name": "Cypress",
-                "level": "Intermediate"
-            }
-        ],
-        "versionControl": [
-            {
-                "name": "Git",
-                "level": "Expert"
-            },
-            {
-                "name": "GitHub",
-                "level": "Expert"
-            },
-            {
-                "name": "GitLab",
-                "level": "Intermediate"
-            }
-        ],
-        "toolsAndEcosystem": [
-            {
-                "name": "Node.js",
-                "level": "Intermediate"
-            },
-            {
-                "name": "npm/Yarn",
-                "level": "Expert"
-            },
-            {
-                "name": "RESTful APIs",
-                "level": "Advanced"
-            },
-            {
-                "name": "GraphQL (Apollo Client)",
-                "level": "Intermediate"
-            },
-            {
-                "name": "VS Code",
-                "level": "Expert"
-            },
-            {
-                "name": "Figma (basic)",
-                "level": "Beginner"
-            }
-        ],
-        "softSkills": [
-            {
-                "name": "Problem Solving",
-                "level": "Advanced"
-            },
-            {
-                "name": "Communication",
-                "level": "Advanced"
-            },
-            {
-                "name": "Team Collaboration",
-                "level": "Advanced"
-            },
-            {
-                "name": "Continuous Learning",
-                "level": "Expert"
-            }
-        ]
-    }
+    "jobRoles": [
+        {
+            "category": "Technology & Data",
+            "roles": [
+                "Software Engineer",
+                "Data Scientist",
+                "Cloud Architect",
+                "Cyber Security Analyst",
+                "Artificial Intelligence (AI) Engineer",
+                "Full Stack Developer",
+                "UX/UI Designer",
+                "Network Administrator",
+                "IT Project Manager",
+                "Database Administrator (DBA)",
+                "DevOps Engineer",
+                "Systems Analyst",
+                "Machine Learning Engineer",
+                "Web Developer",
+                "IT Support Specialist",
+                "Business Intelligence (BI) Analyst",
+                "Front-End Developer",
+                "Back-End Developer",
+                "QA Tester / Software Test Engineer",
+                "Product Manager (Tech)",
+                "Scrum Master",
+                "Data Analyst",
+                "Computer Programmer",
+                "Game Developer",
+                "Embedded Systems Engineer",
+                "Blockchain Developer",
+                "Technical Writer",
+                "Digital Forensic Analyst",
+                "Robotics Engineer",
+                "Cloud Consultant"
+            ]
+        },
+        {
+            "category": "Healthcare & Wellness",
+            "roles": [
+                "Registered Nurse (RN)",
+                "Physician / Doctor",
+                "Surgeon",
+                "Pharmacist",
+                "Medical Assistant",
+                "Physical Therapist (PT)",
+                "Occupational Therapist (OT)",
+                "Dental Hygienist",
+                "Veterinarian",
+                "Radiologic Technologist",
+                "Paramedic / EMT",
+                "Psychiatrist",
+                "Clinical Social Worker",
+                "Dietitian / Nutritionist",
+                "Speech-Language Pathologist",
+                "Nurse Practitioner (NP)",
+                "Medical Coder",
+                "Phlebotomist",
+                "Chiropractor",
+                "Massage Therapist",
+                "Anesthesiologist",
+                "Optometrist",
+                "Lab Technician",
+                "Medical Transcriptionist",
+                "Health Services Manager",
+                "Epidemiologist",
+                "Genetic Counselor",
+                "Respiratory Therapist",
+                "Home Health Aide",
+                "Clinical Research Coordinator"
+            ]
+        },
+        {
+            "category": "Business, Finance & Administration",
+            "roles": [
+                "Accountant",
+                "Financial Analyst",
+                "Marketing Manager",
+                "Human Resources (HR) Manager",
+                "Operations Manager",
+                "Chief Executive Officer (CEO)",
+                "Sales Representative",
+                "Business Analyst",
+                "Project Manager (General)",
+                "Executive Assistant",
+                "Bookkeeper",
+                "Risk Manager",
+                "Auditor",
+                "Investment Banker",
+                "Supply Chain Manager",
+                "Administrative Assistant",
+                "Recruiter / Talent Acquisition Specialist",
+                "Financial Planner",
+                "Public Relations (PR) Specialist",
+                "Management Consultant",
+                "Training and Development Specialist",
+                "Customer Service Representative",
+                "Procurement Specialist",
+                "Compliance Officer",
+                "Actuary",
+                "Treasurer",
+                "Data Entry Clerk",
+                "Insurance Agent",
+                "Retail Store Manager",
+                "Credit Analyst"
+            ]
+        },
+        {
+            "category": "Creative Arts & Media",
+            "roles": [
+                "Graphic Designer",
+                "Content Writer / Strategist",
+                "Video Editor",
+                "Photographer",
+                "Journalist / Reporter",
+                "Animator",
+                "Art Director",
+                "Musician / Composer",
+                "Film Director",
+                "Illustrator",
+                "Social Media Manager",
+                "Copywriter",
+                "Broadcast Engineer",
+                "Fashion Designer",
+                "Interior Designer",
+                "Gallerist / Art Dealer",
+                "Architect",
+                "UX Writer",
+                "Podcast Producer",
+                "Curator",
+                "Creative Director",
+                "Set Designer",
+                "Librarian",
+                "Author / Novelist",
+                "Proofreader",
+                "Brand Manager",
+                "VFX Artist",
+                "Choreographer",
+                "Sound Engineer",
+                "Technical Illustrator"
+            ]
+        },
+        {
+            "category": "Engineering & Manufacturing",
+            "roles": [
+                "Mechanical Engineer",
+                "Civil Engineer",
+                "Electrical Engineer",
+                "Aerospace Engineer",
+                "Chemical Engineer",
+                "Industrial Engineer",
+                "Petroleum Engineer",
+                "Biomedical Engineer",
+                "Construction Manager",
+                "Surveyor",
+                "Welder",
+                "Drafting Technician",
+                "HVAC Technician",
+                "Manufacturing Production Technician",
+                "Quality Control Inspector",
+                "Automotive Mechanic",
+                "Electrician",
+                "Plumber",
+                "Safety Engineer",
+                "Materials Scientist",
+                "Mining Engineer",
+                "Water Treatment Plant Operator",
+                "Tool and Die Maker",
+                "Wind Energy Engineer",
+                "Geotechnical Engineer",
+                "Machine Operator",
+                "Aviation Maintenance Technician",
+                "Solar Energy Systems Engineer",
+                "Boilermaker",
+                "Cartographer"
+            ]
+        },
+        {
+            "category": "Education & Legal",
+            "roles": [
+                "Elementary School Teacher",
+                "High School Teacher",
+                "University Professor",
+                "School Administrator / Principal",
+                "Guidance Counselor",
+                "Lawyer / Attorney",
+                "Paralegal",
+                "Judge",
+                "Mediator",
+                "Court Reporter",
+                "Special Education Teacher",
+                "Archivist",
+                "Tutor",
+                "Admissions Counselor",
+                "Legal Secretary",
+                "Instructional Designer",
+                "Corporate Trainer",
+                "Museum Educator",
+                "ESL Teacher",
+                "Librarian (Academic)"
+            ]
+        },
+        {
+            "category": "Social, Hospitality & Public Service",
+            "roles": [
+                "Police Officer / Patrol Officer",
+                "Firefighter",
+                "Social Worker",
+                "Chef / Cook",
+                "Flight Attendant / Cabin Crew",
+                "Hotel Manager",
+                "Event Planner",
+                "Bartender",
+                "Urban Planner",
+                "Travel Agent",
+                "Realtor / Real Estate Agent",
+                "Customs Officer",
+                "Park Ranger",
+                "Therapist / Counselor (Mental Health)",
+                "Personal Trainer",
+                "Flight Instructor",
+                "Air Traffic Controller",
+                "Clergy / Priest / Pastor",
+                "Non-Profit Program Director",
+                "Foreign Service Officer / Diplomat",
+                "Security Guard",
+                "Housekeeper / Maid",
+                "Waiter / Waitress",
+                "Lobbyist",
+                "Publicist",
+                "Zoologist",
+                "Ecologist",
+                "Oceanographer",
+                "Meteorologist",
+                "Astronomer"
+            ]
+        }
+    ]
 }

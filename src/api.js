@@ -400,16 +400,6 @@ export const api = {
             return res.json();
         }
     },
-    roles: {
-        add: async (roleData) => {
-            const res = await fetch(`${API_URL}/roles`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(roleData),
-            });
-            if (!res.ok) throw new Error('Failed to add role');
-            return res.json();
-        }
-    },
+
 
 };
