@@ -1,22 +1,26 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X, Check, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Search, X, Check, ChevronDown, ChevronUp, AlertCircle, Plus } from 'lucide-react';
 import projectRoles from '../data/projectRoles.json';
+import { api } from '../api';
+import { useToast } from '../context/ToastContext';
 
 export default function RoleSelector({ selectedRoles = [], onChange, maxSelections = 10 }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [expandedCategory, setExpandedCategory] = useState('frontendDevelopment'); // Default open
-    const [showAllCategories, setShowAllCategories] = useState(true);
+    const [expandedCategory, setExpandedCategory] = useState('frontendDevelopment');
+    const [localRoles, setLocalRoles] = useState(projectRoles.skills);
+    const { addToast } = useToast();
+    const [isCreating, setIsCreating] = useState(false);
 
     // Flatten roles for search
     const allRoles = useMemo(() => {
         const roles = [];
-        Object.entries(projectRoles.skills).forEach(([category, skills]) => {
+        Object.entries(localRoles).forEach(([category, skills]) => {
             skills.forEach(skill => {
                 roles.push({ ...skill, category });
             });
         });
         return roles;
-    }, []);
+    }, [localRoles]);
 
     const filteredRoles = useMemo(() => {
         if (!searchTerm) return null;
@@ -31,6 +35,36 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
         } else {
             if (selectedRoles.length >= maxSelections) return;
             onChange([...selectedRoles, roleName]);
+        }
+    };
+
+    const handleCreateRole = async (category = 'other') => {
+        if (!searchTerm.trim()) return;
+        setIsCreating(true);
+        try {
+            const res = await api.roles.add({ name: searchTerm, category });
+            if (res.success || res.message === 'Role already exists') {
+                // Update local state
+                setLocalRoles(prev => {
+                    const newState = { ...prev };
+                    if (!newState[category]) newState[category] = [];
+                    // Check if exists locally to avoid dupes in UI before reload
+                    if (!newState[category].some(r => r.name.toLowerCase() === searchTerm.toLowerCase())) {
+                        newState[category].push({ name: searchTerm, level: 'General' });
+                    }
+                    return newState;
+                });
+
+                // Select the new role
+                handleToggleRole(searchTerm);
+                setSearchTerm('');
+                addToast(`Role "${searchTerm}" added to ${formatCategoryName(category)}`, 'success');
+            }
+        } catch (error) {
+            console.error('Failed to create role:', error);
+            addToast('Failed to create role', 'error');
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -89,7 +123,7 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                     // Search Results
                     <div className="space-y-2">
                         <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Search Results</h4>
-                        {filteredRoles.length > 0 ? (
+                        {filteredRoles && filteredRoles.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {filteredRoles.map((role, idx) => (
                                     <button
@@ -108,12 +142,31 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-500 italic text-sm">No roles found matching "{searchTerm}"</p>
+                            <div className="text-center py-4 bg-white/5 rounded-lg border border-white/5 border-dashed">
+                                <p className="text-gray-400 text-sm mb-2">No roles found matching "{searchTerm}"</p>
+                                <div className="flex flex-col gap-2 items-center">
+                                    <span className="text-xs text-gray-500">Add "{searchTerm}" to a category:</span>
+                                    <div className="flex flex-wrap justify-center gap-2">
+                                        {['frontendDevelopment', 'backendDevelopment', 'mobileDevelopment', 'design', 'other'].map(cat => (
+                                            <button
+                                                key={cat}
+                                                type="button"
+                                                onClick={() => handleCreateRole(cat)}
+                                                disabled={isCreating}
+                                                className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs rounded-full border border-primary/20 transition-colors flex items-center gap-1"
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                                {formatCategoryName(cat)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 ) : (
                     // Categories
-                    Object.entries(projectRoles.skills).map(([category, skills]) => (
+                    Object.entries(localRoles).map(([category, skills]) => (
                         <div key={category} className="border border-white/5 rounded-lg overflow-hidden bg-black/20">
                             <button
                                 type="button"
