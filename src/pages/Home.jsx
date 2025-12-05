@@ -19,6 +19,18 @@ export default function Home() {
     const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
     const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || 'All');
 
+    const [visionText, setVisionText] = useState('Vision');
+    const languages = ['Vision', 'दृष्टि', 'ビジョン', '비전', 'Visión', 'Visione', 'Visão', 'Rؤية', 'Viziune'];
+
+    useEffect(() => {
+        let index = 0;
+        const interval = setInterval(() => {
+            index = (index + 1) % languages.length;
+            setVisionText(languages[index]);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         const fetchProjects = async () => {
             try {
@@ -114,17 +126,7 @@ export default function Home() {
         </div>
     );
 
-    const [visionText, setVisionText] = useState('Vision');
-    const languages = ['Vision', 'दृष्टि', 'ビジョン', '비전', 'Visión', 'Visione', 'Visão', 'Rؤية', 'Viziune'];
 
-    useEffect(() => {
-        let index = 0;
-        const interval = setInterval(() => {
-            index = (index + 1) % languages.length;
-            setVisionText(languages[index]);
-        }, 2500);
-        return () => clearInterval(interval);
-    }, []);
 
     return (
         <div className="min-h-screen text-gray-100 font-sans selection:bg-primary/30">
