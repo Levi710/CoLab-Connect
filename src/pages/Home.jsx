@@ -114,14 +114,26 @@ export default function Home() {
         </div>
     );
 
+    const [visionText, setVisionText] = useState('Vision');
+    const languages = ['Vision', 'दृष्टि', 'ビジョン', '비전', 'Visión', 'Visione', 'Visão', 'Rؤية', 'Viziune'];
+
+    useEffect(() => {
+        let index = 0;
+        const interval = setInterval(() => {
+            index = (index + 1) % languages.length;
+            setVisionText(languages[index]);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="min-h-screen text-gray-100 font-sans selection:bg-primary/30">
             {/* Hero Section */}
             <section className="relative pt-20 pb-32 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                     <div className="inline-block mb-4">
-                        <span className="py-1 px-3 rounded-full bg-gold/10 border border-gold/20 text-gold text-xs font-semibold tracking-wide uppercase shadow-sm shadow-gold/5">
-                            Featured Platform
+                        <span className="py-1 px-3 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase shadow-sm shadow-primary/5 transition-all duration-500">
+                            {visionText}
                         </span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight bg-gold-gradient bg-clip-text text-transparent mb-6 drop-shadow-sm pb-2 leading-tight">
