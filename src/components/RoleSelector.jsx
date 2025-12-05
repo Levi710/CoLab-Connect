@@ -23,9 +23,9 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
     }, [localRoles]);
 
     const filteredRoles = useMemo(() => {
-        if (!searchTerm) return null;
+        if (!searchTerm.trim()) return null;
         return allRoles.filter(role =>
-            role.name.toLowerCase().includes(searchTerm.toLowerCase())
+            role.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
         );
     }, [searchTerm, allRoles]);
 
@@ -39,26 +39,27 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
     };
 
     const handleCreateRole = async (category = 'other') => {
-        if (!searchTerm.trim()) return;
+        const trimmedTerm = searchTerm.trim();
+        if (!trimmedTerm) return;
         setIsCreating(true);
         try {
-            const res = await api.roles.add({ name: searchTerm, category });
+            const res = await api.roles.add({ name: trimmedTerm, category });
             if (res.success || res.message === 'Role already exists') {
                 // Update local state
                 setLocalRoles(prev => {
                     const newState = { ...prev };
                     if (!newState[category]) newState[category] = [];
                     // Check if exists locally to avoid dupes in UI before reload
-                    if (!newState[category].some(r => r.name.toLowerCase() === searchTerm.toLowerCase())) {
-                        newState[category].push({ name: searchTerm, level: 'General' });
+                    if (!newState[category].some(r => r.name.toLowerCase() === trimmedTerm.toLowerCase())) {
+                        newState[category].push({ name: trimmedTerm, level: 'General' });
                     }
                     return newState;
                 });
 
                 // Select the new role
-                handleToggleRole(searchTerm);
+                handleToggleRole(trimmedTerm);
                 setSearchTerm('');
-                addToast(`Role "${searchTerm}" added to ${formatCategoryName(category)}`, 'success');
+                addToast(`Role "${trimmedTerm}" added to ${formatCategoryName(category)}`, 'success');
             }
         } catch (error) {
             console.error('Failed to create role:', error);
@@ -132,8 +133,8 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                         onClick={() => handleToggleRole(role.name)}
                                         disabled={!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections}
                                         className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(role.name)
-                                                ? 'bg-primary/20 text-primary border border-primary/30'
-                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                            ? 'bg-primary/20 text-primary border border-primary/30'
+                                            : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
                                             } ${!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <span>{role.name}</span>
@@ -190,8 +191,8 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                             onClick={() => handleToggleRole(skill.name)}
                                             disabled={!selectedRoles.includes(skill.name) && selectedRoles.length >= maxSelections}
                                             className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(skill.name)
-                                                    ? 'bg-primary/20 text-primary border border-primary/30'
-                                                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
                                                 } ${!selectedRoles.includes(skill.name) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             <div className="flex flex-col items-start">

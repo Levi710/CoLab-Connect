@@ -1711,8 +1711,10 @@ setInterval(updateFeaturedProject, 3600000);
 
 // --- Roles API ---
 app.post('/api/roles', async (req, res) => {
-    const { name, category } = req.body;
-    if (!name) return res.status(400).json({ error: 'Role name is required' });
+    let { name, category } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Role name is required' });
+
+    name = name.trim();
 
     try {
         const rolesPath = path.join(__dirname, '../src/data/projectRoles.json');
