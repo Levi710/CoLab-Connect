@@ -74,6 +74,7 @@ export const api = {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to delete notification');
+            if (res.status === 204) return;
             return res.json();
         },
         markAsRead: async (id) => {
@@ -155,6 +156,7 @@ export const api = {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to delete project');
+            if (res.status === 204) return;
             return res.json();
         },
         view: async (id) => {
@@ -180,6 +182,7 @@ export const api = {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to delete comment');
+            if (res.status === 204) return;
             return res.json();
         },
         toggleCommentLike: async (commentId) => {
@@ -264,6 +267,7 @@ export const api = {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to delete request');
+            if (res.status === 204) return;
             return res.json();
         },
     },
@@ -308,6 +312,7 @@ export const api = {
                 const error = await res.json();
                 throw new Error(error.error || 'Failed to delete message');
             }
+            if (res.status === 204) return;
             return res.json();
         },
         getReadReceipts: async (messageId) => {
@@ -384,6 +389,7 @@ export const api = {
                 headers: getHeaders(),
             });
             if (!res.ok) throw new Error('Failed to delete account');
+            if (res.status === 204) return;
             return res.json();
         }
     },
