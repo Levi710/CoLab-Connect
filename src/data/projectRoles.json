@@ -1,0 +1,140 @@
+{
+    "skills": {
+        "frontendDevelopment": [
+            {
+                "name": "React.js",
+                "level": "Expert"
+            },
+            {
+                "name": "JavaScript (ES6+)",
+                "level": "Expert"
+            },
+            {
+                "name": "HTML5",
+                "level": "Advanced"
+            },
+            {
+                "name": "CSS3",
+                "level": "Advanced"
+            },
+            {
+                "name": "Redux",
+                "level": "Advanced"
+            },
+            {
+                "name": "Context API",
+                "level": "Advanced"
+            },
+            {
+                "name": "React Router",
+                "level": "Advanced"
+            },
+            {
+                "name": "Hooks",
+                "level": "Expert"
+            },
+            {
+                "name": "Webpack",
+                "level": "Intermediate"
+            },
+            {
+                "name": "Babel",
+                "level": "Intermediate"
+            },
+            {
+                "name": "Responsive Design",
+                "level": "Advanced"
+            },
+            {
+                "name": "Accessibility (A11y)",
+                "level": "Intermediate"
+            }
+        ],
+        "stateManagement": [
+            {
+                "name": "Redux",
+                "level": "Advanced"
+            },
+            {
+                "name": "Zustand",
+                "level": "Intermediate"
+            },
+            {
+                "name": "Jotai",
+                "level": "Intermediate"
+            }
+        ],
+        "testing": [
+            {
+                "name": "Jest",
+                "level": "Advanced"
+            },
+            {
+                "name": "React Testing Library",
+                "level": "Advanced"
+            },
+            {
+                "name": "Cypress",
+                "level": "Intermediate"
+            }
+        ],
+        "versionControl": [
+            {
+                "name": "Git",
+                "level": "Expert"
+            },
+            {
+                "name": "GitHub",
+                "level": "Expert"
+            },
+            {
+                "name": "GitLab",
+                "level": "Intermediate"
+            }
+        ],
+        "toolsAndEcosystem": [
+            {
+                "name": "Node.js",
+                "level": "Intermediate"
+            },
+            {
+                "name": "npm/Yarn",
+                "level": "Expert"
+            },
+            {
+                "name": "RESTful APIs",
+                "level": "Advanced"
+            },
+            {
+                "name": "GraphQL (Apollo Client)",
+                "level": "Intermediate"
+            },
+            {
+                "name": "VS Code",
+                "level": "Expert"
+            },
+            {
+                "name": "Figma (basic)",
+                "level": "Beginner"
+            }
+        ],
+        "softSkills": [
+            {
+                "name": "Problem Solving",
+                "level": "Advanced"
+            },
+            {
+                "name": "Communication",
+                "level": "Advanced"
+            },
+            {
+                "name": "Team Collaboration",
+                "level": "Advanced"
+            },
+            {
+                "name": "Continuous Learning",
+                "level": "Expert"
+            }
+        ]
+    }
+}

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import RoleSelector from '../components/RoleSelector';
 
 export default function CreateProject() {
     const navigate = useNavigate();
@@ -205,16 +206,17 @@ export default function CreateProject() {
                         <label htmlFor="lookingFor" className="block text-sm font-medium text-gray-300 mb-1">
                             Who are you looking for? <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            type="text"
-                            id="lookingFor"
-                            name="lookingFor"
-                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                            placeholder="e.g., React Developer, UI Designer, Marketing Lead"
-                            value={formData.lookingFor}
-                            onChange={handleChange}
+                        <RoleSelector
+                            selectedRoles={formData.lookingFor ? formData.lookingFor.split(',').map(s => s.trim()).filter(Boolean) : []}
+                            onChange={(roles) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    lookingFor: roles.join(', ')
+                                }));
+                            }}
+                            maxSelections={10}
                         />
-                        <p className="mt-1 text-xs text-gray-500">Separate roles with commas.</p>
+                        <p className="mt-2 text-xs text-gray-500">Select up to 10 roles.</p>
                     </div>
 
                     {/* Member Limit */}
