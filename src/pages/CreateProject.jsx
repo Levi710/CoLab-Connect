@@ -366,6 +366,10 @@ export default function CreateProject() {
                                     <button
                                         type="button"
                                         onClick={() => {
+                                            if (poll.options.length >= 5) {
+                                                addToast('You can add a maximum of 5 options per poll.', 'error');
+                                                return;
+                                            }
                                             const newPolls = [...formData.polls];
                                             newPolls[pIndex].options.push({ text: '', votes: 0 });
                                             setFormData(prev => ({ ...prev, polls: newPolls }));
