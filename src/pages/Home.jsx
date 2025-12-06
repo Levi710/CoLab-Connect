@@ -48,13 +48,27 @@ export default function Home() {
                 api.projects.getAll({ page: 1, limit: 3 })
             ]);
 
-            const mapProject = p => ({
-                ...p,
-                lookingFor: p.looking_for || '',
-                pollQuestion: p.poll_question,
-                isFeatured: p.is_featured,
-                isSponsored: p.is_sponsored
-            });
+            const mapProject = p => {
+                const mapped = {
+                    ...p,
+                    lookingFor: p.looking_for || '',
+                    pollQuestion: p.poll_question,
+                    isFeatured: p.is_featured,
+                    isSponsored: p.is_sponsored
+                };
+
+                // Map poll voted ID to index for the UI
+                if (mapped.polls) {
+                    mapped.polls = mapped.polls.map(poll => {
+                        const votedIndex = poll.user_voted_option_id
+                            ? poll.options.findIndex(opt => opt.id === poll.user_voted_option_id)
+                            : undefined;
+                        // Frontend expects user_voted_option as index
+                        return { ...poll, user_voted_option: votedIndex !== -1 ? votedIndex : undefined };
+                    });
+                }
+                return mapped;
+            };
 
             if (featuredRes.status === 'fulfilled' && Array.isArray(featuredRes.value)) {
                 setFeaturedProjects(featuredRes.value.map(mapProject));

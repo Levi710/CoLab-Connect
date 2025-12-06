@@ -404,15 +404,14 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
                         'question', pl.question,
                         'type', pl.type,
                         'created_at', pl.created_at,
-                        'user_voted_option', (
-                            SELECT option_index 
+                        'user_voted_option_id', (
+                            SELECT option_id 
                             FROM poll_votes pv 
-                            JOIN poll_options po ON pv.poll_option_id = po.id
-                            WHERE po.poll_id = pl.id AND pv.user_id = $1
+                            WHERE pv.poll_id = pl.id AND pv.user_id = $1
                         ),
                         'options', (
                             SELECT json_agg(
-                                json_build_object('text', po.text, 'votes', po.votes)
+                                json_build_object('id', po.id, 'text', po.text, 'votes', po.votes)
                             ) FROM (
                                 SELECT * FROM poll_options po WHERE po.poll_id = pl.id ORDER BY po.id ASC
                             ) po
