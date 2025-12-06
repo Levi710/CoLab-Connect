@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import RoleSelector from '../components/RoleSelector';
 
@@ -21,6 +21,7 @@ export default function CreateProject() {
         status: 'Idea',
         lookingFor: '',
         pollQuestion: '',
+        polls: [],
         memberLimit: 5,
         images: []
     });
@@ -34,6 +35,7 @@ export default function CreateProject() {
                 status: editingProject.status || 'Idea',
                 lookingFor: editingProject.lookingFor || editingProject.looking_for || '',
                 pollQuestion: editingProject.pollQuestion || editingProject.poll_question || '',
+                polls: editingProject.polls || [],
                 memberLimit: editingProject.member_limit || 5,
                 images: editingProject.images || []
             });
@@ -229,7 +231,7 @@ export default function CreateProject() {
                             id="memberLimit"
                             name="memberLimit"
                             min="1"
-                            max="50"
+                            max="1000"
                             className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             value={formData.memberLimit}
                             onChange={handleChange}
@@ -289,6 +291,101 @@ export default function CreateProject() {
                             value={formData.pollQuestion}
                             onChange={handleChange}
                         />
+                    </div>
+
+                    {/* Advanced Poll Builder */}
+                    <div className="border-t border-white/10 pt-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-white">Poll Builder</h3>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        polls: [...(prev.polls || []), { question: '', options: [{ text: '', votes: 0 }, { text: '', votes: 0 }] }]
+                                    }));
+                                }}
+                                className="text-sm text-primary hover:text-white transition-colors flex items-center gap-1"
+                            >
+                                <Plus className="w-4 h-4" /> Add Poll
+                            </button>
+                        </div>
+
+                        {formData.polls && formData.polls.map((poll, pIndex) => (
+                            <div key={pIndex} className="bg-white/5 p-4 rounded-xl border border-white/10 mb-4 space-y-4">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Question {pIndex + 1}</label>
+                                        <input
+                                            type="text"
+                                            value={poll.question}
+                                            onChange={(e) => {
+                                                const newPolls = [...formData.polls];
+                                                newPolls[pIndex].question = e.target.value;
+                                                setFormData(prev => ({ ...prev, polls: newPolls }));
+                                            }}
+                                            className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-primary text-sm"
+                                            placeholder="Ask a question..."
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const newPolls = formData.polls.filter((_, i) => i !== pIndex);
+                                            setFormData(prev => ({ ...prev, polls: newPolls }));
+                                        }}
+                                        className="text-gray-500 hover:text-red-500 p-1"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2 pl-4 border-l-2 border-white/5">
+                                    {poll.options.map((option, oIndex) => (
+                                        <div key={oIndex} className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-gray-600" />
+                                            <input
+                                                type="text"
+                                                value={option.text}
+                                                onChange={(e) => {
+                                                    const newPolls = [...formData.polls];
+                                                    newPolls[pIndex].options[oIndex].text = e.target.value;
+                                                    setFormData(prev => ({ ...prev, polls: newPolls }));
+                                                }}
+                                                className="flex-1 px-3 py-1.5 bg-black/20 border border-white/10 rounded-md text-white placeholder-gray-600 focus:border-primary text-xs"
+                                                placeholder={`Option ${oIndex + 1}`}
+                                            />
+                                            {poll.options.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newPolls = [...formData.polls];
+                                                        newPolls[pIndex].options = poll.options.filter((_, i) => i !== oIndex);
+                                                        setFormData(prev => ({ ...prev, polls: newPolls }));
+                                                    }}
+                                                    className="text-gray-600 hover:text-red-500"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const newPolls = [...formData.polls];
+                                            newPolls[pIndex].options.push({ text: '', votes: 0 });
+                                            setFormData(prev => ({ ...prev, polls: newPolls }));
+                                        }}
+                                        className="text-xs text-gray-500 hover:text-primary flex items-center gap-1 mt-2"
+                                    >
+                                        <Plus className="w-3 h-3" /> Add Option
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+
+
                     </div>
 
                     <div className="flex justify-end pt-4">

@@ -45,6 +45,11 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
             return;
         }
 
+        if (trimmedTerm.length > 20) {
+            addToast('Custom role must be 20 characters or less', 'error');
+            return;
+        }
+
         if (selectedRoles.length >= maxSelections) {
             addToast(`Maximum ${maxSelections} roles allowed`, 'error');
             return;
@@ -124,8 +129,8 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                         onClick={() => handleToggleRole(role.name)}
                                         disabled={!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections}
                                         className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(role.name)
-                                                ? 'bg-primary/20 text-primary border border-primary/30'
-                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                            ? 'bg-primary/20 text-primary border border-primary/30'
+                                            : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
                                             } ${!selectedRoles.includes(role.name) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <span>{role.name}</span>
@@ -173,8 +178,8 @@ export default function RoleSelector({ selectedRoles = [], onChange, maxSelectio
                                             onClick={() => handleToggleRole(role)}
                                             disabled={!selectedRoles.includes(role) && selectedRoles.length >= maxSelections}
                                             className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${selectedRoles.includes(role)
-                                                    ? 'bg-primary/20 text-primary border border-primary/30'
-                                                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
+                                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                                : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-transparent'
                                                 } ${!selectedRoles.includes(role) && selectedRoles.length >= maxSelections ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             <span>{role}</span>

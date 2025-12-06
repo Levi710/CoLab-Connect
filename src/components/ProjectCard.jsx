@@ -4,6 +4,7 @@ import { ThumbsUp, MessageSquare, Star, Users, X, Heart, Share2, Clock, Trending
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import Poll from './Poll';
 
 export default function ProjectCard({ project, isSponsored, isOwner, onDelete, onEdit }) {
     const { currentUser } = useAuth();
@@ -540,6 +541,17 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                     </h4>
                                     <p className="text-sm text-gray-200">{project.category}</p>
                                 </div>
+
+                                {/* Poll Section */}
+                                {project.polls && project.polls.length > 0 && (
+                                    <div className="mb-8">
+                                        <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                            <div className="w-1 h-4 bg-primary rounded-full"></div>
+                                            Active Polls
+                                        </h4>
+                                        <Poll pollData={project.polls} />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end pt-4 border-t border-white/10">
