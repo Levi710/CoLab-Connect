@@ -733,6 +733,79 @@ app.post('/api/comments/:id/like', authenticateToken, async (req, res) => {
             res.json({ liked: true, likes: parseInt(countRes.rows[0].count) });
         }
     } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to toggle comment like' });
+    }
+});
+
+// Vote on Poll Endpoint
+app.post('/api/polls/:id/vote', authenticateToken, async (req, res) => {
+    const pollId = req.params.id;
+    const { optionIndex } = req.body; // 0-based index from frontend
+    const userId = req.user.id;
+
+    try {
+        // Get all options to map Index -> ID
+        const optionsRes = await db.query('SELECT id FROM poll_options WHERE poll_id = $1 ORDER BY id ASC', [pollId]);
+        const optionsMap = optionsRes.rows;
+
+        if (optionIndex < 0 || optionIndex >= optionsMap.length) {
+            return res.status(400).json({ error: 'Invalid option index' });
+        }
+
+        const targetOptionId = optionsMap[optionIndex].id;
+
+        // Check existing vote
+        const existingVote = await db.query(
+            'SELECT * FROM poll_votes WHERE poll_id = $1 AND user_id = $2',
+            [pollId, userId]
+        );
+
+        // Transaction-like logic
+        if (existingVote.rows.length > 0) {
+            const previousOptionId = existingVote.rows[0].option_id;
+
+            // Remove old vote
+            await db.query('DELETE FROM poll_votes WHERE id = $1', [existingVote.rows[0].id]);
+
+            // Update count for previous option
+            await db.query(`
+                UPDATE poll_options 
+                SET votes = (SELECT COUNT(*) FROM poll_votes WHERE poll_id = $1 AND option_id = $2)
+                WHERE id = $2
+            `, [pollId, previousOptionId]);
+
+            // If clicking same option, it's an unvote - we are done
+            if (previousOptionId === targetOptionId) {
+                return res.json({ success: true, action: 'unvoted' });
+            }
+        }
+
+        // Insert new vote (for new vote or switch)
+        await db.query(
+            'INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ($1, $2, $3)',
+            [pollId, targetOptionId, userId]
+        );
+
+        // Update count for new option
+        await db.query(`
+            UPDATE poll_options 
+            SET votes = (SELECT COUNT(*) FROM poll_votes WHERE poll_id = $1 AND option_id = $2)
+            WHERE id = $2
+        `, [pollId, targetOptionId]);
+
+        res.json({ success: true, action: 'voted' });
+
+    } catch (err) {
+        console.error('Vote failed:', err);
+        res.status(500).json({ error: 'Failed to vote' });
+    }
+});
+
+app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+    try {
         const commentRes = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
         if (commentRes.rows.length === 0) return res.status(404).json({ error: 'Comment not found' });
         const comment = commentRes.rows[0];
