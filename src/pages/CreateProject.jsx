@@ -277,22 +277,6 @@ export default function CreateProject() {
                         </p>
                     </div>
 
-                    {/* Poll Question (Optional) */}
-                    <div>
-                        <label htmlFor="pollQuestion" className="block text-sm font-medium text-gray-300 mb-1">
-                            Poll Question (Optional)
-                        </label>
-                        <input
-                            type="text"
-                            id="pollQuestion"
-                            name="pollQuestion"
-                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                            placeholder="e.g., What feature should we build next?"
-                            value={formData.pollQuestion}
-                            onChange={handleChange}
-                        />
-                    </div>
-
                     {/* Advanced Poll Builder */}
                     <div className="border-t border-white/10 pt-6">
                         <div className="flex justify-between items-center mb-4">
@@ -315,10 +299,14 @@ export default function CreateProject() {
                             <div key={pIndex} className="bg-white/5 p-4 rounded-xl border border-white/10 mb-4 space-y-4">
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1">
-                                        <label className="block text-xs font-medium text-gray-400 mb-1">Question {pIndex + 1}</label>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-xs font-medium text-gray-400">Question {pIndex + 1}</label>
+                                            <span className="text-[10px] text-gray-500">{poll.question.length}/100</span>
+                                        </div>
                                         <input
                                             type="text"
                                             value={poll.question}
+                                            maxLength={100}
                                             onChange={(e) => {
                                                 const newPolls = [...formData.polls];
                                                 newPolls[pIndex].question = e.target.value;
@@ -347,13 +335,14 @@ export default function CreateProject() {
                                             <input
                                                 type="text"
                                                 value={option.text}
+                                                maxLength={50}
                                                 onChange={(e) => {
                                                     const newPolls = [...formData.polls];
                                                     newPolls[pIndex].options[oIndex].text = e.target.value;
                                                     setFormData(prev => ({ ...prev, polls: newPolls }));
                                                 }}
                                                 className="flex-1 px-3 py-1.5 bg-black/20 border border-white/10 rounded-md text-white placeholder-gray-600 focus:border-primary text-xs"
-                                                placeholder={`Option ${oIndex + 1}`}
+                                                placeholder={`Option ${oIndex + 1} (max 50 chars)`}
                                             />
                                             {poll.options.length > 2 && (
                                                 <button
@@ -384,8 +373,6 @@ export default function CreateProject() {
                                 </div>
                             </div>
                         ))}
-
-
                     </div>
 
                     <div className="flex justify-end pt-4">

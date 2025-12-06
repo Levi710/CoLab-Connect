@@ -447,7 +447,12 @@ export default function Profile() {
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border shadow-sm ${profileUser.is_system ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-gold/10 text-gold border-gold/30 shadow-gold/10'}`}>
+                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border shadow-sm ${profileUser.is_system
+                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                    : profileUser.is_premium
+                                        ? 'bg-gold/10 text-gold border-gold/30 shadow-gold/10'
+                                        : 'bg-white/5 text-gray-400 border-white/10'
+                                }`}>
                                 {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
                             {/* Edit Profile & Manage Access Buttons */}
