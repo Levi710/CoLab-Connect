@@ -159,11 +159,7 @@ export default function Home() {
             <div className="bg-white/10 p-8 rounded-xl border border-red-500/50 text-center max-w-lg">
                 <h2 className="text-2xl font-bold mb-4">Error Loading Projects</h2>
                 <p className="mb-6 text-gray-300">{error}</p>
-                <div className="mb-6 text-left bg-black/50 p-4 rounded text-xs font-mono overflow-auto max-h-40">
-                    DEBUG INFO:
-                    <br />
-                    API: {api.projects.getAll.toString().slice(0, 50)}...
-                </div>
+
                 <button
                     onClick={fetchAllProjects}
                     className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
