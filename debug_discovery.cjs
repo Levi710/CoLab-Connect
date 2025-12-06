@@ -21,11 +21,9 @@ async function check() {
 
 
         const resJoin = await pool.query('SELECT COUNT(*) FROM projects p JOIN users u ON p.user_id = u.id');
+        console.log('-----------------------------------');
         console.log('Projects with valid User (JOIN):', resJoin.rows[0].count);
-
-        const sample = await pool.query('SELECT id, title, is_featured FROM projects LIMIT 3');
-        console.log('Sample Projects:', sample.rows);
-
+        console.log('-----------------------------------');
     } catch (err) {
         console.error('Error:', err);
     } finally {
