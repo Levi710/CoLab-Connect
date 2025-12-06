@@ -19,6 +19,12 @@ export default function Home() {
     const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
     const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || 'All');
 
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+    const observerTarget = React.useRef(null);
+
     const [visionText, setVisionText] = useState('Vision');
     const languages = ['Vision', 'दृष्टि', 'ビジョン', '비전', 'Visión', 'Visione', 'Visão', 'Rؤية', 'Viziune'];
 
@@ -31,27 +37,64 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
+    const fetchProjects = async (pageNum, isInitial = false) => {
+        try {
+            if (isInitial) setLoading(true);
+            else setIsFetchingMore(true);
+
+            // Initial load gets 3, subsequent loads get 10
+            const limit = isInitial ? 3 : 10;
+            const data = await api.projects.getAll({ page: pageNum, limit });
+
+            if (data.length < limit) setHasMore(false);
+
+            const formattedData = data.map(p => ({
+                ...p,
+                lookingFor: p.looking_for || '',
+                pollQuestion: p.poll_question,
+                isFeatured: p.is_featured,
+                isSponsored: p.is_sponsored
+            }));
+
+            setProjects(prev => isInitial ? formattedData : [...prev, ...formattedData]);
+        } catch (err) {
+            console.error('Failed to fetch projects:', err);
+        } finally {
+            setLoading(false);
+            setIsFetchingMore(false);
+        }
+    };
+
+    // Initial Load
     useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const data = await api.projects.getAll();
-                // Map snake_case from DB to camelCase for components
-                const formattedData = data.map(p => ({
-                    ...p,
-                    lookingFor: p.looking_for || '',
-                    pollQuestion: p.poll_question,
-                    isFeatured: p.is_featured,
-                    isSponsored: p.is_sponsored
-                }));
-                setProjects(formattedData);
-            } catch (err) {
-                console.error('Failed to fetch projects:', err);
-            } finally {
-                setLoading(false);
+        fetchProjects(1, true);
+    }, []);
+
+    // Intersection Observer for Infinite Scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMore && !loading && !isFetchingMore) {
+                    setPage(prev => {
+                        const nextPage = prev + 1;
+                        fetchProjects(nextPage, false);
+                        return nextPage;
+                    });
+                }
+            },
+            { threshold: 1.0 }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => {
+            if (observerTarget.current) {
+                observer.unobserve(observerTarget.current);
             }
         };
-        fetchProjects();
-    }, []);
+    }, [hasMore, loading, isFetchingMore]);
 
     // Sync local state with URL params when they change (e.g. back button)
     useEffect(() => {
@@ -242,6 +285,12 @@ export default function Home() {
                                 <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
                             ))}
                         </div>
+                        {/* Sentinel for Infinite Scroll */}
+                        {hasMore && (
+                            <div ref={observerTarget} className="h-20 flex items-center justify-center mt-8">
+                                {isFetchingMore && <div className="text-gray-400">Loading more projects...</div>}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
