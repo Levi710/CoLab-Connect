@@ -769,10 +769,14 @@ app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
         // Cascade delete handled by DB constraints mostly, but manual cleanup for safety
         await db.query('DELETE FROM project_images WHERE project_id = $1', [projectId]);
         await db.query('DELETE FROM project_members WHERE project_id = $1', [projectId]);
+
+        // Delete messages linked to requests first to satisfy FK constraints
+        await db.query('DELETE FROM messages WHERE request_id IN (SELECT id FROM requests WHERE project_id = $1)', [projectId]);
+        await db.query('DELETE FROM messages WHERE project_id = $1', [projectId]);
+
         await db.query('DELETE FROM requests WHERE project_id = $1', [projectId]);
         await db.query('DELETE FROM likes WHERE project_id = $1', [projectId]);
         await db.query('DELETE FROM comments WHERE project_id = $1', [projectId]);
-        await db.query('DELETE FROM messages WHERE project_id = $1', [projectId]);
         await db.query('DELETE FROM projects WHERE id = $1', [projectId]);
 
         res.json({ message: 'Project deleted successfully' });
