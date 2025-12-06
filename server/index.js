@@ -404,7 +404,7 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
                     json_build_object(
                         'id', pl.id,
                         'question', pl.question,
-                        'type', pl.type,
+
                         'created_at', pl.created_at,
                         'user_voted_option_id', (
                             SELECT option_id 
