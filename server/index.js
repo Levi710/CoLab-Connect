@@ -357,7 +357,9 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
             SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
             (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
-            (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
+            (SELECT json_agg(t.image_url) FROM (SELECT image_url FROM project_images pi WHERE pi.project_id = p.id LIMIT 1) t) as images,
+            (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
             (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
             (
                 SELECT json_agg(
