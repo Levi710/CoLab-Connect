@@ -379,6 +379,7 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
             FROM projects p 
             JOIN users u ON p.user_id = u.id
             ORDER BY created_at DESC
+            LIMIT 50
         `, [userId]);
         res.json(result.rows);
     } catch (err) {
