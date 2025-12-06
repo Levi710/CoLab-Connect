@@ -49,13 +49,20 @@ export default function Home() {
                         isSponsored: p.is_sponsored
                     };
 
-                    if (mapped.polls) {
+                    if (Array.isArray(mapped.polls)) {
                         mapped.polls = mapped.polls.map(poll => {
+                            const options = Array.isArray(poll.options) ? poll.options : [];
                             const votedIndex = poll.user_voted_option_id
-                                ? poll.options.findIndex(opt => opt.id === poll.user_voted_option_id)
+                                ? options.findIndex(opt => opt.id === poll.user_voted_option_id)
                                 : undefined;
-                            return { ...poll, user_voted_option: votedIndex !== -1 ? votedIndex : undefined };
+                            return {
+                                ...poll,
+                                options,
+                                user_voted_option: votedIndex !== -1 ? votedIndex : undefined
+                            };
                         });
+                    } else {
+                        mapped.polls = [];
                     }
                     return mapped;
                 };
