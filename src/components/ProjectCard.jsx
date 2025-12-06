@@ -294,8 +294,8 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                     </div>
                 )}
 
-                {/* Project Images */}
-                {project.images && project.images.length > 0 && (
+                {/* Project Images or Placeholder */}
+                {project.images && project.images.length > 0 ? (
                     <div className="h-48 w-full overflow-x-auto flex snap-x snap-mandatory custom-scrollbar shrink-0">
                         {project.images.map((img, idx) => (
                             <img
@@ -305,6 +305,11 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 className="h-full w-full object-cover flex-shrink-0 snap-center"
                             />
                         ))}
+                    </div>
+                ) : (
+                    <div className="h-48 w-full shrink-0 bg-gradient-to-br from-white/5 to-white/10 flex items-center justify-center relative overflow-hidden group-hover:from-primary/10 group-hover:to-primary/5 transition-colors">
+                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+                        <ImageIcon className="w-12 h-12 text-white/10 group-hover:text-primary/20 transition-colors" />
                     </div>
                 )}
 
