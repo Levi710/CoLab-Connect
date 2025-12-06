@@ -350,6 +350,34 @@ const optionalAuthenticateToken = (req, res, next) => {
     });
 };
 
+// Get Featured Projects (and PotM candidates)
+app.get('/api/projects/featured', optionalAuthenticateToken, async (req, res) => {
+    try {
+        const currentUserId = req.user ? req.user.id : null;
+        const result = await db.query(`
+            SELECT p.*, u.username as owner_name, u.photo_url as owner_photo, u.public_id as owner_public_id,
+            (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
+            (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
+            CASE WHEN $1::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) ELSE FALSE END as is_liked,
+            (
+                SELECT json_agg(pi.image_url)
+                FROM (
+                    SELECT image_url FROM project_images WHERE project_id = p.id ORDER BY id ASC LIMIT 1
+                ) pi
+            ) as images
+            FROM projects p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.is_featured = TRUE
+            ORDER BY p.created_at DESC
+        `, [currentUserId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch featured projects' });
+    }
+});
+
 app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;

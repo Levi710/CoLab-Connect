@@ -12,18 +12,21 @@ export default function Home() {
     const { addToast } = useToast();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [projects, setProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
 
-    // Initialize state from URL params
-    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-    const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || 'All');
+    // Main Data State
+    const [projects, setProjects] = useState([]); // The Feed
+    const [featuredProjects, setFeaturedProjects] = useState([]); // Featured (Top)
+    const [loading, setLoading] = useState(true);
 
     // Pagination State
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const observerTarget = React.useRef(null);
+
+    // Initial Filter State
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+    const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || 'All');
 
     const [visionText, setVisionText] = useState('Vision');
     const languages = ['Vision', 'दृष्टि', 'ビジョン', '비전', 'Visión', 'Visione', 'Visão', 'Rؤية', 'Viziune'];
@@ -37,16 +40,39 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
-    const fetchProjects = async (pageNum, isInitial = false) => {
+    const fetchInitialData = async () => {
         try {
-            if (isInitial) setLoading(true);
-            else setIsFetchingMore(true);
+            setLoading(true);
+            const [featuredData, feedData] = await Promise.all([
+                api.projects.getFeatured(),
+                api.projects.getAll({ page: 1, limit: 3 })
+            ]);
 
-            // Initial load gets 3, subsequent loads get 10
-            const limit = isInitial ? 3 : 10;
-            const data = await api.projects.getAll({ page: pageNum, limit });
+            const mapProject = p => ({
+                ...p,
+                lookingFor: p.looking_for || '',
+                pollQuestion: p.poll_question,
+                isFeatured: p.is_featured,
+                isSponsored: p.is_sponsored
+            });
 
-            if (data.length < limit) setHasMore(false);
+            setFeaturedProjects(featuredData.map(mapProject));
+            setProjects(feedData.map(mapProject));
+
+            if (feedData.length < 3) setHasMore(false);
+        } catch (err) {
+            console.error('Failed to fetch initial data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchMoreProjects = async (pageNum) => {
+        try {
+            setIsFetchingMore(true);
+            const data = await api.projects.getAll({ page: pageNum, limit: 10 });
+
+            if (data.length < 10) setHasMore(false);
 
             const formattedData = data.map(p => ({
                 ...p,
@@ -56,18 +82,18 @@ export default function Home() {
                 isSponsored: p.is_sponsored
             }));
 
-            setProjects(prev => isInitial ? formattedData : [...prev, ...formattedData]);
+            setProjects(prev => [...prev, ...formattedData]);
         } catch (err) {
-            console.error('Failed to fetch projects:', err);
+            console.error('Failed to fetch more projects:', err);
+            setHasMore(false);
         } finally {
-            setLoading(false);
             setIsFetchingMore(false);
         }
     };
 
     // Initial Load
     useEffect(() => {
-        fetchProjects(1, true);
+        fetchInitialData();
     }, []);
 
     // Intersection Observer for Infinite Scroll
@@ -77,7 +103,7 @@ export default function Home() {
                 if (entries[0].isIntersecting && hasMore && !loading && !isFetchingMore) {
                     setPage(prev => {
                         const nextPage = prev + 1;
-                        fetchProjects(nextPage, false);
+                        fetchMoreProjects(nextPage);
                         return nextPage;
                     });
                 }
@@ -102,7 +128,7 @@ export default function Home() {
         setFilterCategory(searchParams.get('category') || 'All');
     }, [searchParams]);
 
-    // Debounce search: Update URL params after 2 seconds of inactivity
+    // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearchParams(prev => {
@@ -115,35 +141,27 @@ export default function Home() {
 
                 return newParams;
             });
-        }, 2000); // 2 seconds delay as requested
+        }, 2000);
 
         return () => clearTimeout(timer);
     }, [searchTerm, filterCategory, setSearchParams]);
 
-    // Handle immediate filter change (optional, but usually filters are immediate. User asked for search throttling)
-    // For now, I'll include category in the debounce to keep it consistent with the "wait" request, 
-    // or I could separate them. I'll keep them together for simplicity.
-
-    /* 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        // Search is now handled by the debounce effect
-    }; 
-    */
-
-    // Filter projects based on URL params (source of truth)
+    // Client-side filtering for the loaded feed
     const currentSearch = searchParams.get('q') || '';
     const currentCategory = searchParams.get('category') || 'All';
 
-    const filteredProjects = projects.filter(project => {
-        const matchesSearch = project.title.toLowerCase().includes(currentSearch.toLowerCase()) ||
-            project.description.toLowerCase().includes(currentSearch.toLowerCase());
-        const matchesCategory = currentCategory === 'All' || project.category === currentCategory;
+    const filterFn = (p) => {
+        const matchesSearch = p.title.toLowerCase().includes(currentSearch.toLowerCase()) ||
+            p.description.toLowerCase().includes(currentSearch.toLowerCase());
+        const matchesCategory = currentCategory === 'All' || p.category === currentCategory;
         return matchesSearch && matchesCategory;
-    });
+    };
 
-    // Logic for project of the month: Prefer system-selected featured project, fallback to most likes
-    const projectOfTheMonth = projects.find(p => p.is_featured) || [...filteredProjects].sort((a, b) => b.likes - a.likes)[0];
+    const filteredFeed = projects.filter(filterFn);
+
+    // Project of the Month Logic
+    // Prefer first featured project, fallback to most liked project in the current feed
+    const projectOfTheMonth = featuredProjects.length > 0 ? featuredProjects[0] : [...projects].sort((a, b) => b.votes - a.votes)[0];
 
     const handleEditProject = (project) => {
         const isPremium = currentUser?.is_premium;
@@ -168,8 +186,6 @@ export default function Home() {
             </div>
         </div>
     );
-
-
 
     return (
         <div className="min-h-screen text-gray-100 font-sans selection:bg-primary/30">
@@ -212,20 +228,22 @@ export default function Home() {
 
             {/* Main Content Area */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-20 relative z-20">
-                {/* Featured Projects (Moved above Search) */}
-                <div className="mb-16">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-serif font-bold text-white flex items-center gap-2">
-                            <span className="w-1 h-8 bg-gold-gradient rounded-full"></span>
-                            Featured Projects
-                        </h2>
+                {/* Featured Projects */}
+                {featuredProjects.length > 0 && (
+                    <div className="mb-16">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-3xl font-serif font-bold text-white flex items-center gap-2">
+                                <span className="w-1 h-8 bg-gold-gradient rounded-full"></span>
+                                Featured Projects
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {featuredProjects.map(project => (
+                                <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
+                            ))}
+                        </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredProjects.filter(p => p.is_featured).map(project => (
-                            <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
-                        ))}
-                    </div>
-                </div>
+                )}
 
                 {/* Project of the Month */}
                 {projectOfTheMonth && (
@@ -276,13 +294,13 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* All Projects - Only visible to logged in users */}
+                {/* All Projects Feed - Only visible to logged in users */}
                 {currentUser && (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-8">All Projects</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredProjects.filter(p => !p.is_featured && p.id !== projectOfTheMonth?.id).map(project => (
-                                <ProjectCard key={project.id} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
+                            {filteredFeed.map((project, index) => (
+                                <ProjectCard key={project.id || index} project={project} isOwner={project.user_id === currentUser?.id} onEdit={handleEditProject} />
                             ))}
                         </div>
                         {/* Sentinel for Infinite Scroll */}

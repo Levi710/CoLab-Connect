@@ -87,6 +87,13 @@ export const api = {
         }
     },
     projects: {
+        getFeatured: async () => {
+            const res = await fetch(`${API_URL}/projects/featured`, {
+                headers: getHeaders(),
+            });
+            if (!res.ok) throw new Error('Failed to fetch featured projects');
+            return res.json();
+        },
         getAll: async (params = {}) => {
             const queryString = new URLSearchParams(params).toString();
             const res = await fetch(`${API_URL}/projects?${queryString}`, {
