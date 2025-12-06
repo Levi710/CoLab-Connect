@@ -710,15 +710,20 @@ app.post('/api/polls/:id/vote', authenticateToken, async (req, res) => {
         const optionsMap = optionsRes.rows; // Array of IDs in order
 
         // Revert usage: if user clicks same option, we assume unvote
+        // Revert usage: if user clicks same option, we assume unvote
         if (existingVote.rows.length > 0) {
             const previousOptionIndex = existingVote.rows[0].option_id;
 
-            // Decrement previous
-            const prevOptionDbId = optionsMap[previousOptionIndex].id;
-            await db.query('UPDATE poll_options SET votes = votes - 1 WHERE id = $1', [prevOptionDbId]);
-
             // Remove vote record
             await db.query('DELETE FROM poll_votes WHERE id = $1', [existingVote.rows[0].id]);
+
+            // Recalculate votes for the previous option
+            const prevOptionDbId = optionsMap[previousOptionIndex].id;
+            await db.query(`
+                UPDATE poll_options 
+                SET votes = (SELECT COUNT(*) FROM poll_votes WHERE poll_id = $1 AND option_id = $2)
+                WHERE id = $3
+            `, [pollId, previousOptionIndex, prevOptionDbId]);
 
             if (previousOptionIndex === optionIndex) {
                 return res.json({ success: true, action: 'unvoted' });
@@ -726,13 +731,18 @@ app.post('/api/polls/:id/vote', authenticateToken, async (req, res) => {
         }
 
         // Vote (or switch)
-        const newOptionDbId = optionsMap[optionIndex].id;
-        await db.query('UPDATE poll_options SET votes = votes + 1 WHERE id = $1', [newOptionDbId]);
-
         await db.query(
             'INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ($1, $2, $3)',
             [pollId, optionIndex, userId]
         );
+
+        // Recalculate votes for the new option
+        const newOptionDbId = optionsMap[optionIndex].id;
+        await db.query(`
+            UPDATE poll_options 
+            SET votes = (SELECT COUNT(*) FROM poll_votes WHERE poll_id = $1 AND option_id = $2)
+            WHERE id = $3
+        `, [pollId, optionIndex, newOptionDbId]);
 
         res.json({ success: true, action: 'voted' });
     } catch (err) {
