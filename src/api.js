@@ -258,7 +258,10 @@ export const api = {
                 headers: getHeaders(),
                 body: JSON.stringify({ status }),
             });
-            if (!res.ok) throw new Error('Failed to update request status');
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to update request status');
+            }
             return res.json();
         },
         delete: async (requestId) => {

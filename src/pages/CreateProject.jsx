@@ -92,6 +92,11 @@ export default function CreateProject() {
             return;
         }
 
+        if (formData.memberLimit < 2) {
+            addToast('Team size limit must be at least 2.', 'error');
+            return;
+        }
+
         if (formData.polls && formData.polls.length > 0) {
             for (const poll of formData.polls) {
                 if (!poll.question || !poll.question.trim()) {
@@ -244,7 +249,7 @@ export default function CreateProject() {
                             type="number"
                             id="memberLimit"
                             name="memberLimit"
-                            min="1"
+                            min="2"
                             max="1000"
                             className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             value={formData.memberLimit}

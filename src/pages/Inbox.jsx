@@ -55,7 +55,11 @@ export default function Inbox() {
             addToast(`Request ${status}`, 'success');
         } catch (error) {
             console.error('Failed to update status:', error);
-            addToast('Failed to update request status', 'error');
+            if (error.message === 'Project is full') {
+                addToast('Max team size already reached', 'error');
+            } else {
+                addToast(error.message || 'Failed to update request status', 'error');
+            }
         }
     };
 
