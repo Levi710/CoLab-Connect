@@ -43,7 +43,7 @@ export default function Home() {
     const fetchInitialData = async () => {
         try {
             setLoading(true);
-            const [featuredData, feedData] = await Promise.all([
+            const [featuredRes, feedRes] = await Promise.allSettled([
                 api.projects.getFeatured(),
                 api.projects.getAll({ page: 1, limit: 3 })
             ]);
@@ -56,10 +56,21 @@ export default function Home() {
                 isSponsored: p.is_sponsored
             });
 
-            setFeaturedProjects(featuredData.map(mapProject));
-            setProjects(feedData.map(mapProject));
+            if (featuredRes.status === 'fulfilled' && Array.isArray(featuredRes.value)) {
+                setFeaturedProjects(featuredRes.value.map(mapProject));
+            } else {
+                console.error('Featured fetch failed or invalid:', featuredRes.reason || featuredRes.value);
+            }
 
-            if (feedData.length < 3) setHasMore(false);
+            if (feedRes.status === 'fulfilled' && Array.isArray(feedRes.value)) {
+                const data = feedRes.value;
+                setProjects(data.map(mapProject));
+                if (data.length < 3) setHasMore(false);
+            } else {
+                console.error('Feed fetch failed or invalid:', feedRes.reason || feedRes.value);
+                setHasMore(false);
+            }
+
         } catch (err) {
             console.error('Failed to fetch initial data:', err);
         } finally {
