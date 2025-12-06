@@ -92,6 +92,20 @@ export default function CreateProject() {
             return;
         }
 
+        if (formData.polls && formData.polls.length > 0) {
+            for (const poll of formData.polls) {
+                if (!poll.question || !poll.question.trim()) {
+                    addToast('Poll questions cannot be empty.', 'error');
+                    return;
+                }
+                const validOptions = poll.options.filter(opt => opt.text && opt.text.trim());
+                if (validOptions.length < 2) {
+                    addToast('Each poll must have at least 2 valid options.', 'error');
+                    return;
+                }
+            }
+        }
+
         setLoading(true);
         try {
             if (editingProject) {

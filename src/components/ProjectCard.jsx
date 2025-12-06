@@ -114,14 +114,28 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
     const handleCommentLike = async (commentId) => {
         if (!currentUser) return addToast('Please login to like comments', 'info');
+
+        // Optimistic Update
+        const originalComments = [...comments];
+        setComments(comments.map(c => {
+            if (c.id === commentId) {
+                const isLiked = c.is_liked;
+                return {
+                    ...c,
+                    is_liked: !isLiked,
+                    likes_count: isLiked ? (c.likes_count - 1) : (c.likes_count + 1)
+                };
+            }
+            return c;
+        }));
+
         try {
-            const res = await api.projects.toggleCommentLike(commentId);
-            setComments(comments.map(c =>
-                c.id === commentId ? { ...c, likes_count: res.likes } : c
-            ));
+            await api.projects.toggleCommentLike(commentId);
         } catch (err) {
             console.error('Failed to like comment:', err);
             addToast('Failed to like comment', 'error');
+            // Rollback
+            setComments(originalComments);
         }
     };
 
@@ -226,9 +240,9 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                             {/* Like Button */}
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleCommentLike(comment.id); }}
-                                className="flex items-center gap-1 text-gray-500 hover:text-pink-500 transition-colors"
+                                className={`flex items-center gap-1 transition-colors ${comment.is_liked ? 'text-pink-500' : 'text-gray-500 hover:text-pink-500'}`}
                             >
-                                <Heart className={`w-3 h-3 ${comment.likes_count > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                <Heart className={`w-3 h-3 ${comment.is_liked ? 'fill-pink-500' : ''}`} />
                                 <span className="text-[10px]">{comment.likes_count || 0}</span>
                             </button>
                         </div>

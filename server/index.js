@@ -165,6 +165,14 @@ async function initDb() {
                 poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
                 text TEXT NOT NULL,
                 votes INTEGER DEFAULT 0
+            )`,
+            `CREATE TABLE IF NOT EXISTS poll_votes (
+                id SERIAL PRIMARY KEY,
+                poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
+                option_id INTEGER NOT NULL,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(poll_id, user_id)
             )`
         ];
 
@@ -354,11 +362,15 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
             (
                 SELECT json_agg(
                     json_build_object(
+                        'id', pl.id,
                         'question', pl.question,
                         'options', (
                             SELECT json_agg(
                                 json_build_object('text', po.text, 'votes', po.votes)
                             ) FROM poll_options po WHERE po.poll_id = pl.id
+                        ),
+                        'user_voted_option', (
+                            SELECT option_id FROM poll_votes pv WHERE pv.poll_id = pl.id AND pv.user_id = $1
                         )
                     )
                 ) FROM polls pl WHERE pl.project_id = p.id
@@ -387,11 +399,15 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
             (
                 SELECT json_agg(
                     json_build_object(
+                        'id', pl.id,
                         'question', pl.question,
                         'options', (
                             SELECT json_agg(
                                 json_build_object('text', po.text, 'votes', po.votes)
                             ) FROM poll_options po WHERE po.poll_id = pl.id
+                        ),
+                        'user_voted_option', (
+                            SELECT option_id FROM poll_votes pv WHERE pv.poll_id = pl.id AND pv.user_id = $1
                         )
                     )
                 ) FROM polls pl WHERE pl.project_id = p.id
@@ -672,6 +688,54 @@ app.post('/api/comments/:id/like', authenticateToken, async (req, res) => {
     }
 });
 
+// Vote on Poll Endpoint
+app.post('/api/polls/:id/vote', authenticateToken, async (req, res) => {
+    const pollId = req.params.id;
+    const { optionIndex } = req.body; // 0-based index from frontend
+    const userId = req.user.id;
+
+    try {
+        // 1. Check existing vote
+        const existingVote = await db.query(
+            'SELECT * FROM poll_votes WHERE poll_id = $1 AND user_id = $2',
+            [pollId, userId]
+        );
+
+        const optionsRes = await db.query('SELECT id FROM poll_options WHERE poll_id = $1 ORDER BY id ASC', [pollId]);
+        const optionsMap = optionsRes.rows; // Array of IDs in order
+
+        // Revert usage: if user clicks same option, we assume unvote
+        if (existingVote.rows.length > 0) {
+            const previousOptionIndex = existingVote.rows[0].option_id;
+
+            // Decrement previous
+            const prevOptionDbId = optionsMap[previousOptionIndex].id;
+            await db.query('UPDATE poll_options SET votes = votes - 1 WHERE id = $1', [prevOptionDbId]);
+
+            // Remove vote record
+            await db.query('DELETE FROM poll_votes WHERE id = $1', [existingVote.rows[0].id]);
+
+            if (previousOptionIndex === optionIndex) {
+                return res.json({ success: true, action: 'unvoted' });
+            }
+        }
+
+        // Vote (or switch)
+        const newOptionDbId = optionsMap[optionIndex].id;
+        await db.query('UPDATE poll_options SET votes = votes + 1 WHERE id = $1', [newOptionDbId]);
+
+        await db.query(
+            'INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ($1, $2, $3)',
+            [pollId, optionIndex, userId]
+        );
+
+        res.json({ success: true, action: 'voted' });
+    } catch (err) {
+        console.error('Vote error:', err);
+        res.status(500).json({ error: 'Failed to record vote' });
+    }
+});
+
 app.delete('/api/comments/:id', authenticateToken, async (req, res) => {
     const commentId = req.params.id;
     const userId = req.user.id;
@@ -729,17 +793,20 @@ app.post('/api/projects/:id/view', async (req, res) => {
     }
 });
 
-app.get('/api/projects/:id/comments', async (req, res) => {
+app.get('/api/projects/:id/comments', optionalAuthenticateToken, async (req, res) => {
     const projectId = req.params.id;
+    const userId = req.user ? req.user.id : null;
+
     try {
         const result = await db.query(`
-            SELECT c.*, u.username, u.photo_url,
-            (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) as likes_count
+            SELECT c.*, u.username, u.photo_url, u.public_id as user_public_id,
+            (SELECT COUNT(*)::int FROM comment_likes cl WHERE cl.comment_id = c.id) as likes_count,
+            CASE WHEN $2::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = $2) ELSE FALSE END as is_liked
             FROM comments c
             JOIN users u ON c.user_id = u.id
             WHERE c.project_id = $1
             ORDER BY c.created_at DESC
-    `, [projectId]);
+    `, [projectId, userId]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);

@@ -1,21 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { api } from '../api';
 
 export default function Poll({ pollData }) {
-    // Local state to track votes for this session
-    // In a real app, this would come from the backend
+    // Polls now includes 'user_voted_option' (option_id/index) if signed in
     const [polls, setPolls] = useState(pollData || []);
     const [voted, setVoted] = useState({});
 
+    // Initialize voted state from props
+    useEffect(() => {
+        if (pollData) {
+            setPolls(pollData);
+            const initialVoted = {};
+            pollData.forEach((poll, index) => {
+                if (poll.user_voted_option !== undefined && poll.user_voted_option !== null) {
+                    initialVoted[index] = poll.user_voted_option;
+                }
+            });
+            setVoted(initialVoted);
+        }
+    }, [pollData]);
+
     if (!polls || polls.length === 0) return null;
 
-    const handleVote = (questionIndex, optionIndex) => {
-        if (voted[questionIndex]) return;
+    const handleVote = async (questionIndex, optionIndex) => {
+        const poll = polls[questionIndex];
 
-        const updatedPolls = [...polls];
-        updatedPolls[questionIndex].options[optionIndex].votes += 1;
-        setPolls(updatedPolls);
-        setVoted(prev => ({ ...prev, [questionIndex]: true }));
+        // Optimistic UI Update
+        const previousVoted = { ...voted };
+        const previousPolls = JSON.parse(JSON.stringify(polls));
+
+        try {
+            // Apply optimistic change
+            const updatedPolls = [...polls];
+            const currentVote = voted[questionIndex];
+
+            // Revert/Unvote
+            if (currentVote === optionIndex) {
+                updatedPolls[questionIndex].options[optionIndex].votes -= 1;
+                setVoted(prev => {
+                    const newState = { ...prev };
+                    delete newState[questionIndex];
+                    return newState;
+                });
+            } else {
+                // Switch or New Vote
+                if (currentVote !== undefined) {
+                    updatedPolls[questionIndex].options[currentVote].votes -= 1;
+                }
+                updatedPolls[questionIndex].options[optionIndex].votes += 1;
+                setVoted(prev => ({ ...prev, [questionIndex]: optionIndex }));
+            }
+            setPolls(updatedPolls);
+
+            // API Call
+            await api.polls.vote(poll.id, optionIndex);
+        } catch (err) {
+            console.error('Vote failed:', err);
+            // Revert state on error
+            setVoted(previousVoted);
+            setPolls(previousPolls);
+        }
     };
 
     const calculatePercentage = (votes, totalVotes) => {
@@ -27,7 +72,8 @@ export default function Poll({ pollData }) {
         <div className="space-y-6">
             {polls.map((poll, qIndex) => {
                 const totalVotes = poll.options.reduce((acc, curr) => acc + (curr.votes || 0), 0);
-                const hasVoted = voted[qIndex];
+                const userVoteIndex = voted[qIndex];
+                const hasVoted = userVoteIndex !== undefined;
 
                 return (
                     <div key={qIndex} className="bg-white/5 p-4 rounded-xl border border-white/5">
@@ -35,6 +81,8 @@ export default function Poll({ pollData }) {
                         <div className="space-y-3">
                             {poll.options.map((option, oIndex) => {
                                 const percentage = calculatePercentage(option.votes || 0, totalVotes);
+                                const isSelected = userVoteIndex === oIndex;
+
                                 return (
                                     <div key={oIndex} className="relative group">
                                         {/* Result Background Bar */}
@@ -47,18 +95,17 @@ export default function Poll({ pollData }) {
 
                                         <button
                                             onClick={() => handleVote(qIndex, oIndex)}
-                                            disabled={hasVoted}
-                                            className={`relative w-full flex items-center justify-between p-3 rounded-lg border transition-all ${hasVoted
-                                                    ? 'border-transparent cursor-default'
-                                                    : 'bg-black/20 border-white/10 hover:bg-white/10 hover:border-primary/30 text-gray-300'
+                                            className={`relative w-full flex items-center justify-between p-3 rounded-lg border transition-all ${isSelected
+                                                ? 'border-primary bg-primary/10'
+                                                : 'bg-black/20 border-white/10 hover:bg-white/10 hover:border-primary/30 text-gray-300'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3 z-10">
-                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${hasVoted
-                                                        ? 'border-primary/50'
-                                                        : 'border-gray-500 group-hover:border-primary'
+                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected
+                                                    ? 'border-primary'
+                                                    : 'border-gray-500 group-hover:border-primary'
                                                     }`}>
-                                                    {hasVoted && <div className="w-2 h-2 rounded-full bg-primary" />}
+                                                    {isSelected && <div className="w-2 h-2 rounded-full bg-primary" />}
                                                 </div>
                                                 <span className="font-medium text-sm text-white">{option.text}</span>
                                             </div>

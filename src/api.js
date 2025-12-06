@@ -393,6 +393,17 @@ export const api = {
             return res.json();
         }
     },
+    polls: {
+        vote: async (pollId, optionIndex) => {
+            const res = await fetch(`${API_URL}/polls/${pollId}/vote`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ optionIndex }),
+            });
+            if (!res.ok) throw new Error('Failed to vote');
+            return res.json();
+        }
+    },
     creators: {
         getAll: async () => {
             const res = await fetch(`${API_URL}/creators`);
