@@ -381,7 +381,7 @@ app.get('/api/projects/featured', optionalAuthenticateToken, async (req, res) =>
 app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
+        const limit = parseInt(req.query.limit) || 500;
         const offset = (page - 1) * limit;
         const currentUserId = req.user ? req.user.id : null;
 
