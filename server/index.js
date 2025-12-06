@@ -404,7 +404,9 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
                         'options', (
                             SELECT json_agg(
                                 json_build_object('text', po.text, 'votes', po.votes)
-                            ) FROM poll_options po WHERE po.poll_id = pl.id
+                            ) FROM (
+                                SELECT * FROM poll_options po WHERE po.poll_id = pl.id ORDER BY po.id ASC
+                            ) po
                         ),
                         'user_voted_option', (
                             SELECT option_id FROM poll_votes pv WHERE pv.poll_id = pl.id AND pv.user_id = $1

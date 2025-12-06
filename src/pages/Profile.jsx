@@ -132,10 +132,11 @@ export default function Profile() {
                     setLoading(false);
                 }
             } else {
-                setLoading(true);
+                // Only show loading on initial fetch
+                if (!profileUser) setLoading(true);
                 try {
                     const { api } = await import('../api');
-                    console.log('Fetching profile for ID:', id);
+                    if (!profileUser) console.log('Fetching profile for ID:', id);
                     const data = await api.users.getProfile(id);
                     setProfileUser(data);
                     setBio(data.bio || '');
