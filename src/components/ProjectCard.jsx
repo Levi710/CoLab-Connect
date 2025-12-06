@@ -283,7 +283,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
     return (
         <>
             <div
-                className={`bg-[#13161f] rounded-xl overflow-hidden group relative transition-all duration-300 ${isSponsored ? 'ring-1 ring-primary/20' : ''} ${showComments ? '' : 'hover:bg-white/5 cursor-pointer'}`}
+                className={`bg-[#13161f] rounded-xl overflow-hidden group relative transition-all duration-300 h-[500px] flex flex-col ${isSponsored ? 'ring-1 ring-primary/20' : ''} ${showComments ? '' : 'hover:bg-white/5 cursor-pointer'}`}
                 onClick={handleCardClick}
             >
                 {isSponsored && (
@@ -296,7 +296,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
 
                 {/* Project Images */}
                 {project.images && project.images.length > 0 && (
-                    <div className="h-48 w-full overflow-x-auto flex snap-x snap-mandatory custom-scrollbar">
+                    <div className="h-48 w-full overflow-x-auto flex snap-x snap-mandatory custom-scrollbar shrink-0">
                         {project.images.map((img, idx) => (
                             <img
                                 key={idx}
@@ -308,8 +308,8 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                     </div>
                 )}
 
-                <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
+                <div className="p-6 flex flex-col flex-1 min-h-0">
+                    <div className="flex justify-between items-start mb-4 shrink-0">
                         <div className="flex items-center space-x-3 min-w-0">
                             <Link to={`/profile/${project.owner_public_id || project.user_id}`} className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold shadow-inner border border-white/5 overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0" onClick={(e) => { e.stopPropagation(); handleLinkClick(e); }}>
                                 {project.owner_photo ? (
@@ -325,7 +325,7 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                                 <p className="text-xs text-gray-500">{new Date(project.created_at).toLocaleDateString()}</p>
                             </div>
                         </div>
-                        <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex space-x-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                             {isOwner && (
                                 <>
                                     <button onClick={() => onEdit && onEdit(project)} className="text-gray-500 hover:text-white transition-colors text-xs">
@@ -339,28 +339,28 @@ export default function ProjectCard({ project, isSponsored, isOwner, onDelete, o
                         </div>
                     </div>
 
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed shrink-0">
                         {project.description}
                     </p>
 
                     {/* Looking For Section */}
                     {project.looking_for && (
-                        <div className="mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
+                        <div className="mb-4 bg-white/5 p-3 rounded-lg border border-white/5 shrink-0 max-h-[80px] overflow-hidden">
                             <h4 className="text-xs font-bold text-primary mb-1 uppercase tracking-wide">Looking For</h4>
-                            <p className="text-xs text-gray-300">{project.looking_for}</p>
+                            <p className="text-xs text-gray-300 line-clamp-2">{project.looking_for}</p>
                         </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="px-2 py-1 rounded-md bg-white/5 text-xs font-medium text-gray-300 border border-white/5">
+                    <div className="flex flex-wrap gap-2 mb-6 shrink-0 overflow-hidden h-[32px]">
+                        <span className="px-2 py-1 rounded-md bg-white/5 text-xs font-medium text-gray-300 border border-white/5 whitespace-nowrap">
                             {project.category}
                         </span>
-                        <span className="px-2 py-1 rounded-md bg-white/5 text-xs font-medium text-gray-300 border border-white/5">
+                        <span className="px-2 py-1 rounded-md bg-white/5 text-xs font-medium text-gray-300 border border-white/5 whitespace-nowrap">
                             {project.status}
                         </span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto shrink-0" onClick={(e) => e.stopPropagation()}>
                         <div className="flex space-x-4 text-gray-500">
                             <button
                                 onClick={handleLike}
