@@ -223,6 +223,12 @@ export default function Profile() {
     };
 
     const addSkill = (skill) => {
+        if (selectedSkills.length >= 50) {
+            addToast('You can only select up to 50 skills.', 'error');
+            setShowSkillDropdown(false);
+            return;
+        }
+
         if (!selectedSkills.includes(skill)) {
             setSelectedSkills([...selectedSkills, skill]);
         }
@@ -255,6 +261,11 @@ export default function Profile() {
 
     const handleSave = async () => {
         if (!isOwnProfile && id !== 'system') return;
+
+        if (bio.length < 50 || bio.length > 250) {
+            addToast('Bio must be between 50 and 250 characters.', 'error');
+            return;
+        }
 
         setLoading(true);
         try {
@@ -448,10 +459,10 @@ export default function Profile() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium h-fit border shadow-sm ${profileUser.is_system
-                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                                    : profileUser.is_premium
-                                        ? 'bg-gold/10 text-gold border-gold/30 shadow-gold/10'
-                                        : 'bg-white/5 text-gray-400 border-white/10'
+                                ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                : profileUser.is_premium
+                                    ? 'bg-gold/10 text-gold border-gold/30 shadow-gold/10'
+                                    : 'bg-white/5 text-gray-400 border-white/10'
                                 }`}>
                                 {profileUser.is_system ? 'System Core' : (profileUser.is_premium ? 'Premium Plan' : 'Free Plan')}
                             </span>
@@ -553,13 +564,20 @@ export default function Profile() {
                             </dt>
                             <dd className="mt-1 text-sm text-gray-200">
                                 {isEditing ? (
-                                    <textarea
-                                        rows={4}
-                                        className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm bg-dark border-white/10 rounded-md border p-3 text-white placeholder-gray-500"
-                                        value={bio}
-                                        onChange={(e) => setBio(e.target.value)}
-                                        placeholder="Tell us about yourself..."
-                                    />
+                                    <>
+                                        <textarea
+                                            rows={4}
+                                            maxLength={250}
+                                            className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm bg-dark border-white/10 rounded-md border p-3 text-white placeholder-gray-500"
+                                            value={bio}
+                                            onChange={(e) => setBio(e.target.value)}
+                                            placeholder="Tell us about yourself..."
+                                        />
+                                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Min 50 characters</span>
+                                            <span className={bio.length < 50 || bio.length === 250 ? 'text-blue-400' : ''}>{bio.length}/250</span>
+                                        </div>
+                                    </>
                                 ) : (
                                     <p className="whitespace-pre-wrap">{bio || <span className="text-gray-500 italic">No bio added yet.</span>}</p>
                                 )}
@@ -568,7 +586,7 @@ export default function Profile() {
 
                         <div className="sm:col-span-2">
                             <dt className="text-sm font-medium text-gray-400 flex items-center gap-2 mb-2">
-                                <Award className="h-4 w-4" /> Skills
+                                <Award className="h-4 w-4" /> Skills <span className="text-xs text-gray-500">({selectedSkills.length}/50)</span>
                             </dt>
                             <dd className="mt-1 text-sm text-gray-200">
                                 {isEditing ? (
