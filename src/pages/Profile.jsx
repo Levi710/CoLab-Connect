@@ -372,9 +372,12 @@ export default function Profile() {
                 </div>
             )}
 
-            <div className="bg-dark-surface/80 backdrop-blur-md shadow-2xl shadow-black/50 rounded-lg border border-gold/20 mb-8 relative overflow-hidden">
-                {/* Decorative sheen */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-gold/5 via-transparent to-transparent pointer-events-none" />
+            <div className={`bg-dark-surface/80 backdrop-blur-md shadow-2xl shadow-black/50 rounded-lg border mb-8 relative overflow-hidden transition-all duration-300 ${profileUser.is_premium ? 'border-gold/20' : 'border-white/5'}`}>
+                {/* Decorative sheen - Premium Only */}
+                {profileUser.is_premium && (
+                    <div className="absolute inset-0 bg-gradient-to-tr from-gold/5 via-transparent to-transparent pointer-events-none" />
+                )}
+
                 <div
                     className="h-32 bg-cover bg-center relative group rounded-t-lg"
                     style={{
@@ -412,7 +415,7 @@ export default function Profile() {
                     <div className="-mt-16 mb-4 relative inline-block group">
                         {photoUrl ? (
                             <img
-                                className="h-24 w-24 rounded-full border-4 border-dark-surface shadow-lg shadow-gold/20 inline-block object-cover bg-dark"
+                                className={`h-24 w-24 rounded-full border-4 border-dark-surface inline-block object-cover bg-dark ${profileUser.is_premium ? 'shadow-lg shadow-gold/20' : 'shadow-md border-white/10'}`}
                                 src={photoUrl}
                                 alt={profileUser.username}
                             />
