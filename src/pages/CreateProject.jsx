@@ -284,6 +284,10 @@ export default function CreateProject() {
                             <button
                                 type="button"
                                 onClick={() => {
+                                    if ((formData.polls || []).length >= 3) {
+                                        addToast('You can add a maximum of 3 polls.', 'error');
+                                        return;
+                                    }
                                     setFormData(prev => ({
                                         ...prev,
                                         polls: [...(prev.polls || []), { question: '', options: [{ text: '', votes: 0 }, { text: '', votes: 0 }] }]

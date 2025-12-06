@@ -153,6 +153,18 @@ async function initDb() {
                 bot_skills TEXT,
                 bot_background_url TEXT,
                 access_list INTEGER[] DEFAULT '{}'
+            )`,
+            `CREATE TABLE IF NOT EXISTS polls (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                question TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+            `CREATE TABLE IF NOT EXISTS poll_options (
+                id SERIAL PRIMARY KEY,
+                poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
+                text TEXT NOT NULL,
+                votes INTEGER DEFAULT 0
             )`
         ];
 
@@ -339,6 +351,18 @@ app.get('/api/projects', optionalAuthenticateToken, async (req, res) => {
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
             (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
+            (
+                SELECT json_agg(
+                    json_build_object(
+                        'question', pl.question,
+                        'options', (
+                            SELECT json_agg(
+                                json_build_object('text', po.text, 'votes', po.votes)
+                            ) FROM poll_options po WHERE po.poll_id = pl.id
+                        )
+                    )
+                ) FROM polls pl WHERE pl.project_id = p.id
+            ) as polls,
             CASE WHEN $1::int IS NOT NULL THEN (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) ELSE FALSE END as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
@@ -360,6 +384,18 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
             (SELECT COUNT(*) FROM comments c WHERE c.project_id = p.id) as comments_count,
             (SELECT json_agg(pi.image_url) FROM project_images pi WHERE pi.project_id = p.id) as images,
             (SELECT COUNT(*)::int FROM likes l WHERE l.project_id = p.id) as likes_count,
+            (
+                SELECT json_agg(
+                    json_build_object(
+                        'question', pl.question,
+                        'options', (
+                            SELECT json_agg(
+                                json_build_object('text', po.text, 'votes', po.votes)
+                            ) FROM poll_options po WHERE po.poll_id = pl.id
+                        )
+                    )
+                ) FROM polls pl WHERE pl.project_id = p.id
+            ) as polls,
             (SELECT COUNT(*) > 0 FROM likes l WHERE l.project_id = p.id AND l.user_id = $1) as is_liked
             FROM projects p 
             JOIN users u ON p.user_id = u.id
@@ -375,7 +411,7 @@ app.get('/api/projects/my', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/projects', authenticateToken, async (req, res) => {
-    const { title, description, category, status, lookingFor, pollQuestion, memberLimit, images } = req.body;
+    const { title, description, category, status, lookingFor, pollQuestion, memberLimit, images, polls } = req.body;
     try {
         const limit = parseInt(memberLimit) || 5;
         const result = await db.query(
@@ -399,6 +435,28 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
             const imagesToInsert = images.slice(0, imageLimit);
             for (const imgUrl of imagesToInsert) {
                 await db.query('INSERT INTO project_images (project_id, image_url) VALUES ($1, $2)', [project.id, imgUrl]);
+            }
+        }
+
+        // Handle Advanced Polls
+        if (polls && Array.isArray(polls)) {
+            for (const poll of polls) {
+                if (!poll.question) continue;
+                const pollRes = await db.query(
+                    'INSERT INTO polls (project_id, question) VALUES ($1, $2) RETURNING id',
+                    [project.id, poll.question]
+                );
+                const pollId = pollRes.rows[0].id;
+
+                if (poll.options && Array.isArray(poll.options)) {
+                    for (const option of poll.options) {
+                        if (!option.text) continue;
+                        await db.query(
+                            'INSERT INTO poll_options (poll_id, text, votes) VALUES ($1, $2, $3)',
+                            [pollId, option.text, 0]
+                        );
+                    }
+                }
             }
         }
 
