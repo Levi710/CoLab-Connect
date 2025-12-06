@@ -17,7 +17,7 @@ export default function CreateProject() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        category: 'Tech',
+        category: 'Technology',
         status: 'Idea',
         lookingFor: '',
         pollQuestion: '',
@@ -193,11 +193,13 @@ export default function CreateProject() {
                                 value={formData.category}
                                 onChange={handleChange}
                             >
-                                <option value="Tech">Tech</option>
+                                <option value="Technology">Technology</option>
                                 <option value="Social Impact">Social Impact</option>
                                 <option value="Art">Art</option>
                                 <option value="Education">Education</option>
                                 <option value="Business">Business</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Design">Design</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
