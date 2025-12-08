@@ -25,7 +25,7 @@ export default function Creators() {
                         ...creator,
                         name: 'Ayush Kishor (Levi)',
                         role: 'Core Developer',
-                        image_url: '/creators/ayush.png'
+                        image_url: '/creators/ayush.jpg'
                     };
                 }
                 if (creator.name.includes('Sarah')) {
