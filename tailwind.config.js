@@ -28,7 +28,9 @@ export default {
           light: '#EEF2F3',
           DEFAULT: '#C0C0C0',
           dark: '#A0A0A0',
-        }
+        },
+        'baby-pink': '#F4C2C2',
+        'deep-pink': '#8d1538',
       },
       backgroundImage: {
         'grid-pattern': "linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px)",
