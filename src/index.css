@@ -51,4 +51,16 @@
         --color-primary-hover: #FF1493;
         --color-primary-light: #FFC0CB;
     }
+
+    [data-theme='baby-pink'] {
+        --color-primary: #F4C2C2;
+        --color-primary-hover: #EBB1B1;
+        --color-primary-light: #FADADD;
+    }
+
+    [data-theme='deep-pink'] {
+        --color-primary: #8d1538;
+        --color-primary-hover: #6d102b;
+        --color-primary-light: #b02a52;
+    }
 }
