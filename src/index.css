@@ -63,4 +63,10 @@
         --color-primary-hover: #6d102b;
         --color-primary-light: #b02a52;
     }
+
+    [data-theme='teal'] {
+        --color-primary: #028A88;
+        --color-primary-hover: #026e6d;
+        --color-primary-light: #26aca9;
+    }
 }
